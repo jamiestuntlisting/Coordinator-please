@@ -1389,10 +1389,10 @@ export class DeskScene extends Phaser.Scene {
     // Book result area
     this.bookResultText = this.add.text(px, py, '', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '14px',
+      fontSize: '11px',
       color: '#d4c5a0',
-      wordWrap: { width: 230 },
-      lineSpacing: 4,
+      wordWrap: { width: 200 },
+      lineSpacing: 3,
     });
     this.bottomHalfContainer.add(this.bookResultText);
 
@@ -1433,8 +1433,9 @@ export class DeskScene extends Phaser.Scene {
 
     this.reelDisplayText = this.add.text(px + 14, reelY + 30, visitor.skillReel ? 'TAPE READY' : 'NO TAPE', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '12px',
       color: visitor.skillReel ? '#4a7a4f' : '#6a6050',
+      wordWrap: { width: 200 },
     });
     this.bottomHalfContainer.add(this.reelDisplayText);
 
@@ -1469,8 +1470,8 @@ export class DeskScene extends Phaser.Scene {
     this.dialogueContainer.add(gfx);
 
     // Question buttons row
-    const btnY = 705;
-    const btnH = 36;
+    const btnY = 706;
+    const btnH = 34;
     const options = [
       { key: 'tell_me_about_experience', label: 'Experience?' },
       { key: 'about_your_reel', label: 'Skills?' },
@@ -1513,8 +1514,8 @@ export class DeskScene extends Phaser.Scene {
     });
 
     // Conversation box
-    const convoY = 748;
-    const convoH = 80;
+    const convoY = 744;
+    const convoH = 72;
     gfx.fillStyle(0x0e0e14, 0.92);
     gfx.fillRoundedRect(10, convoY, 780, convoH, 4);
     gfx.lineStyle(1, 0x2a2a36, 0.8);
@@ -1523,8 +1524,8 @@ export class DeskScene extends Phaser.Scene {
     this.renderConversationHistory(10, convoY, convoH);
 
     // Action buttons
-    const actionY = 834;
-    const actionBtnH = 34;
+    const actionY = 820;
+    const actionBtnH = 36;
 
     // HIRE button
     const hireBg = this.add.graphics();
@@ -1614,8 +1615,8 @@ export class DeskScene extends Phaser.Scene {
   }
 
   private renderConversationHistory(panelX: number, convoY: number, convoH: number): void {
-    // Show last 3-4 conversation entries (or greeting if no history)
-    const maxVisible = 4;
+    // Show last 2 conversation entries (or greeting if no history)
+    const maxVisible = 2;
     const entries = this.conversationHistory.slice(-maxVisible);
     let ty = convoY + 4;
     const lineH = 14;
@@ -1831,40 +1832,201 @@ export class DeskScene extends Phaser.Scene {
 
   private showReelResult(): void {
     const visitor = this.pendingReelVisitor;
-    if (!this.reelDisplayText || !visitor?.skillReel) return;
+    if (!visitor?.skillReel) return;
     const reel = visitor.skillReel;
     const state = this.gsm.getCurrentState();
 
     const dupCheck = this.reelSystem.checkForDuplicate(reel, state.seenReels);
     const animation = REEL_ANIMATIONS.find(a => a.id === reel.animationId);
-    const animDesc = animation ? animation.description : reel.animationId.replace(/_/g, ' ');
     const animType = animation ? animation.stuntType : 'unknown';
     const bodyMismatch = this.reelSystem.checkBodyTypeMismatch(reel, visitor);
 
-    const lines = [
-      `TITLE: ${reel.titleCardName}`,
-      `Stunt: ${animType}`,
-      animDesc,
-      `Build: ${reel.bodyType.build} ${reel.bodyType.height}" / ${reel.bodyType.weight}lb`,
-    ];
-
-    if (dupCheck.isDuplicate) {
-      lines.push('');
-      lines.push('** DUPLICATE REEL **');
-      lines.push(`Same footage shown by: ${dupCheck.originalOwner}`);
-      this.reelDisplayText.setColor('#c4553a');
-      this.showDuplicateReelCallout(visitor, dupCheck.originalOwner!);
-    } else if (bodyMismatch) {
-      lines.push('');
-      lines.push('Body type mismatch with reel.');
-      this.reelDisplayText.setColor('#e8c36a');
-    } else {
-      this.reelDisplayText.setColor('#d4c5a0');
+    // Update the small text label
+    if (this.reelDisplayText) {
+      this.reelDisplayText.setText(animType.replace(/_/g, ' ').toUpperCase());
+      if (dupCheck.isDuplicate) {
+        this.reelDisplayText.setColor('#c4553a');
+      } else if (bodyMismatch) {
+        this.reelDisplayText.setColor('#e8c36a');
+      } else {
+        this.reelDisplayText.setColor('#d4c5a0');
+      }
     }
 
-    this.reelDisplayText.setText(lines.join('\n'));
+    // Draw visual reel in the monitor area
+    this.drawReelVisual(animType, reel.titleCardName, dupCheck.isDuplicate, bodyMismatch, dupCheck.originalOwner ?? null);
+
+    if (dupCheck.isDuplicate) {
+      this.showDuplicateReelCallout(visitor, dupCheck.originalOwner!);
+    }
+
     this.reelSystem.recordReel(reel, visitor.name, state.seenReels);
     this.pendingReelVisitor = null;
+  }
+
+  private drawReelVisual(stuntType: string, titleName: string, isDuplicate: boolean, bodyMismatch: boolean, dupOwner: string | null): void {
+    // Draw inside the reel monitor area (in bottomHalfContainer)
+    const reelGfx = this.add.graphics();
+    this.bottomHalfContainer.add(reelGfx);
+
+    // Monitor inner bounds (from drawBookAndReel - px=544, reelY=540)
+    const mx = 558;
+    const my = 562;
+    const mw = 218;
+    const mh = 68;
+
+    // VHS blue background
+    reelGfx.fillStyle(0x0a0a2a, 1);
+    reelGfx.fillRect(mx, my, mw, mh);
+
+    // VHS tracking lines
+    reelGfx.fillStyle(0x1a1a4a, 0.5);
+    for (let i = 0; i < 4; i++) {
+      reelGfx.fillRect(mx, my + randomInt(0, mh), mw, 1);
+    }
+
+    // Draw stunt figure based on type
+    const figX = mx + mw / 2;
+    const figY = my + 28;
+
+    // Ground line
+    reelGfx.fillStyle(0x2a2a5a, 0.8);
+    reelGfx.fillRect(mx + 10, my + 50, mw - 20, 1);
+
+    // Stick figure performing stunt
+    reelGfx.fillStyle(0xd4c5a0, 0.9);
+
+    if (stuntType === 'fight') {
+      // Fighting pose - two figures
+      reelGfx.fillCircle(figX - 20, figY - 8, 4);
+      reelGfx.fillRect(figX - 21, figY - 4, 3, 14);
+      reelGfx.fillRect(figX - 18, figY, 18, 2); // punch arm
+      reelGfx.fillCircle(figX + 15, figY - 6, 4);
+      reelGfx.fillRect(figX + 14, figY - 2, 3, 14);
+      // Impact star
+      reelGfx.fillStyle(0xf5d799, 0.8);
+      reelGfx.fillCircle(figX, figY, 3);
+    } else if (stuntType === 'high_fall' || stuntType === 'stair_fall') {
+      // Falling figure
+      reelGfx.fillCircle(figX, figY - 15, 4);
+      reelGfx.fillRect(figX - 1, figY - 11, 3, 12);
+      reelGfx.fillRect(figX - 8, figY - 8, 6, 2);
+      reelGfx.fillRect(figX + 2, figY - 6, 6, 2);
+      reelGfx.fillRect(figX - 5, figY + 1, 2, 8);
+      reelGfx.fillRect(figX + 3, figY + 1, 2, 8);
+      // Arrow showing fall direction
+      reelGfx.fillStyle(0xc4553a, 0.6);
+      reelGfx.fillTriangle(figX + 15, figY + 10, figX + 12, figY + 4, figX + 18, figY + 4);
+      reelGfx.fillRect(figX + 14, figY - 4, 3, 8);
+    } else if (stuntType === 'car_hit') {
+      // Figure flying through air after car hit
+      reelGfx.fillCircle(figX + 10, figY - 10, 4);
+      reelGfx.fillRect(figX + 9, figY - 6, 3, 10);
+      reelGfx.fillRect(figX + 5, figY - 4, 5, 2);
+      reelGfx.fillRect(figX + 12, figY - 2, 5, 2);
+      // Car shape
+      reelGfx.fillStyle(0x4a4a6a, 0.8);
+      reelGfx.fillRect(figX - 30, figY + 2, 30, 12);
+      reelGfx.fillRect(figX - 25, figY - 6, 20, 8);
+      // Wheels
+      reelGfx.fillStyle(0x1a1a2a, 1);
+      reelGfx.fillCircle(figX - 24, figY + 14, 3);
+      reelGfx.fillCircle(figX - 8, figY + 14, 3);
+    } else if (stuntType === 'fire_gag') {
+      // Figure with flames
+      reelGfx.fillCircle(figX, figY - 8, 4);
+      reelGfx.fillRect(figX - 1, figY - 4, 3, 14);
+      reelGfx.fillRect(figX - 6, figY - 2, 4, 2);
+      reelGfx.fillRect(figX + 3, figY - 2, 4, 2);
+      // Flames around figure
+      reelGfx.fillStyle(0xe8a030, 0.7);
+      reelGfx.fillTriangle(figX - 5, figY - 12, figX - 8, figY + 4, figX - 2, figY + 4);
+      reelGfx.fillTriangle(figX + 5, figY - 14, figX + 2, figY + 2, figX + 8, figY + 2);
+      reelGfx.fillStyle(0xc44020, 0.5);
+      reelGfx.fillTriangle(figX, figY - 16, figX - 4, figY - 4, figX + 4, figY - 4);
+    } else if (stuntType === 'wire_work') {
+      // Figure suspended on wire
+      reelGfx.lineStyle(1, 0x8a8a9a, 0.6);
+      reelGfx.lineBetween(figX, my + 2, figX, figY - 12);
+      reelGfx.fillStyle(0xd4c5a0, 0.9);
+      reelGfx.fillCircle(figX, figY - 8, 4);
+      reelGfx.fillRect(figX - 1, figY - 4, 3, 12);
+      // Arms out like flying
+      reelGfx.fillRect(figX - 10, figY - 2, 8, 2);
+      reelGfx.fillRect(figX + 3, figY - 2, 8, 2);
+      // Legs trailing
+      reelGfx.fillRect(figX - 3, figY + 8, 2, 6);
+      reelGfx.fillRect(figX + 2, figY + 8, 2, 6);
+    } else if (stuntType === 'explosion_reaction') {
+      // Figure being blown back
+      reelGfx.fillCircle(figX + 12, figY - 6, 4);
+      reelGfx.fillRect(figX + 11, figY - 2, 3, 12);
+      // Explosion
+      reelGfx.fillStyle(0xe8a030, 0.6);
+      reelGfx.fillCircle(figX - 10, figY, 12);
+      reelGfx.fillStyle(0xc44020, 0.4);
+      reelGfx.fillCircle(figX - 10, figY, 8);
+      reelGfx.fillStyle(0xf5d799, 0.5);
+      reelGfx.fillCircle(figX - 10, figY, 4);
+    } else {
+      // Generic - standing figure
+      reelGfx.fillCircle(figX, figY - 8, 4);
+      reelGfx.fillRect(figX - 1, figY - 4, 3, 14);
+      reelGfx.fillRect(figX - 6, figY - 2, 4, 2);
+      reelGfx.fillRect(figX + 3, figY - 2, 4, 2);
+      reelGfx.fillRect(figX - 3, figY + 10, 2, 6);
+      reelGfx.fillRect(figX + 2, figY + 10, 2, 6);
+    }
+
+    // Title card at bottom
+    const titleText = this.add.text(mx + 4, my + mh - 14, titleName, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '10px',
+      color: '#d4c5a0',
+    });
+    this.bottomHalfContainer.add(titleText);
+
+    // REC indicator
+    reelGfx.fillStyle(0xc44020, 0.8);
+    reelGfx.fillCircle(mx + mw - 12, my + 8, 3);
+    const recText = this.add.text(mx + mw - 8, my + 4, 'REC', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '8px',
+      color: '#c44020',
+    });
+    this.bottomHalfContainer.add(recText);
+
+    // Duplicate stamp
+    if (isDuplicate) {
+      reelGfx.fillStyle(0xc44020, 0.3);
+      reelGfx.fillRect(mx, my, mw, mh);
+      const dupText = this.add.text(mx + mw / 2, my + mh / 2 - 8, 'DUPLICATE', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '14px',
+        color: '#ff4444',
+        fontStyle: 'bold',
+      }).setOrigin(0.5);
+      this.bottomHalfContainer.add(dupText);
+      if (dupOwner) {
+        const ownerText = this.add.text(mx + mw / 2, my + mh / 2 + 6, `Same as ${dupOwner}`, {
+          fontFamily: 'Courier New, monospace',
+          fontSize: '9px',
+          color: '#ff6666',
+        }).setOrigin(0.5);
+        this.bottomHalfContainer.add(ownerText);
+      }
+    }
+
+    // Body mismatch warning
+    if (bodyMismatch && !isDuplicate) {
+      const warnText = this.add.text(mx + mw / 2, my + 4, 'BODY MISMATCH', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '9px',
+        color: '#e8c36a',
+        fontStyle: 'bold',
+      }).setOrigin(0.5, 0);
+      this.bottomHalfContainer.add(warnText);
+    }
   }
 
   private showDuplicateReelCallout(visitor: Visitor, originalOwner: string): void {

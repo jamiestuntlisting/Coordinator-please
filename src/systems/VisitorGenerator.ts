@@ -643,8 +643,10 @@ export class VisitorGenerator {
   private maybeBribe(nightConfig: NightConfig): BribeOffer | null {
     if (!chance(0.4)) return null;
     const [min, max] = nightConfig.bribeRange;
+    if (max < 5) return null; // no bribes if range is too low
+    const amount = randomInt(Math.max(5, min), max);
     return {
-      amount: randomInt(min, max),
+      amount,
       dialogue: pick(BRIBE_DIALOGUES),
     };
   }
