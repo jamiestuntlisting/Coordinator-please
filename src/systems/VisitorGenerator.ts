@@ -56,14 +56,32 @@ const SKILLS_LIST = [
   'trampolining', 'precision driving', 'rappelling', 'swimming',
 ];
 
+// Legit credits — all released BEFORE March 1995
 const CREDITS_LIST = [
-  'Die Hard 3 (1995)', 'Lethal Weapon 3 (1992)', 'Speed (1994)', 'Batman Forever (1995)',
-  'Broken Arrow (1995)', 'The Rock (1995)', 'Twister (1994)', 'Mission: Impossible (1995)',
-  'Waterworld (1995)', 'Heat (1995)', 'Crimson Tide (1994)', 'Braveheart (1993)',
-  'GoldenEye (1995)', 'Apollo 13 (1994)', 'Desperado (1995)', 'Under Siege 2 (1995)',
-  'Mortal Kombat (1993)', 'Judge Dredd (1993)', 'Cliffhanger (1993)', 'Outbreak (1994)',
-  'Total Recall (1990)', 'Die Hard 2 (1990)', 'Terminator 2 (1991)', 'The Fugitive (1993)',
-  'Point Break (1991)', 'Last Action Hero (1993)', 'Demolition Man (1993)', 'Hard Target (1993)',
+  'Lethal Weapon 3 (1992)', 'Speed (1994)', 'True Lies (1994)',
+  'The Crow (1994)', 'Timecop (1994)', 'Stargate (1994)',
+  'Street Fighter (1994)', 'Drop Zone (1994)', 'The Specialist (1994)',
+  'On Deadly Ground (1994)', 'No Escape (1994)',
+  'Cliffhanger (1993)', 'The Fugitive (1993)', 'Demolition Man (1993)',
+  'Last Action Hero (1993)', 'Hard Target (1993)', 'Army of Darkness (1992)',
+  'Passenger 57 (1992)', 'Rapid Fire (1992)',
+  'Total Recall (1990)', 'Die Hard 2 (1990)', 'Terminator 2 (1991)',
+  'Point Break (1991)', 'Robin Hood: Prince of Thieves (1991)',
+  'Backdraft (1991)', 'Thelma & Louise (1991)',
+  'Lethal Weapon 2 (1989)', 'Indiana Jones: Last Crusade (1989)',
+  'Road House (1989)', 'Kickboxer (1989)', 'Bloodsport (1988)',
+];
+
+// FUTURE credits — these films don't exist yet in March 1995!
+// Only fakers have these. A tell that they're lying about their resume.
+const FUTURE_CREDITS = [
+  'Die Hard 3 (1995)', 'Batman Forever (1995)', 'GoldenEye (1995)',
+  'Braveheart (1995)', 'Waterworld (1995)', 'Desperado (1995)',
+  'Under Siege 2 (1995)', 'Mortal Kombat (1995)', 'Heat (1995)',
+  'Independence Day (1996)', 'The Rock (1996)', 'Mission: Impossible (1996)',
+  'Twister (1996)', 'Eraser (1996)', 'The Long Kiss Goodnight (1996)',
+  'Con Air (1997)', 'Face/Off (1997)', 'The Lost World (1997)',
+  'Lethal Weapon 4 (1998)', 'Armageddon (1998)', 'Blade (1998)',
 ];
 
 const COORDINATOR_NAMES = [
@@ -125,6 +143,16 @@ function pickN<T>(arr: T[], n: number): T[] {
   return shuffled.slice(0, Math.min(n, arr.length));
 }
 
+/** Pick N items from arr, avoiding items in the `used` set. Adds picked items to `used`. */
+function pickNUnique(arr: string[], n: number, used: Set<string>): string[] {
+  const available = arr.filter(x => !used.has(x));
+  const pool = available.length >= n ? available : arr;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  const result = shuffled.slice(0, Math.min(n, shuffled.length));
+  result.forEach(x => used.add(x));
+  return result;
+}
+
 function chance(probability: number): boolean {
   return Math.random() < probability;
 }
@@ -138,12 +166,24 @@ function nextId(): string {
 // ---- Generator class ----
 
 export class VisitorGenerator {
+  // Track used names and credits per night to avoid repeats
+  private usedFirstNames: Set<string> = new Set();
+  private usedCredits: Set<string> = new Set();
+  private usedGetLostLines: Set<string> = new Set();
+  private usedGreetings: Set<string> = new Set();
+
   /**
    * Generate all visitors for a given night.
    */
   generateVisitorsForNight(nightConfig: NightConfig, state: GameState): Visitor[] {
     const visitors: Visitor[] = [];
     const legitChance = this.getLegitChance(nightConfig.night);
+
+    // Reset per-night tracking
+    this.usedFirstNames.clear();
+    this.usedCredits.clear();
+    this.usedGetLostLines.clear();
+    this.usedGreetings.clear();
 
     for (let i = 0; i < nightConfig.visitorCount; i++) {
       const isLegit = chance(legitChance);
@@ -213,7 +253,7 @@ export class VisitorGenerator {
 
     const resume: Resume = {
       skills,
-      credits: pickN(CREDITS_LIST, randomInt(3, 6)),
+      credits: pickNUnique(CREDITS_LIST, randomInt(3, 6), this.usedCredits),
       coordinatorRefs: this.generateCoordRefs(true),
       sagStatus: 'current',
       listedHeight: this.heightToString(body.height),
@@ -226,7 +266,7 @@ export class VisitorGenerator {
       bodyType: { ...body },
     } : null;
 
-    const bribeOffer = this.maybeBribe(nightConfig) ;
+    const bribeOffer = this.maybeBribe(nightConfig);
 
     const howHeard = pick(HOW_HEARD_OPTIONS);
 
@@ -366,9 +406,18 @@ export class VisitorGenerator {
       name: sagCardName,
     } : null;
 
+    // Fakers sometimes list credits from the FUTURE (films that don't exist yet in 1995)
+    const fakerCredits = pickNUnique(CREDITS_LIST, randomInt(1, 3), this.usedCredits);
+    if (chance(0.35)) {
+      // Add 1-2 future credits — a tell that they're lying
+      const futureCount = randomInt(1, 2);
+      const futureCredits = pickN(FUTURE_CREDITS, futureCount);
+      fakerCredits.push(...futureCredits);
+    }
+
     const resume: Resume = {
       skills,
-      credits: pickN(CREDITS_LIST, randomInt(1, 4)),
+      credits: fakerCredits,
       coordinatorRefs: this.generateCoordRefs(false),
       sagStatus,
       listedHeight: this.heightToString(body.height + (chance(0.3) ? randomInt(-2, 2) : 0)),
@@ -621,9 +670,14 @@ export class VisitorGenerator {
       name: name,
     };
 
+    const legacyCredits = pickNUnique(CREDITS_LIST, randomInt(2, 4), this.usedCredits);
+    if (!isLegit && chance(0.3)) {
+      legacyCredits.push(...pickN(FUTURE_CREDITS, 1));
+    }
+
     const resume: Resume = {
       skills,
-      credits: pickN(CREDITS_LIST, randomInt(2, 5)),
+      credits: legacyCredits,
       coordinatorRefs: refs,
       sagStatus,
       listedHeight: this.heightToString(body.height),
@@ -700,7 +754,17 @@ export class VisitorGenerator {
 
   generateName(gender: Gender): string {
     const resolvedGender = gender === 'any' ? (chance(0.5) ? 'male' : 'female') : gender;
-    const first = resolvedGender === 'male' ? pick(FIRST_NAMES_MALE) : pick(FIRST_NAMES_FEMALE);
+    const namePool = resolvedGender === 'male' ? FIRST_NAMES_MALE : FIRST_NAMES_FEMALE;
+
+    // Try to pick a first name not yet used this night
+    let first = pick(namePool);
+    let attempts = 0;
+    while (this.usedFirstNames.has(first) && attempts < 20) {
+      first = pick(namePool);
+      attempts++;
+    }
+    this.usedFirstNames.add(first);
+
     const last = pick(LAST_NAMES);
     return `${first} ${last}`;
   }
@@ -796,6 +860,14 @@ export class VisitorGenerator {
     return refs;
   }
 
+  /** Pick from array, preferring items not yet in the `used` set. Adds result to `used`. */
+  private pickUnique(arr: string[], used: Set<string>): string {
+    const available = arr.filter(x => !used.has(x));
+    const result = available.length > 0 ? pick(available) : pick(arr);
+    used.add(result);
+    return result;
+  }
+
   private heightToString(inches: number): string {
     const feet = Math.floor(inches / 12);
     const remaining = inches % 12;
@@ -820,16 +892,40 @@ export class VisitorGenerator {
   ): Record<string, string> {
     const responses: Record<string, string> = {};
 
-    // Greeting
+    // Greeting — many options per personality to avoid repeats
     const greetings: Record<PersonalityType, string[]> = {
-      confident: [`Hey there. ${name}. I'm here for the gig.`, `Evening. Name's ${name}. Let's get to work.`],
-      nervous: [`H-hi. I'm ${name}. Am I in the right place?`, `Um, ${name}. They told me to come here.`],
-      aggressive: [`${name}. Look, I don't have all night.`, `Yeah, I'm ${name}. Let's move this along.`],
-      smooth: [`Good evening. ${name}, at your service.`, `The name's ${name}. Pleasure to meet you.`],
-      desperate: [`Please, I'm ${name}. I really need this.`, `${name}. Look, I'll do anything you need.`],
-      quiet: [`${name}.`, `Hi. ${name}. ...`],
+      confident: [
+        `Hey there. ${name}. I'm here for the gig.`, `Evening. Name's ${name}. Let's get to work.`,
+        `${name}. My coordinator sent me. Where do I sign?`, `What's up. ${name}. I heard you need bodies.`,
+        `${name}. I'm the one they called about. Ready when you are.`,
+      ],
+      nervous: [
+        `H-hi. I'm ${name}. Am I in the right place?`, `Um, ${name}. They told me to come here.`,
+        `Is this... are you the coordinator? I'm ${name}.`, `Sorry I'm late. Or early. I'm ${name}.`,
+        `*clears throat* ${name}. Here for the... the stunt thing.`,
+      ],
+      aggressive: [
+        `${name}. Look, I don't have all night.`, `Yeah, I'm ${name}. Let's move this along.`,
+        `I'm ${name} and I've been waiting out there for twenty minutes.`, `${name}. You gonna hire me or what?`,
+        `I drove forty minutes for this. ${name}. Let's go.`,
+      ],
+      smooth: [
+        `Good evening. ${name}, at your service.`, `The name's ${name}. Pleasure to meet you.`,
+        `Hey. ${name}. I believe you've been expecting me.`, `${name}. Word on the lot is you need someone good.`,
+        `Charmed. ${name}. I think we can help each other out tonight.`,
+      ],
+      desperate: [
+        `Please, I'm ${name}. I really need this.`, `${name}. Look, I'll do anything you need.`,
+        `Thank God you're still hiring. ${name}. I really need this gig.`,
+        `${name}. My rent's due. Please just hear me out.`,
+        `I've been to four sets tonight. ${name}. Please.`,
+      ],
+      quiet: [
+        `${name}.`, `Hi. ${name}. ...`, `*nods* ${name}. Here for the call.`,
+        `...${name}. They sent me over.`, `Evening. ${name}.`,
+      ],
     };
-    responses['greeting'] = pick(greetings[personality]);
+    responses['greeting'] = this.pickUnique(greetings[personality], this.usedGreetings);
 
     // How did you hear about this
     if (isLegit) {
@@ -998,18 +1094,24 @@ export class VisitorGenerator {
       ]);
     }
 
-    // GET LOST response (departing dialogue)
+    // GET LOST response (departing dialogue) — all unique per night
     if (isLegit) {
-      responses['get_lost'] = pick([
+      responses['get_lost'] = this.pickUnique([
         'Your loss, pal. I\'ll be on the next gig by morning.',
         '*shakes head* You\'re making a mistake. But that\'s your problem.',
-        'Fine. I got three coordinators who\'d hire me tonight. Good luck finding someone better.',
+        'Fine. I got three coordinators who\'d hire me tonight. Good luck.',
         'Alright. No hard feelings. But you\'re gonna wish you\'d kept me.',
         '*gathers headshot* I\'ll remember this. This business is small.',
         'Your call. But don\'t come crying when your guy can\'t do a 40-footer.',
-      ]);
+        '*stands up slowly* You know where to find me if you change your mind.',
+        'I hope whoever you hire is half as good as me. Seriously.',
+        '*tips hat* Good luck tonight. You\'re going to need it.',
+        '*shrugs* Your set, your call. I got other offers.',
+        'You\'ll see my name in the trades next month. Remember this moment.',
+        'I\'ve been turned away by better coordinators than you. No offense.',
+      ], this.usedGetLostLines);
     } else {
-      responses['get_lost'] = pick([
+      responses['get_lost'] = this.pickUnique([
         '*mutters* This is bull. I came all the way down here for nothing.',
         'Whatever, man. You don\'t know what you\'re missing.',
         '*storms off* You\'ll regret this!',
@@ -1020,7 +1122,15 @@ export class VisitorGenerator {
         'This ain\'t the last you\'ll see of me.',
         'Yeah? Well my cousin works at the production office, so...',
         '*kicks chair on the way out*',
-      ]);
+        '*grabs headshot* This headshot cost me forty bucks, you know.',
+        'You\'re making a huge mistake, buddy. HUGE.',
+        '*slams door* ...it doesn\'t slam. It\'s a tent.',
+        'I\'m going to Denny\'s. This was a waste of my time.',
+        '*walks away muttering about how this town is rigged*',
+        'Fine. FINE. I\'ll just go be an extra. At least they appreciate people.',
+        '*drops headshot on purpose* Whoops. Keep it. I got a hundred of those.',
+        'My therapist is going to hear about this.',
+      ], this.usedGetLostLines);
     }
 
     // Reel question

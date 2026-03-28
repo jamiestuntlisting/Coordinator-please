@@ -160,10 +160,10 @@ export const NIGHT_CONFIGS: NightConfig[] = [
   {
     night: 4,
     noteType: 'stunt_change',
-    noteDescription: 'Car hit is now a high fall.',
+    noteDescription: 'Car hit is now a high fall. Remember that.',
     roles: [
       {
-        title: 'High Fall',
+        title: 'Car Hit',
         stuntType: 'high_fall',
         riskLevel: 'high',
         requiredGender: 'male',
