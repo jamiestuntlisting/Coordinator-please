@@ -94,9 +94,11 @@ export class ReelSystem {
   checkForDuplicate(
     reel: SkillReel,
     seenReels: Map<string, string>,
+    currentVisitorName: string,
   ): { isDuplicate: boolean; originalOwner: string | null } {
     const existing = seenReels.get(reel.animationId);
-    if (existing) {
+    if (existing && existing !== currentVisitorName) {
+      // Only a duplicate if a DIFFERENT visitor showed this same reel
       return { isDuplicate: true, originalOwner: existing };
     }
     return { isDuplicate: false, originalOwner: null };

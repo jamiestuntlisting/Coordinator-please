@@ -2337,7 +2337,7 @@ export class DeskScene extends Phaser.Scene {
     const reel = visitor.skillReel;
     const state = this.gsm.getCurrentState();
 
-    const dupCheck = this.reelSystem.checkForDuplicate(reel, state.seenReels);
+    const dupCheck = this.reelSystem.checkForDuplicate(reel, state.seenReels, visitor.name);
     const animation = REEL_ANIMATIONS.find(a => a.id === reel.animationId);
     const animType = animation ? animation.stuntType : 'unknown';
     const bodyMismatch = this.reelSystem.checkBodyTypeMismatch(reel, visitor);
