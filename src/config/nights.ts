@@ -37,7 +37,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     wigGuyAppears: false,
     returningVisitorChance: 0,
     kidExpenseChance: 0,
-    openingMonologue: "I would say I've done worse... if I could remember.",
+    openingMonologue: "A week of overnights. I would say I've done worse... if I could even remember...",
     closingMonologue: 'Not bad. 11 hours in the dark. But I survived.',
   },
 

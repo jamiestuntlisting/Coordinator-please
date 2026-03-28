@@ -122,8 +122,10 @@ export class EveningScene extends Phaser.Scene {
         const cur = this.fullMonologue[this.charIndex - 1];
         const next = this.fullMonologue[this.charIndex];
         const prev = this.fullMonologue[this.charIndex - 2];
-        if (cur === '.' && next === '.') this.typeDelay = 400;
-        else if (cur === '.' && prev === '.') this.typeDelay = 400;
+        // Dramatic beat: long pause after "..." before next word
+        if (cur === '.' && prev === '.' && next === ' ') this.typeDelay = 1200;
+        else if (cur === '.' && next === '.') this.typeDelay = 350;
+        else if (cur === '.' && prev === '.') this.typeDelay = 350;
         else this.typeDelay = 40;
 
         if (this.charIndex >= this.fullMonologue.length && !this.continueShown) {
