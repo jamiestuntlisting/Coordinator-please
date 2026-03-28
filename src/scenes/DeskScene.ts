@@ -98,6 +98,15 @@ export class DeskScene extends Phaser.Scene {
   private bribeAccepted: boolean = false;
   private conversationHistory: { question: string; answer: string }[] = [];
 
+  // Intertitle
+  private showingIntertitle: boolean = false;
+  private intertitleContainer: Phaser.GameObjects.Container | null = null;
+  // Visitor fade-in
+  private visitorFadeIn: boolean = false;
+  private visitorFadeElapsed: number = 0;
+  private visitorFadeDuration: number = 800;
+  private visitorSpriteContainer: Phaser.GameObjects.Container | null = null;
+
   // VHS effects
   private grainGraphics: Phaser.GameObjects.Graphics | null = null;
   private grainTimer: number = 0;
@@ -153,6 +162,11 @@ export class DeskScene extends Phaser.Scene {
     this.flickerTimer = 0;
     this.flickerInterval = randomInt(5000, 10000);
     this.workLightGfx = null;
+    this.showingIntertitle = false;
+    this.intertitleContainer = null;
+    this.visitorFadeIn = false;
+    this.visitorFadeElapsed = 0;
+    this.visitorSpriteContainer = null;
 
     // Store in GameStateManager
     this.gsm.updateState({
@@ -184,7 +198,7 @@ export class DeskScene extends Phaser.Scene {
     this.drawTopHalf();
     this.drawStatusBar();
     this.drawVHSOverlay();
-    this.presentVisitor(this.visitors[0]);
+    this.showIntertitle();
   }
 
   update(_time: number, delta: number): void {
@@ -207,6 +221,16 @@ export class DeskScene extends Phaser.Scene {
       this.flickerTimer = 0;
       this.flickerInterval = randomInt(5000, 10000);
       this.doLightFlicker();
+    }
+
+    // Visitor fade in from darkness
+    if (this.visitorFadeIn && this.visitorSpriteContainer) {
+      this.visitorFadeElapsed += delta;
+      const progress = Math.min(1, this.visitorFadeElapsed / this.visitorFadeDuration);
+      this.visitorSpriteContainer.setAlpha(progress);
+      if (progress >= 1) {
+        this.visitorFadeIn = false;
+      }
     }
   }
 
@@ -371,6 +395,47 @@ export class DeskScene extends Phaser.Scene {
 
     // --- Time display ---
     this.drawTimeDisplay();
+  }
+
+  private showIntertitle(): void {
+    this.showingIntertitle = true;
+    this.intertitleContainer = this.add.container(0, 0);
+    this.intertitleContainer.setDepth(50);
+
+    const gfx = this.add.graphics();
+    this.intertitleContainer.add(gfx);
+    gfx.fillStyle(0x050508, 1);
+    gfx.fillRect(0, 0, 800, 600);
+
+    // Subtle work light glow hint
+    gfx.fillStyle(0xf5d799, 0.03);
+    gfx.fillEllipse(400, 300, 300, 200);
+
+    const titleText = this.add.text(400, 260, 'A few stunties are\nhere to hustle you.', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '28px',
+      color: '#d4c5a0',
+      align: 'center',
+      lineSpacing: 8,
+    }).setOrigin(0.5);
+    this.intertitleContainer.add(titleText);
+
+    const continueText = this.add.text(400, 380, '[ TAP TO CONTINUE ]', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '16px',
+      color: '#6a6050',
+    }).setOrigin(0.5);
+    this.intertitleContainer.add(continueText);
+
+    // Use pointerdown to dismiss
+    this.input.once('pointerdown', () => {
+      if (this.intertitleContainer) {
+        this.intertitleContainer.destroy();
+        this.intertitleContainer = null;
+      }
+      this.showingIntertitle = false;
+      this.presentVisitor(this.visitors[0]);
+    });
   }
 
   private drawWorkLightGlow(alphaMultiplier: number): void {
@@ -569,11 +634,19 @@ export class DeskScene extends Phaser.Scene {
   // ---- Visitor sprite ----
   private drawCurrentVisitorSprite(): void {
     if (!this.currentVisitor) return;
+
+    this.visitorSpriteContainer = this.add.container(0, 0);
+    this.topHalfContainer.add(this.visitorSpriteContainer);
+    this.visitorSpriteContainer.setAlpha(0);
+    this.visitorFadeIn = true;
+    this.visitorFadeElapsed = 0;
+
     const gfx = this.add.graphics();
-    this.topHalfContainer.add(gfx);
+    this.visitorSpriteContainer.add(gfx);
 
     const vx = 400;
-    const vy = 146;
+    const vy = 105;
+    const s = 2.2; // scale factor
     const isMale = this.currentVisitor.gender === 'male';
     const bodyColor = isMale ? 0x4a5a7a : 0x7a4a6a;
     const skinColor = 0xc4a882;
@@ -581,105 +654,98 @@ export class DeskScene extends Phaser.Scene {
     const hairColor = isMale ? 0x2a2222 : 0x3a2a22;
 
     // Shadow on ground
-    gfx.fillStyle(0x000000, 0.2);
-    gfx.fillEllipse(vx, vy + 76, 40, 12);
+    gfx.fillStyle(0x000000, 0.25);
+    gfx.fillEllipse(vx, vy + 76*s, 40*s, 12*s);
 
     // Shoes
     gfx.fillStyle(0x1a1a22, 1);
-    gfx.fillRect(vx - 12, vy + 68, 10, 5);
-    gfx.fillRect(vx + 2, vy + 68, 10, 5);
+    gfx.fillRect(vx - 12*s, vy + 68*s, 10*s, 5*s);
+    gfx.fillRect(vx + 2*s, vy + 68*s, 10*s, 5*s);
 
     // Legs
     gfx.fillStyle(0x2a2a38, 1);
-    gfx.fillRect(vx - 10, vy + 46, 8, 24);
-    gfx.fillRect(vx + 2, vy + 46, 8, 24);
+    gfx.fillRect(vx - 10*s, vy + 46*s, 8*s, 24*s);
+    gfx.fillRect(vx + 2*s, vy + 46*s, 8*s, 24*s);
     // Knee highlights
     gfx.fillStyle(0x34344a, 0.5);
-    gfx.fillRect(vx - 9, vy + 54, 6, 3);
-    gfx.fillRect(vx + 3, vy + 54, 6, 3);
+    gfx.fillRect(vx - 9*s, vy + 54*s, 6*s, 3*s);
+    gfx.fillRect(vx + 3*s, vy + 54*s, 6*s, 3*s);
 
     // Belt
     gfx.fillStyle(0x2a2018, 1);
-    gfx.fillRect(vx - 15, vy + 42, 30, 5);
+    gfx.fillRect(vx - 15*s, vy + 42*s, 30*s, 5*s);
     // Belt buckle
     gfx.fillStyle(0x8a7a5a, 0.8);
-    gfx.fillRect(vx - 2, vy + 43, 4, 3);
+    gfx.fillRect(vx - 2*s, vy + 43*s, 4*s, 3*s);
 
     // Body / torso
     gfx.fillStyle(bodyColor, 0.9);
-    gfx.fillRect(vx - 15, vy, 30, 44);
+    gfx.fillRect(vx - 15*s, vy, 30*s, 44*s);
     // Shirt fold shadow
     gfx.fillStyle(0x000000, 0.1);
-    gfx.fillRect(vx - 1, vy + 6, 2, 34);
+    gfx.fillRect(vx - 1*s, vy + 6*s, 2*s, 34*s);
     // Collar
     gfx.fillStyle(isMale ? 0x5a6a8a : 0x8a5a7a, 1);
-    gfx.fillTriangle(vx - 8, vy, vx, vy + 8, vx - 14, vy + 2);
-    gfx.fillTriangle(vx + 8, vy, vx, vy + 8, vx + 14, vy + 2);
+    gfx.fillTriangle(vx - 8*s, vy, vx, vy + 8*s, vx - 14*s, vy + 2*s);
+    gfx.fillTriangle(vx + 8*s, vy, vx, vy + 8*s, vx + 14*s, vy + 2*s);
 
     // Arms
     gfx.fillStyle(bodyColor, 0.85);
-    gfx.fillRect(vx - 22, vy + 6, 8, 32);
-    gfx.fillRect(vx + 14, vy + 6, 8, 32);
+    gfx.fillRect(vx - 22*s, vy + 6*s, 8*s, 32*s);
+    gfx.fillRect(vx + 14*s, vy + 6*s, 8*s, 32*s);
     // Arm shadow (inner)
     gfx.fillStyle(0x000000, 0.08);
-    gfx.fillRect(vx - 16, vy + 8, 2, 28);
-    gfx.fillRect(vx + 14, vy + 8, 2, 28);
+    gfx.fillRect(vx - 16*s, vy + 8*s, 2*s, 28*s);
+    gfx.fillRect(vx + 14*s, vy + 8*s, 2*s, 28*s);
 
     // Hands
     gfx.fillStyle(skinColor, 0.85);
-    gfx.fillEllipse(vx - 18, vy + 40, 7, 7);
-    gfx.fillEllipse(vx + 18, vy + 40, 7, 7);
+    gfx.fillEllipse(vx - 18*s, vy + 40*s, 7*s, 7*s);
+    gfx.fillEllipse(vx + 18*s, vy + 40*s, 7*s, 7*s);
 
     // Neck
     gfx.fillStyle(skinColor, 0.85);
-    gfx.fillRect(vx - 4, vy - 5, 8, 8);
+    gfx.fillRect(vx - 4*s, vy - 5*s, 8*s, 8*s);
     // Neck shadow
     gfx.fillStyle(skinShadow, 0.5);
-    gfx.fillRect(vx - 4, vy - 2, 8, 4);
+    gfx.fillRect(vx - 4*s, vy - 2*s, 8*s, 4*s);
 
     // Head
     gfx.fillStyle(skinColor, 0.9);
-    gfx.fillEllipse(vx, vy - 12, 24, 28);
+    gfx.fillEllipse(vx, vy - 12*s, 24*s, 28*s);
 
     // Ear suggestions
     gfx.fillStyle(skinShadow, 0.7);
-    gfx.fillEllipse(vx - 12, vy - 10, 4, 6);
-    gfx.fillEllipse(vx + 12, vy - 10, 4, 6);
+    gfx.fillEllipse(vx - 12*s, vy - 10*s, 4*s, 6*s);
+    gfx.fillEllipse(vx + 12*s, vy - 10*s, 4*s, 6*s);
 
     // Hair
     gfx.fillStyle(hairColor, 1);
     if (isMale) {
-      // Short hair
-      gfx.fillEllipse(vx, vy - 22, 26, 14);
-      // Sideburns
-      gfx.fillRect(vx - 12, vy - 18, 3, 10);
-      gfx.fillRect(vx + 9, vy - 18, 3, 10);
+      gfx.fillEllipse(vx, vy - 22*s, 26*s, 14*s);
+      gfx.fillRect(vx - 12*s, vy - 18*s, 3*s, 10*s);
+      gfx.fillRect(vx + 9*s, vy - 18*s, 3*s, 10*s);
     } else {
-      // Longer hair
-      gfx.fillEllipse(vx, vy - 22, 28, 16);
-      gfx.fillRect(vx - 13, vy - 20, 4, 26);
-      gfx.fillRect(vx + 9, vy - 20, 4, 26);
+      gfx.fillEllipse(vx, vy - 22*s, 28*s, 16*s);
+      gfx.fillRect(vx - 13*s, vy - 20*s, 4*s, 26*s);
+      gfx.fillRect(vx + 9*s, vy - 20*s, 4*s, 26*s);
     }
 
     // Eyes
     gfx.fillStyle(0xffffff, 0.9);
-    gfx.fillEllipse(vx - 5, vy - 12, 5, 3);
-    gfx.fillEllipse(vx + 5, vy - 12, 5, 3);
+    gfx.fillEllipse(vx - 5*s, vy - 12*s, 5*s, 3*s);
+    gfx.fillEllipse(vx + 5*s, vy - 12*s, 5*s, 3*s);
     gfx.fillStyle(0x1a1a1a, 1);
-    gfx.fillCircle(vx - 5, vy - 12, 1.5);
-    gfx.fillCircle(vx + 5, vy - 12, 1.5);
+    gfx.fillCircle(vx - 5*s, vy - 12*s, 1.5*s);
+    gfx.fillCircle(vx + 5*s, vy - 12*s, 1.5*s);
 
     // Nose
     gfx.fillStyle(skinShadow, 0.5);
-    gfx.fillTriangle(vx, vy - 8, vx - 2, vy - 4, vx + 2, vy - 4);
+    gfx.fillTriangle(vx, vy - 8*s, vx - 2*s, vy - 4*s, vx + 2*s, vy - 4*s);
 
     // Mouth
     gfx.fillStyle(0x8a5a4a, 0.6);
-    gfx.fillEllipse(vx, vy - 2, 6, 2);
-
-    // Slight shadow on the visitor (edge of light pool)
-    gfx.fillStyle(0x050508, 0.15);
-    gfx.fillRect(vx - 24, vy - 28, 48, 108);
+    gfx.fillEllipse(vx, vy - 2*s, 6*s, 2*s);
   }
 
   // ================================================================
@@ -706,7 +772,7 @@ export class DeskScene extends Phaser.Scene {
     // Night info
     const nightLabel = this.add.text(16, 568, `NIGHT ${this.night}/7`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '14px',
+      fontSize: '16px',
       color: '#d4c5a0',
       fontStyle: 'bold',
     });
@@ -715,7 +781,7 @@ export class DeskScene extends Phaser.Scene {
     // Time
     const timeLabel = this.add.text(130, 568, timeStr, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '14px',
+      fontSize: '16px',
       color: '#d4c5a0',
     });
     this.statusBar.add(timeLabel);
@@ -723,7 +789,7 @@ export class DeskScene extends Phaser.Scene {
     // Roles
     const rolesLabel = this.add.text(240, 568, `Roles: ${filledCount}/${totalRoles}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '14px',
+      fontSize: '16px',
       color: '#d4c5a0',
     });
     this.statusBar.add(rolesLabel);
@@ -731,7 +797,7 @@ export class DeskScene extends Phaser.Scene {
     // Money in gold
     const moneyLabel = this.add.text(400, 568, `$${state.money}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '18px',
       color: '#e8c36a',
       fontStyle: 'bold',
     });
@@ -770,7 +836,7 @@ export class DeskScene extends Phaser.Scene {
 
     const repLabel = this.add.text(barX + barW + 6, barY - 1, `REP ${state.reputation}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '12px',
+      fontSize: '14px',
       color: '#d4c5a0',
     });
     this.statusBar.add(repLabel);
@@ -795,30 +861,30 @@ export class DeskScene extends Phaser.Scene {
 
     // Panel dividers with subtle depth
     gfx.lineStyle(1, 0x2a261e, 1);
-    gfx.lineBetween(250, 285, 250, 555);
-    gfx.lineBetween(530, 285, 530, 555);
+    gfx.lineBetween(200, 285, 200, 555);
+    gfx.lineBetween(540, 285, 540, 555);
 
     // Panel backgrounds in slightly different shades
     // Headshot panel
     gfx.fillStyle(0x171510, 1);
-    gfx.fillRect(1, 281, 249, 274);
+    gfx.fillRect(1, 281, 199, 274);
     // Resume panel
     gfx.fillStyle(0x18160e, 1);
-    gfx.fillRect(251, 281, 278, 274);
+    gfx.fillRect(201, 281, 338, 274);
     // Book/Reel panel
     gfx.fillStyle(0x161410, 1);
-    gfx.fillRect(531, 281, 269, 274);
+    gfx.fillRect(541, 281, 259, 274);
 
     // Subtle inner borders for each panel
     gfx.lineStyle(1, 0x1e1c16, 0.5);
-    gfx.strokeRect(4, 284, 243, 268);
-    gfx.strokeRect(254, 284, 272, 268);
-    gfx.strokeRect(534, 284, 262, 268);
+    gfx.strokeRect(4, 284, 193, 268);
+    gfx.strokeRect(204, 284, 332, 268);
+    gfx.strokeRect(544, 284, 252, 268);
 
     // Paper texture on resume panel (faint horizontal lines every 12px)
     gfx.lineStyle(1, 0x1e1c14, 0.15);
     for (let py = 296; py < 552; py += 12) {
-      gfx.lineBetween(255, py, 525, py);
+      gfx.lineBetween(205, py, 535, py);
     }
 
     // LEFT: Headshot
@@ -836,15 +902,15 @@ export class DeskScene extends Phaser.Scene {
 
     const headerText = this.add.text(hx, hy, 'HEADSHOT', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '11px',
+      fontSize: '14px',
       color: '#6a6050',
       letterSpacing: 2,
     });
     this.bottomHalfContainer.add(headerText);
 
     const photoY = hy + 20;
-    const photoW = 130;
-    const photoH = 165;
+    const photoW = 110;
+    const photoH = 140;
     const skinBase = visitor.gender === 'male' ? 0x8a6a4a : 0x9a7a5a;
     const hairColor = visitor.gender === 'male' ? 0x3a2a1a : 0x4a3020;
 
@@ -934,7 +1000,7 @@ export class DeskScene extends Phaser.Scene {
 
       const nameText = this.add.text(hx + 4, photoY + photoH + 6, visitor.name, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '11px',
+        fontSize: '14px',
         color: '#d4c5a0',
       });
       this.bottomHalfContainer.add(nameText);
@@ -995,7 +1061,7 @@ export class DeskScene extends Phaser.Scene {
 
       const nameText = this.add.text(hx + 4, photoY + photoH + 6, visitor.name, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '11px',
+        fontSize: '14px',
         color: '#d4c5a0',
       });
       this.bottomHalfContainer.add(nameText);
@@ -1077,7 +1143,7 @@ export class DeskScene extends Phaser.Scene {
 
       const nameText = this.add.text(hx + 4, photoY + photoH + 6, visitor.name, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '11px',
+        fontSize: '14px',
         color: '#aaaaaa',
       });
       this.bottomHalfContainer.add(nameText);
@@ -1091,7 +1157,7 @@ export class DeskScene extends Phaser.Scene {
     };
     const typeText = this.add.text(hx, photoY + photoH + 22, typeLabels[visitor.headshot.type] ?? '', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '9px',
+      fontSize: '12px',
       color: '#6a6050',
     });
     this.bottomHalfContainer.add(typeText);
@@ -1170,12 +1236,12 @@ export class DeskScene extends Phaser.Scene {
 
   // ---- Resume Panel ----
   private drawResume(visitor: Visitor): void {
-    const rx = 264;
+    const rx = 214;
     let ry = 290;
 
     const headerText = this.add.text(rx, ry, 'RESUME', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '11px',
+      fontSize: '14px',
       color: '#6a6050',
       letterSpacing: 2,
     });
@@ -1184,7 +1250,7 @@ export class DeskScene extends Phaser.Scene {
 
     const nameText = this.add.text(rx, ry, visitor.name, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '20px',
+      fontSize: '22px',
       color: '#d4c5a0',
       fontStyle: 'bold',
     });
@@ -1200,7 +1266,7 @@ export class DeskScene extends Phaser.Scene {
     };
     const sagText = this.add.text(rx, ry, `SAG: ${visitor.resume.sagStatus.toUpperCase()}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '18px',
       color: sagColors[visitor.resume.sagStatus] ?? '#888070',
       fontStyle: 'bold',
     });
@@ -1210,7 +1276,7 @@ export class DeskScene extends Phaser.Scene {
     // Height / Weight
     const hwText = this.add.text(rx, ry, `${visitor.resume.listedHeight}  ${visitor.resume.listedWeight}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '18px',
       color: '#d4c5a0',
     });
     this.bottomHalfContainer.add(hwText);
@@ -1219,7 +1285,7 @@ export class DeskScene extends Phaser.Scene {
     // Skills
     const skillsHeader = this.add.text(rx, ry, 'Skills:', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '12px',
+      fontSize: '14px',
       color: '#6a6050',
     });
     this.bottomHalfContainer.add(skillsHeader);
@@ -1240,7 +1306,7 @@ export class DeskScene extends Phaser.Scene {
     // Credits (limited to 3, with word wrap)
     const creditsHeader = this.add.text(rx, ry, 'Credits:', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '12px',
+      fontSize: '14px',
       color: '#6a6050',
     });
     this.bottomHalfContainer.add(creditsHeader);
@@ -1250,9 +1316,9 @@ export class DeskScene extends Phaser.Scene {
       visitor.resume.credits.slice(0, 3).forEach(credit => {
         const creditText = this.add.text(rx + 8, ry, `- ${credit}`, {
           fontFamily: 'Courier New, monospace',
-          fontSize: '12px',
+          fontSize: '14px',
           color: '#d4c5a0',
-          wordWrap: { width: 250 },
+          wordWrap: { width: 300 },
         });
         this.bottomHalfContainer.add(creditText);
         ry += 15;
@@ -1260,7 +1326,7 @@ export class DeskScene extends Phaser.Scene {
     } else {
       const noneText = this.add.text(rx + 8, ry, '(none)', {
         fontFamily: 'Courier New, monospace',
-        fontSize: '12px',
+        fontSize: '14px',
         color: '#6a6050',
       });
       this.bottomHalfContainer.add(noneText);
@@ -1271,7 +1337,7 @@ export class DeskScene extends Phaser.Scene {
     // Coordinator refs
     const refsHeader = this.add.text(rx, ry, 'Coord Refs:', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '11px',
+      fontSize: '14px',
       color: '#6a6050',
     });
     this.bottomHalfContainer.add(refsHeader);
@@ -1282,9 +1348,9 @@ export class DeskScene extends Phaser.Scene {
         const refColor = ref.realCoordinator ? '#d4c5a0' : '#6a6050';
         const refText = this.add.text(rx + 8, ry, `- ${ref.name} (${ref.city})`, {
           fontFamily: 'Courier New, monospace',
-          fontSize: '12px',
+          fontSize: '14px',
           color: refColor,
-          wordWrap: { width: 250 },
+          wordWrap: { width: 300 },
         });
         this.bottomHalfContainer.add(refText);
         ry += 15;
@@ -1292,7 +1358,7 @@ export class DeskScene extends Phaser.Scene {
     } else {
       const noneText = this.add.text(rx + 8, ry, '(none)', {
         fontFamily: 'Courier New, monospace',
-        fontSize: '12px',
+        fontSize: '14px',
         color: '#6a6050',
       });
       this.bottomHalfContainer.add(noneText);
@@ -1306,7 +1372,7 @@ export class DeskScene extends Phaser.Scene {
 
     const headerText = this.add.text(px, py, 'STUNT LISTING BOOK', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '11px',
+      fontSize: '14px',
       color: '#6a6050',
       letterSpacing: 2,
     });
@@ -1319,23 +1385,23 @@ export class DeskScene extends Phaser.Scene {
     const lookupBg = this.add.graphics();
     this.bottomHalfContainer.add(lookupBg);
     lookupBg.fillStyle(0x2a2618, 1);
-    lookupBg.fillRoundedRect(px, py, 220, 24, 3);
+    lookupBg.fillRoundedRect(px, py, 220, 34, 3);
     lookupBg.lineStyle(1, 0x5a4a2a, 1);
-    lookupBg.strokeRoundedRect(px, py, 220, 24, 3);
+    lookupBg.strokeRoundedRect(px, py, 220, 34, 3);
 
-    const lookupBtn = this.add.text(px + 8, py + 4, `LOOK UP: ${lastName}`, {
+    const lookupBtn = this.add.text(px + 8, py + 7, `LOOK UP: ${lastName}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '14px',
+      fontSize: '16px',
       color: '#e8c36a',
       fontStyle: 'bold',
     }).setInteractive({ useHandCursor: true });
     this.bottomHalfContainer.add(lookupBtn);
-    py += 30;
+    py += 40;
 
     // Book result area
     this.bookResultText = this.add.text(px, py, '', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '12px',
+      fontSize: '14px',
       color: '#d4c5a0',
       wordWrap: { width: 230 },
       lineSpacing: 4,
@@ -1354,7 +1420,7 @@ export class DeskScene extends Phaser.Scene {
 
     const reelHeader = this.add.text(px, reelY, 'SKILL REEL', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '11px',
+      fontSize: '14px',
       color: '#6a6050',
       letterSpacing: 2,
     });
@@ -1379,7 +1445,7 @@ export class DeskScene extends Phaser.Scene {
 
     this.reelDisplayText = this.add.text(px + 14, reelY + 30, visitor.skillReel ? 'TAPE READY' : 'NO TAPE', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '14px',
+      fontSize: '16px',
       color: visitor.skillReel ? '#4a7a4f' : '#6a6050',
     });
     this.bottomHalfContainer.add(this.reelDisplayText);
@@ -1388,13 +1454,13 @@ export class DeskScene extends Phaser.Scene {
       const playBg = this.add.graphics();
       this.bottomHalfContainer.add(playBg);
       playBg.fillStyle(0x2a2618, 1);
-      playBg.fillRoundedRect(px, reelY + 104, 140, 24, 3);
+      playBg.fillRoundedRect(px, reelY + 104, 140, 34, 3);
       playBg.lineStyle(1, 0x5a4a2a, 1);
-      playBg.strokeRoundedRect(px, reelY + 104, 140, 24, 3);
+      playBg.strokeRoundedRect(px, reelY + 104, 140, 34, 3);
 
-      const playBtn = this.add.text(px + 8, reelY + 108, 'PLAY REEL', {
+      const playBtn = this.add.text(px + 8, reelY + 111, 'PLAY REEL', {
         fontFamily: 'Courier New, monospace',
-        fontSize: '14px',
+        fontSize: '16px',
         color: '#e8c36a',
         fontStyle: 'bold',
       }).setInteractive({ useHandCursor: true });
@@ -1411,24 +1477,24 @@ export class DeskScene extends Phaser.Scene {
   private drawDialogue(visitor: Visitor): void {
     this.dialogueContainer.removeAll(true);
 
-    const panelX = 250;
-    const btnY = 440;
-    const convoY = 460;
-    const convoH = 90;
+    const panelX = 10;
+    const btnY = 432;
+    const convoY = 480;
+    const convoH = 74;
 
     const gfx = this.add.graphics();
     this.dialogueContainer.add(gfx);
 
     // Conversation history panel background
     gfx.fillStyle(0x0e0e14, 0.92);
-    gfx.fillRoundedRect(panelX, convoY, 280, convoH, 4);
+    gfx.fillRoundedRect(panelX, convoY, 520, convoH, 4);
     gfx.lineStyle(1, 0x2a2a36, 0.8);
-    gfx.strokeRoundedRect(panelX, convoY, 280, convoH, 4);
+    gfx.strokeRoundedRect(panelX, convoY, 520, convoH, 4);
 
-    // Render conversation history (last 3-4 entries)
+    // Render conversation history
     this.renderConversationHistory(panelX, convoY, convoH);
 
-    // Dialogue option buttons (above conversation panel)
+    // Dialogue option buttons — full width, row above conversation
     const options = [
       { key: 'tell_me_about_experience', label: 'Experience?' },
       { key: 'about_your_reel', label: 'Skills?' },
@@ -1436,20 +1502,26 @@ export class DeskScene extends Phaser.Scene {
       { key: 'are_you_sag', label: 'SAG?' },
     ];
 
+    const btnW = 150;
+    const btnH = 34;
+    const btnGap = 6;
+    const startX = panelX;
+
     options.forEach((opt, i) => {
-      const bx = 254 + i * 68;
+      const bx = startX + i * (btnW + btnGap);
       const btnBg = this.add.graphics();
       this.dialogueContainer.add(btnBg);
       btnBg.fillStyle(0x1a1816, 0.9);
-      btnBg.fillRoundedRect(bx - 2, btnY - 2, 62, 20, 2);
-      btnBg.lineStyle(1, 0x3a352e, 0.6);
-      btnBg.strokeRoundedRect(bx - 2, btnY - 2, 62, 20, 2);
+      btnBg.fillRoundedRect(bx, btnY, btnW, btnH, 4);
+      btnBg.lineStyle(1, 0x3a352e, 0.8);
+      btnBg.strokeRoundedRect(bx, btnY, btnW, btnH, 4);
 
-      const btn = this.add.text(bx + 2, btnY + 1, opt.label, {
+      const btn = this.add.text(bx + btnW / 2, btnY + btnH / 2, opt.label, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '10px',
+        fontSize: '14px',
         color: '#e8c36a',
-      }).setInteractive({ useHandCursor: true });
+        fontStyle: 'bold',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
       btn.on('pointerdown', () => {
         this.idleTimer = 0;
@@ -1461,43 +1533,45 @@ export class DeskScene extends Phaser.Scene {
       this.dialogueContainer.add(btn);
     });
 
-    // Action buttons (below conversation panel)
-    const actionY = convoY + convoH + 4;
+    // Action buttons — HIRE and GET LOST, big and prominent
+    const actionY = convoY + convoH + 6;
+    const actionBtnW = 180;
+    const actionBtnH = 40;
 
-    // HIRE button (green background)
+    // HIRE button
     const hireBg = this.add.graphics();
     this.dialogueContainer.add(hireBg);
     hireBg.fillStyle(0x1a3a1e, 1);
-    hireBg.fillRoundedRect(258, actionY - 2, 80, 26, 4);
-    hireBg.lineStyle(1, 0x4a7a4f, 1);
-    hireBg.strokeRoundedRect(258, actionY - 2, 80, 26, 4);
+    hireBg.fillRoundedRect(panelX, actionY, actionBtnW, actionBtnH, 6);
+    hireBg.lineStyle(2, 0x4a7a4f, 1);
+    hireBg.strokeRoundedRect(panelX, actionY, actionBtnW, actionBtnH, 6);
 
-    const hireBtn = this.add.text(268, actionY + 2, 'HIRE', {
+    const hireBtn = this.add.text(panelX + actionBtnW / 2, actionY + actionBtnH / 2, 'HIRE', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '20px',
       color: '#6aba6f',
       fontStyle: 'bold',
-    }).setInteractive({ useHandCursor: true });
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     hireBtn.on('pointerdown', () => {
       this.idleTimer = 0;
       this.showRolePicker(visitor);
     });
     this.dialogueContainer.add(hireBtn);
 
-    // GET LOST button (red background)
+    // GET LOST button
     const rejectBg = this.add.graphics();
     this.dialogueContainer.add(rejectBg);
     rejectBg.fillStyle(0x3a1a1a, 1);
-    rejectBg.fillRoundedRect(390, actionY - 2, 130, 26, 4);
-    rejectBg.lineStyle(1, 0xc4553a, 1);
-    rejectBg.strokeRoundedRect(390, actionY - 2, 130, 26, 4);
+    rejectBg.fillRoundedRect(panelX + actionBtnW + 10, actionY, actionBtnW + 40, actionBtnH, 6);
+    rejectBg.lineStyle(2, 0xc4553a, 1);
+    rejectBg.strokeRoundedRect(panelX + actionBtnW + 10, actionY, actionBtnW + 40, actionBtnH, 6);
 
-    const rejectBtn = this.add.text(400, actionY + 2, 'GET LOST', {
+    const rejectBtn = this.add.text(panelX + actionBtnW + 10 + (actionBtnW + 40) / 2, actionY + actionBtnH / 2, 'GET LOST', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '20px',
       color: '#e06050',
       fontStyle: 'bold',
-    }).setInteractive({ useHandCursor: true });
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     rejectBtn.on('pointerdown', () => {
       this.idleTimer = 0;
       this.rejectVisitor(visitor);
@@ -1510,7 +1584,7 @@ export class DeskScene extends Phaser.Scene {
     const maxVisible = 4;
     const entries = this.conversationHistory.slice(-maxVisible);
     let ty = convoY + 4;
-    const lineH = 10;
+    const lineH = 14;
     const maxLineY = convoY + convoH - 4;
 
     if (entries.length === 0) {
@@ -1518,9 +1592,9 @@ export class DeskScene extends Phaser.Scene {
       // (greeting text is set via showVisitorResponse after drawDialogue)
       this.currentDialogueText = this.add.text(panelX + 8, ty, '', {
         fontFamily: 'Courier New, monospace',
-        fontSize: '11px',
+        fontSize: '14px',
         color: '#d4c5a0',
-        wordWrap: { width: 260 },
+        wordWrap: { width: 500 },
         lineSpacing: 2,
       });
       this.dialogueContainer.add(this.currentDialogueText);
@@ -1536,9 +1610,9 @@ export class DeskScene extends Phaser.Scene {
       // Question (dim)
       const qText = this.add.text(panelX + 8, ty, `> ${entry.question}`, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '10px',
+        fontSize: '12px',
         color: '#6a6050',
-        wordWrap: { width: 260 },
+        wordWrap: { width: 500 },
       });
       this.dialogueContainer.add(qText);
       ty += lineH + 2;
@@ -1548,9 +1622,9 @@ export class DeskScene extends Phaser.Scene {
       // Answer (bright)
       const aText = this.add.text(panelX + 8, ty, entry.answer, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '11px',
+        fontSize: '14px',
         color: '#d4c5a0',
-        wordWrap: { width: 260 },
+        wordWrap: { width: 500 },
         lineSpacing: 1,
       });
       this.dialogueContainer.add(aText);
