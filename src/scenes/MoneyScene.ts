@@ -204,15 +204,8 @@ export class MoneyScene extends Phaser.Scene {
       sepGfx.setAlpha(0);
       this.tweens.add({ targets: sepGfx, alpha: 1, duration: 100 });
     } else {
-      // Format with dot leaders
       const amountStr = this.formatAmount(item.amount);
-      const maxWidth = 40;
-      const labelLen = item.label.length + (item.isSubItem ? 2 : 0);
-      const amountLen = amountStr.length;
-      const dotCount = Math.max(2, maxWidth - labelLen - amountLen);
-      const dots = '.'.repeat(dotCount);
       const prefix = item.isSubItem ? '  ' : '';
-      const fullLine = `${prefix}${item.label} ${dots} ${amountStr}`;
 
       const isBold = item.isTotalLine || item.isRunningTotal;
       const fontSize = item.isRunningTotal ? '22px' : (isBold ? '20px' : '18px');
@@ -232,21 +225,31 @@ export class MoneyScene extends Phaser.Scene {
         underGfx.lineBetween(150, y - 6, 650, y - 6);
       }
 
-      // Color shift when expenses > income — make background redder
       let lineColor = item.color;
       if (item.isBribe) {
-        lineColor = '#8a7a4a'; // Tainted money color
+        lineColor = '#8a7a4a';
       }
 
-      const text = this.add.text(leftX, y, fullLine, {
+      // Label on left
+      const labelText = this.add.text(leftX, y, `${prefix}${item.label}`, {
         fontFamily: 'Courier New, monospace',
         fontSize: fontSize,
         color: lineColor,
         fontStyle: isBold ? 'bold' : 'normal',
       }).setAlpha(0);
 
-      this.tweens.add({ targets: text, alpha: 1, duration: 150 });
-      this.lineTexts.push(text);
+      // Amount right-aligned in fixed column
+      const amountText = this.add.text(620, y, amountStr, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: fontSize,
+        color: lineColor,
+        fontStyle: isBold ? 'bold' : 'normal',
+      }).setOrigin(1, 0).setAlpha(0);
+
+      this.tweens.add({ targets: labelText, alpha: 1, duration: 150 });
+      this.tweens.add({ targets: amountText, alpha: 1, duration: 150 });
+      this.lineTexts.push(labelText);
+      this.lineTexts.push(amountText);
     }
 
     this.currentLine++;

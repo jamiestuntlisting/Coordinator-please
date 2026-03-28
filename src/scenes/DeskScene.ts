@@ -98,6 +98,11 @@ export class DeskScene extends Phaser.Scene {
   private bribeAccepted: boolean = false;
   private bribeRefused: boolean = false;
   private conversationHistory: { question: string; answer: string }[] = [];
+
+  // Real-time clock
+  private clockElapsed: number = 0;
+  private clockText: Phaser.GameObjects.Text | null = null;
+  private statusTimeText: Phaser.GameObjects.Text | null = null;
   private dialogueClickCounts: Record<string, number> = {};
   private reelAnimating: boolean = false;
   private reelAnimFrame: number = 0;
@@ -178,6 +183,9 @@ export class DeskScene extends Phaser.Scene {
     this.reelAnimFrame = 0;
     this.reelAnimElapsed = 0;
     this.pendingReelVisitor = null;
+    this.clockElapsed = 0;
+    this.clockText = null;
+    this.statusTimeText = null;
 
     // Store in GameStateManager
     this.gsm.updateState({
@@ -241,15 +249,41 @@ export class DeskScene extends Phaser.Scene {
       }
     }
 
-    // Reel animation
+    // Real-time clock — tick up every 3 seconds of real time = 1 minute game time
+    this.clockElapsed += delta;
+    if (this.clockElapsed >= 3000) {
+      this.clockElapsed = 0;
+      const state = this.gsm.getCurrentState();
+      const newTime = state.timeOfNight + (1 / 60); // +1 minute
+      this.gsm.updateState({ timeOfNight: newTime });
+      // Update displays
+      const timeStr = this.formatTime(newTime);
+      if (this.clockText) this.clockText.setText(timeStr);
+      if (this.statusTimeText) this.statusTimeText.setText(timeStr);
+
+      // Check deadline
+      if (newTime >= this.nightConfig.hiringDeadline && !this.nightDone) {
+        this.endNight();
+      }
+    }
+
+    // Reel animation — animate the stick figure performing the stunt
     if (this.reelAnimating && this.reelDisplayText) {
       this.reelAnimElapsed += delta;
-      if (this.reelAnimElapsed > 150) {
+      if (this.reelAnimElapsed > 200) {
         this.reelAnimElapsed = 0;
         this.reelAnimFrame++;
-        const frames = ['\u25b6 PLAYING...', '\u25b6\u25b6 PLAYING...', '\u25b6\u25b6\u25b6 PLAYING...', '\u25b6 PLAYING...'];
-        this.reelDisplayText.setText(frames[this.reelAnimFrame % frames.length]);
-        if (this.reelAnimFrame >= 8) {
+        const dots = '.'.repeat((this.reelAnimFrame % 3) + 1);
+        this.reelDisplayText.setText(`▶ PLAYING${dots}`);
+
+        // Draw animated frame in monitor
+        if (this.pendingReelVisitor?.skillReel) {
+          const animation = REEL_ANIMATIONS.find(a => a.id === this.pendingReelVisitor!.skillReel!.animationId);
+          const animType = animation ? animation.stuntType : 'unknown';
+          this.drawReelAnimFrame(animType, this.reelAnimFrame);
+        }
+
+        if (this.reelAnimFrame >= 10) {
           this.reelAnimating = false;
           this.showReelResult();
         }
@@ -639,22 +673,32 @@ export class DeskScene extends Phaser.Scene {
   }
 
   private drawTimeDisplay(): void {
-    const timeStr = this.formatTime(this.gsm.getCurrentState().timeOfNight);
+    const state = this.gsm.getCurrentState();
+    const timeStr = this.formatTime(state.timeOfNight);
+    const deadlineStr = this.formatTime(this.nightConfig.hiringDeadline);
 
     // Dark panel behind time
     const panelGfx = this.add.graphics();
     this.topHalfContainer.add(panelGfx);
     panelGfx.fillStyle(0x0a0a12, 0.7);
-    panelGfx.fillRoundedRect(690, 6, 100, 26, 4);
+    panelGfx.fillRoundedRect(620, 6, 170, 26, 4);
     panelGfx.lineStyle(1, 0x2a2a36, 0.5);
-    panelGfx.strokeRoundedRect(690, 6, 100, 26, 4);
+    panelGfx.strokeRoundedRect(620, 6, 170, 26, 4);
 
-    const timeText = this.add.text(740, 12, timeStr, {
+    this.clockText = this.add.text(660, 12, timeStr, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#a09880',
     }).setOrigin(0.5, 0);
-    this.topHalfContainer.add(timeText);
+    this.topHalfContainer.add(this.clockText);
+
+    // Deadline indicator
+    const deadlineLabel = this.add.text(750, 12, `DL: ${deadlineStr}`, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '12px',
+      color: '#c4553a',
+    }).setOrigin(0.5, 0);
+    this.topHalfContainer.add(deadlineLabel);
   }
 
   // ---- Visitor sprite ----
@@ -674,10 +718,11 @@ export class DeskScene extends Phaser.Scene {
     const vy = 160;
     const s = 4.0; // scale factor
     const isMale = this.currentVisitor.gender === 'male';
-    const bodyColor = isMale ? 0x4a5a7a : 0x7a4a6a;
-    const skinColor = 0xc4a882;
-    const skinShadow = 0xa08862;
-    const hairColor = isMale ? 0x2a2222 : 0x3a2a22;
+    const app = this.currentVisitor.appearance;
+    const bodyColor = app.shirtColor;
+    const skinColor = app.skinTone;
+    const skinShadow = app.skinShadow;
+    const hairColor = app.hairColor;
 
     // Shadow on ground
     gfx.fillStyle(0x000000, 0.25);
@@ -689,7 +734,7 @@ export class DeskScene extends Phaser.Scene {
     gfx.fillRect(vx + 2*s, vy + 68*s, 10*s, 5*s);
 
     // Legs
-    gfx.fillStyle(0x2a2a38, 1);
+    gfx.fillStyle(app.pantsColor, 1);
     gfx.fillRect(vx - 10*s, vy + 46*s, 8*s, 24*s);
     gfx.fillRect(vx + 2*s, vy + 46*s, 8*s, 24*s);
     // Knee highlights
@@ -711,7 +756,7 @@ export class DeskScene extends Phaser.Scene {
     gfx.fillStyle(0x000000, 0.1);
     gfx.fillRect(vx - 1*s, vy + 6*s, 2*s, 34*s);
     // Collar
-    gfx.fillStyle(isMale ? 0x5a6a8a : 0x8a5a7a, 1);
+    gfx.fillStyle(app.shirtColor + 0x101010, 1);
     gfx.fillTriangle(vx - 8*s, vy, vx, vy + 8*s, vx - 14*s, vy + 2*s);
     gfx.fillTriangle(vx + 8*s, vy, vx, vy + 8*s, vx + 14*s, vy + 2*s);
 
@@ -745,16 +790,54 @@ export class DeskScene extends Phaser.Scene {
     gfx.fillEllipse(vx - 12*s, vy - 10*s, 4*s, 6*s);
     gfx.fillEllipse(vx + 12*s, vy - 10*s, 4*s, 6*s);
 
-    // Hair
+    // Hair — varies by style
     gfx.fillStyle(hairColor, 1);
-    if (isMale) {
-      gfx.fillEllipse(vx, vy - 22*s, 26*s, 14*s);
-      gfx.fillRect(vx - 12*s, vy - 18*s, 3*s, 10*s);
-      gfx.fillRect(vx + 9*s, vy - 18*s, 3*s, 10*s);
-    } else {
-      gfx.fillEllipse(vx, vy - 22*s, 28*s, 16*s);
-      gfx.fillRect(vx - 13*s, vy - 20*s, 4*s, 26*s);
-      gfx.fillRect(vx + 9*s, vy - 20*s, 4*s, 26*s);
+    switch (app.hairStyle) {
+      case 'bald':
+        // Just show scalp (no hair drawn)
+        gfx.fillStyle(skinColor, 0.95);
+        gfx.fillEllipse(vx, vy - 22*s, 24*s, 12*s);
+        break;
+      case 'buzzcut':
+        gfx.fillEllipse(vx, vy - 22*s, 25*s, 13*s);
+        break;
+      case 'short':
+        gfx.fillEllipse(vx, vy - 22*s, 26*s, 14*s);
+        gfx.fillRect(vx - 12*s, vy - 18*s, 3*s, 10*s);
+        gfx.fillRect(vx + 9*s, vy - 18*s, 3*s, 10*s);
+        break;
+      case 'medium':
+        gfx.fillEllipse(vx, vy - 22*s, 28*s, 16*s);
+        gfx.fillRect(vx - 13*s, vy - 18*s, 4*s, 16*s);
+        gfx.fillRect(vx + 9*s, vy - 18*s, 4*s, 16*s);
+        break;
+      case 'long':
+        gfx.fillEllipse(vx, vy - 22*s, 28*s, 16*s);
+        gfx.fillRect(vx - 13*s, vy - 20*s, 4*s, 30*s);
+        gfx.fillRect(vx + 9*s, vy - 20*s, 4*s, 30*s);
+        break;
+      case 'ponytail':
+        gfx.fillEllipse(vx, vy - 22*s, 26*s, 14*s);
+        // Ponytail behind head
+        gfx.fillRect(vx + 10*s, vy - 18*s, 3*s, 20*s);
+        gfx.fillEllipse(vx + 11*s, vy + 2*s, 4*s, 4*s);
+        break;
+    }
+
+    // Beard
+    if (app.hasBeard) {
+      gfx.fillStyle(hairColor, 0.6);
+      gfx.fillEllipse(vx, vy - 1*s, 10*s, 6*s);
+      gfx.fillRect(vx - 6*s, vy - 6*s, 2*s, 6*s);
+      gfx.fillRect(vx + 4*s, vy - 6*s, 2*s, 6*s);
+    }
+
+    // Glasses
+    if (app.hasGlasses) {
+      gfx.lineStyle(1.5*s, 0x2a2a2a, 0.8);
+      gfx.strokeCircle(vx - 5*s, vy - 12*s, 3.5*s);
+      gfx.strokeCircle(vx + 5*s, vy - 12*s, 3.5*s);
+      gfx.lineBetween(vx - 1.5*s, vy - 12*s, vx + 1.5*s, vy - 12*s);
     }
 
     // Eyes
@@ -818,12 +901,12 @@ export class DeskScene extends Phaser.Scene {
     this.statusBar.add(nightLabel);
 
     // Time
-    const timeLabel = this.add.text(130, 876, timeStr, {
+    this.statusTimeText = this.add.text(130, 876, timeStr, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#d4c5a0',
     });
-    this.statusBar.add(timeLabel);
+    this.statusBar.add(this.statusTimeText);
 
     // Roles
     const rolesLabel = this.add.text(240, 876, `Roles: ${filledCount}/${totalRoles}`, {
@@ -950,8 +1033,10 @@ export class DeskScene extends Phaser.Scene {
     const photoY = hy + 20;
     const photoW = 110;
     const photoH = 140;
-    const skinBase = visitor.gender === 'male' ? 0x8a6a4a : 0x9a7a5a;
-    const hairColor = visitor.gender === 'male' ? 0x3a2a1a : 0x4a3020;
+    // Use visitor appearance for headshot skin/hair if face matches, otherwise randomize
+    const app = visitor.appearance;
+    const skinBase = visitor.headshot.matchesFace ? app.skinTone : (visitor.gender === 'male' ? 0x8a6a4a : 0x9a7a5a);
+    const hairColor = visitor.headshot.matchesFace ? app.hairColor : (visitor.gender === 'male' ? 0x3a2a1a : 0x4a3020);
 
     if (visitor.headshot.type === 'color_8x10') {
       // White border (photo border)
@@ -1187,6 +1272,23 @@ export class DeskScene extends Phaser.Scene {
       });
       this.bottomHalfContainer.add(nameText);
     }
+
+    // Make headshot clickable
+    const headshotZone = this.add.zone(hx + photoW / 2, photoY + photoH / 2, photoW, photoH)
+      .setInteractive({ useHandCursor: true });
+    this.bottomHalfContainer.add(headshotZone);
+    headshotZone.on('pointerdown', () => {
+      this.idleTimer = 0;
+      if (!visitor.headshot.matchesFace) {
+        // Headshot doesn't match — trigger mismatch dialogue
+        const response = visitor.dialogueResponses['headshot_mismatch'] ?? 'Uh... that\'s me. Definitely me.';
+        this.conversationHistory.push({ question: 'This headshot doesn\'t look like you...', answer: response });
+        this.drawDialogue(visitor);
+      } else {
+        this.conversationHistory.push({ question: '', answer: '[Headshot matches. Looks legit.]' });
+        this.drawDialogue(visitor);
+      }
+    });
 
     // Photo type label
     const typeLabels: Record<string, string> = {
@@ -1478,7 +1580,7 @@ export class DeskScene extends Phaser.Scene {
       { key: 'tell_me_about_experience', label: 'Experience?' },
       { key: 'about_your_reel', label: 'Skills?' },
       { key: 'where_are_you_from', label: 'From where?' },
-      { key: 'are_you_sag', label: 'SAG?' },
+      { key: 'are_you_sag', label: 'Show SAG Card' },
     ];
 
     const totalW = 780;
@@ -1509,6 +1611,12 @@ export class DeskScene extends Phaser.Scene {
         const responseKey = count <= 1 ? opt.key : `${opt.key}_${count}`;
         const response = visitor.dialogueResponses[responseKey] ?? visitor.dialogueResponses[opt.key] ?? '...';
         this.conversationHistory.push({ question: opt.label, answer: response });
+
+        // Show SAG card visual when asking about SAG
+        if (opt.key === 'are_you_sag' && count === 1) {
+          this.showSagCardVisual(visitor);
+        }
+
         this.drawDialogue(visitor);
       });
 
@@ -1529,12 +1637,13 @@ export class DeskScene extends Phaser.Scene {
     const actionY = 820;
     const actionBtnH = 36;
 
-    // HIRE button — shows bribe amount if active
     const hasBribe = visitor.bribeOffer && !this.bribeAccepted && !this.bribeRefused;
+
+    // HIRE button — shows bribe if present
     const hireLabelText = hasBribe
       ? `HIRE (w/ $${visitor.bribeOffer!.amount})`
       : 'HIRE';
-    const hireBtnW = hasBribe ? 300 : 250;
+    const hireBtnW = 380;
 
     const hireBg = this.add.graphics();
     this.dialogueContainer.add(hireBg);
@@ -1551,7 +1660,6 @@ export class DeskScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     hireBtn.on('pointerdown', () => {
       this.idleTimer = 0;
-      // Auto-accept bribe when hiring if not refused
       if (visitor.bribeOffer && !this.bribeAccepted && !this.bribeRefused) {
         this.handleBribe(visitor, true);
       }
@@ -1559,33 +1667,13 @@ export class DeskScene extends Phaser.Scene {
     });
     this.dialogueContainer.add(hireBtn);
 
-    // REFUSE $ button next to HIRE (if bribe is active and not yet handled)
-    const refuseX = 10 + hireBtnW + 8;
-    if (hasBribe) {
-      const refuseBribeBg = this.add.graphics();
-      this.dialogueContainer.add(refuseBribeBg);
-      refuseBribeBg.fillStyle(0x3a1a1a, 0.8);
-      refuseBribeBg.fillRoundedRect(refuseX, actionY, 90, actionBtnH, 6);
-      refuseBribeBg.lineStyle(1, 0xc4553a, 0.8);
-      refuseBribeBg.strokeRoundedRect(refuseX, actionY, 90, actionBtnH, 6);
+    // GET LOST button — if bribe is active, say "keep your money"
+    const getLostX = 398;
+    const getLostW = 392;
+    const getLostLabel = hasBribe
+      ? `GET LOST (keep your $${visitor.bribeOffer!.amount})`
+      : 'GET LOST';
 
-      const refuseBribeBtn = this.add.text(refuseX + 45, actionY + actionBtnH / 2, 'REFUSE $', {
-        fontFamily: 'Courier New, monospace',
-        fontSize: '14px',
-        color: '#e06050',
-        fontStyle: 'bold',
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-      refuseBribeBtn.on('pointerdown', () => {
-        this.handleBribe(visitor, false);
-        this.bribeRefused = true;
-        this.drawDialogue(visitor);
-      });
-      this.dialogueContainer.add(refuseBribeBtn);
-    }
-
-    // GET LOST button
-    const getLostX = hasBribe ? refuseX + 98 : 270;
-    const getLostW = hasBribe ? 280 : 300;
     const rejectBg = this.add.graphics();
     this.dialogueContainer.add(rejectBg);
     rejectBg.fillStyle(0x3a1a1a, 1);
@@ -1593,9 +1681,9 @@ export class DeskScene extends Phaser.Scene {
     rejectBg.lineStyle(2, 0xc4553a, 1);
     rejectBg.strokeRoundedRect(getLostX, actionY, getLostW, actionBtnH, 6);
 
-    const rejectBtn = this.add.text(getLostX + getLostW / 2, actionY + actionBtnH / 2, 'GET LOST', {
+    const rejectBtn = this.add.text(getLostX + getLostW / 2, actionY + actionBtnH / 2, getLostLabel, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '20px',
+      fontSize: hasBribe ? '14px' : '20px',
       color: '#e06050',
       fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
@@ -1607,16 +1695,11 @@ export class DeskScene extends Phaser.Scene {
   }
 
   private renderConversationHistory(panelX: number, convoY: number, convoH: number): void {
-    // Show last 2 conversation entries (or greeting if no history)
-    const maxVisible = 2;
-    const entries = this.conversationHistory.slice(-maxVisible);
+    // Always show the MOST RECENT entry only (so user sees latest Q&A)
     let ty = convoY + 4;
-    const lineH = 14;
-    const maxLineY = convoY + convoH - 4;
 
-    if (entries.length === 0) {
+    if (this.conversationHistory.length === 0) {
       // Show the greeting as a single response
-      // (greeting text is set via showVisitorResponse after drawDialogue)
       this.currentDialogueText = this.add.text(panelX + 8, ty, '', {
         fontFamily: 'Courier New, monospace',
         fontSize: '16px',
@@ -1628,13 +1711,13 @@ export class DeskScene extends Phaser.Scene {
       return;
     }
 
-    // We have conversation entries; no need for standalone currentDialogueText
     this.currentDialogueText = null;
 
-    entries.forEach(entry => {
-      if (ty >= maxLineY) return;
+    // Show only the last entry — always visible, never cut off
+    const entry = this.conversationHistory[this.conversationHistory.length - 1];
 
-      // Question (dim)
+    // Question (dim) — skip if it's a system message (empty question)
+    if (entry.question) {
       const qText = this.add.text(panelX + 8, ty, `> ${entry.question}`, {
         fontFamily: 'Courier New, monospace',
         fontSize: '14px',
@@ -1642,23 +1725,18 @@ export class DeskScene extends Phaser.Scene {
         wordWrap: { width: 760 },
       });
       this.dialogueContainer.add(qText);
-      ty += lineH + 2;
+      ty += 18;
+    }
 
-      if (ty >= maxLineY) return;
-
-      // Answer (bright)
-      const aText = this.add.text(panelX + 8, ty, entry.answer, {
-        fontFamily: 'Courier New, monospace',
-        fontSize: '16px',
-        color: '#d4c5a0',
-        wordWrap: { width: 760 },
-        lineSpacing: 1,
-      });
-      this.dialogueContainer.add(aText);
-      // Estimate height of wrapped text
-      const estimatedLines = Math.ceil(entry.answer.length / 36);
-      ty += estimatedLines * (lineH + 1) + 4;
+    // Answer (bright)
+    const aText = this.add.text(panelX + 8, ty, entry.answer, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '16px',
+      color: '#d4c5a0',
+      wordWrap: { width: 760 },
+      lineSpacing: 1,
     });
+    this.dialogueContainer.add(aText);
   }
 
   // ================================================================
@@ -1782,6 +1860,94 @@ export class DeskScene extends Phaser.Scene {
       // If no standalone dialogue text (conversation mode), add as a system entry
       this.conversationHistory.push({ question: '', answer: text });
       this.drawDialogue(this.currentVisitor);
+    }
+  }
+
+  private showSagCardVisual(visitor: Visitor): void {
+    // Show a SAG card overlay in the bottom-left area (over headshot)
+    const cardGfx = this.add.graphics();
+    this.bottomHalfContainer.add(cardGfx);
+
+    const cx = 16;
+    const cy = 580;
+    const cw = 170;
+    const ch = 100;
+
+    if (visitor.sagCard && visitor.sagCard.present) {
+      // Card background
+      cardGfx.fillStyle(visitor.sagCard.valid ? 0xd8d0b8 : 0xc8b898, 1);
+      cardGfx.fillRoundedRect(cx, cy, cw, ch, 4);
+      cardGfx.lineStyle(1, 0x8a7a5a, 1);
+      cardGfx.strokeRoundedRect(cx, cy, cw, ch, 4);
+
+      // SAG logo area
+      cardGfx.fillStyle(0x2a4a8a, 1);
+      cardGfx.fillRect(cx + 8, cy + 6, 50, 14);
+
+      const sagLabel = this.add.text(cx + 12, cy + 8, 'SAG', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '10px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+      });
+      this.bottomHalfContainer.add(sagLabel);
+
+      // Member name
+      const cardName = this.add.text(cx + 8, cy + 26, visitor.sagCard.name, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '11px',
+        color: '#1a1a1a',
+        fontStyle: 'bold',
+        wordWrap: { width: cw - 16 },
+      });
+      this.bottomHalfContainer.add(cardName);
+
+      // Status
+      const statusColor = visitor.sagCard.valid ? '#2a6a2a' : '#8a2a2a';
+      const statusLabel = visitor.sagCard.valid ? 'CURRENT' : 'EXPIRED';
+      const statusText = this.add.text(cx + 8, cy + 50, statusLabel, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '12px',
+        color: statusColor,
+        fontStyle: 'bold',
+      });
+      this.bottomHalfContainer.add(statusText);
+
+      // Membership number (fake)
+      const memNum = this.add.text(cx + 8, cy + 68, `#${Math.floor(Math.random() * 900000 + 100000)}`, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '10px',
+        color: '#4a4a4a',
+      });
+      this.bottomHalfContainer.add(memNum);
+
+      // If expired, add a red stamp
+      if (!visitor.sagCard.valid) {
+        cardGfx.lineStyle(3, 0xc44020, 0.6);
+        cardGfx.strokeRect(cx + 60, cy + 40, 90, 30);
+        const expiredStamp = this.add.text(cx + 105, cy + 48, 'EXPIRED', {
+          fontFamily: 'Courier New, monospace',
+          fontSize: '12px',
+          color: '#c44020',
+          fontStyle: 'bold',
+        }).setOrigin(0.5).setAngle(-8);
+        this.bottomHalfContainer.add(expiredStamp);
+      }
+    } else {
+      // No card
+      cardGfx.fillStyle(0x1a1a22, 0.8);
+      cardGfx.fillRoundedRect(cx, cy, cw, ch, 4);
+      cardGfx.lineStyle(1, 0x3a3a44, 0.6);
+      cardGfx.strokeRoundedRect(cx, cy, cw, ch, 4);
+
+      const noCard = this.add.text(cx + cw / 2, cy + ch / 2, 'NO SAG CARD\nSHOWN', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '14px',
+        color: '#c4553a',
+        fontStyle: 'bold',
+        align: 'center',
+      }).setOrigin(0.5);
+      this.bottomHalfContainer.add(noCard);
     }
   }
 
@@ -2013,6 +2179,125 @@ export class DeskScene extends Phaser.Scene {
         fontStyle: 'bold',
       }).setOrigin(0.5, 0);
       this.bottomHalfContainer.add(warnText);
+    }
+  }
+
+  private drawReelAnimFrame(stuntType: string, frame: number): void {
+    // Animate inside the reel monitor area
+    const mx = 558;
+    const my = 562;
+    const mw = 218;
+    const mh = 68;
+
+    // Clear previous frame by drawing over it
+    const clearGfx = this.add.graphics();
+    this.bottomHalfContainer.add(clearGfx);
+    clearGfx.fillStyle(0x0a0a2a, 1);
+    clearGfx.fillRect(mx, my, mw, mh);
+
+    // VHS tracking lines
+    clearGfx.fillStyle(0x1a1a4a, 0.5);
+    clearGfx.fillRect(mx, my + randomInt(0, mh), mw, 1);
+
+    const figX = mx + mw / 2;
+    const figY = my + 28;
+    const phase = frame % 4;
+
+    // Ground line
+    clearGfx.fillStyle(0x2a2a5a, 0.8);
+    clearGfx.fillRect(mx + 10, my + 50, mw - 20, 1);
+
+    clearGfx.fillStyle(0xd4c5a0, 0.9);
+
+    if (stuntType === 'fight') {
+      // Two figures fighting — animate punches
+      const punchOffset = phase % 2 === 0 ? 8 : -2;
+      clearGfx.fillCircle(figX - 20, figY - 8, 4);
+      clearGfx.fillRect(figX - 21, figY - 4, 3, 14);
+      clearGfx.fillRect(figX - 18, figY - 2 + (phase % 2) * 4, punchOffset + 10, 2);
+      clearGfx.fillCircle(figX + 15, figY - 6 - (phase % 2) * 3, 4);
+      clearGfx.fillRect(figX + 14, figY - 2, 3, 14);
+      // Impact flash on hit frames
+      if (phase === 1) {
+        clearGfx.fillStyle(0xf5d799, 0.8);
+        clearGfx.fillCircle(figX, figY - 2, 4);
+      }
+    } else if (stuntType === 'high_fall' || stuntType === 'stair_fall') {
+      // Figure falling down over frames
+      const fallY = figY - 15 + phase * 8;
+      const rotation = phase * 15;
+      clearGfx.fillCircle(figX + phase * 2, fallY, 4);
+      clearGfx.fillRect(figX - 1 + phase * 2, fallY + 4, 3, 12);
+      // Arms flailing
+      clearGfx.fillRect(figX - 8 + phase * 3, fallY + 2, 6, 2);
+      clearGfx.fillRect(figX + 3 - phase * 2, fallY + 6, 6, 2);
+      // Legs
+      clearGfx.fillRect(figX - 4 + phase, fallY + 16, 2, 6);
+      clearGfx.fillRect(figX + 2 - phase, fallY + 16, 2, 6);
+    } else if (stuntType === 'car_hit') {
+      // Car approaches then hits figure
+      const carX = figX - 40 + phase * 12;
+      clearGfx.fillStyle(0x4a4a6a, 0.8);
+      clearGfx.fillRect(carX, figY + 2, 30, 12);
+      clearGfx.fillRect(carX + 5, figY - 6, 20, 8);
+      clearGfx.fillStyle(0x1a1a2a, 1);
+      clearGfx.fillCircle(carX + 6, figY + 14, 3);
+      clearGfx.fillCircle(carX + 22, figY + 14, 3);
+      // Figure getting hit and flying
+      clearGfx.fillStyle(0xd4c5a0, 0.9);
+      const flyX = figX + 10 + phase * 5;
+      const flyY = figY - 8 - phase * 4;
+      clearGfx.fillCircle(flyX, flyY, 4);
+      clearGfx.fillRect(flyX - 1, flyY + 4, 3, 10);
+    } else if (stuntType === 'fire_gag') {
+      // Figure on fire — flames animate
+      clearGfx.fillCircle(figX, figY - 8, 4);
+      clearGfx.fillRect(figX - 1, figY - 4, 3, 14);
+      clearGfx.fillRect(figX - 6, figY - 2, 4, 2);
+      clearGfx.fillRect(figX + 3, figY - 2, 4, 2);
+      // Animated flames
+      const flameH = 10 + phase * 3;
+      clearGfx.fillStyle(0xe8a030, 0.5 + phase * 0.1);
+      clearGfx.fillTriangle(figX - 6, figY - flameH, figX - 10, figY + 4, figX - 2, figY + 4);
+      clearGfx.fillTriangle(figX + 6, figY - flameH - 2, figX + 2, figY + 2, figX + 10, figY + 2);
+      clearGfx.fillStyle(0xc44020, 0.4 + phase * 0.1);
+      clearGfx.fillTriangle(figX, figY - flameH - 4, figX - 4, figY - 4, figX + 4, figY - 4);
+    } else if (stuntType === 'wire_work') {
+      // Figure swinging on wire
+      const swingX = figX + Math.sin(phase * 1.5) * 15;
+      clearGfx.lineStyle(1, 0x8a8a9a, 0.6);
+      clearGfx.lineBetween(figX, my + 2, swingX, figY - 12);
+      clearGfx.fillStyle(0xd4c5a0, 0.9);
+      clearGfx.fillCircle(swingX, figY - 8, 4);
+      clearGfx.fillRect(swingX - 1, figY - 4, 3, 12);
+      clearGfx.fillRect(swingX - 10, figY - 2, 8, 2);
+      clearGfx.fillRect(swingX + 3, figY - 2, 8, 2);
+    } else {
+      // Actor close-up — just a face acting
+      clearGfx.fillStyle(0xc4a882, 0.9);
+      clearGfx.fillEllipse(figX, figY, 28, 34);
+      // Eyes
+      clearGfx.fillStyle(0x1a1a1a, 1);
+      const eyeOpen = phase % 2 === 0;
+      if (eyeOpen) {
+        clearGfx.fillCircle(figX - 6, figY - 4, 2);
+        clearGfx.fillCircle(figX + 6, figY - 4, 2);
+      } else {
+        clearGfx.fillRect(figX - 8, figY - 4, 4, 1);
+        clearGfx.fillRect(figX + 4, figY - 4, 4, 1);
+      }
+      // Mouth changes expression
+      clearGfx.fillStyle(0x8a4a3a, 0.6);
+      if (phase === 0) clearGfx.fillEllipse(figX, figY + 8, 8, 2);
+      else if (phase === 1) clearGfx.fillEllipse(figX, figY + 8, 10, 4);
+      else if (phase === 2) clearGfx.fillEllipse(figX, figY + 8, 6, 6);
+      else clearGfx.fillEllipse(figX, figY + 8, 8, 3);
+    }
+
+    // REC indicator blinks
+    if (phase % 2 === 0) {
+      clearGfx.fillStyle(0xc44020, 0.8);
+      clearGfx.fillCircle(mx + mw - 12, my + 8, 3);
     }
   }
 
@@ -2301,6 +2586,7 @@ export class DeskScene extends Phaser.Scene {
       wasReturning: visitor.isReturning,
     });
 
+    // No rep change for rejections (passed_legit = 0, passed_faker = 0)
     const outcome: HireOutcome = isFaker ? 'passed_faker' : 'passed_legit';
     const state = this.gsm.getCurrentState();
     const { repChange } = this.reputationSystem.applyHireResult(outcome, state);
@@ -2309,20 +2595,13 @@ export class DeskScene extends Phaser.Scene {
       state.rejectedVisitors.push(visitor.id);
     }
 
-    this.hireResults.push({
-      visitorId: visitor.id,
-      visitorName: visitor.name,
-      roleId: '',
-      roleTitle: isFaker ? '(caught faker)' : '(rejected)',
-      outcome,
-      repChange,
-      wasInjured: false,
-      injury: null,
-    });
-
+    // Don't add rejected visitors to hireResults — they won't show in results
     this.drawStatusBar();
-    this.showVisitorResponse(`[${visitor.name} leaves.]`);
-    this.time.delayedCall(400, () => this.nextVisitor());
+
+    // Show their departing dialogue
+    const getLostResponse = visitor.dialogueResponses['get_lost'] ?? `*${visitor.name} leaves quietly*`;
+    this.showVisitorResponse(getLostResponse);
+    this.time.delayedCall(1200, () => this.nextVisitor());
   }
 
   private nextVisitor(): void {
@@ -2526,6 +2805,16 @@ export class DeskScene extends Phaser.Scene {
         { description: 'Kid broke his glasses', cost: 45 },
         { description: 'Birthday party gift', cost: 20 },
         { description: 'Doctor visit copay', cost: 25 },
+        { description: 'Ex called. "Emergency"', cost: 50 },
+        { description: 'Dog ate the remote again', cost: 18 },
+        { description: 'Parking ticket (again)', cost: 35 },
+        { description: 'VCR ate a rental tape', cost: 12 },
+        { description: 'Replaced pager battery', cost: 8 },
+        { description: 'Towed from wrong spot', cost: 60 },
+        { description: 'Sunglasses sat on', cost: 22 },
+        { description: 'Lost bet to grip dept', cost: 20 },
+        { description: 'Bought lunch for the PA', cost: 14 },
+        { description: 'Late fee at Blockbuster', cost: 6 },
       ];
       kidExpense = randomPick(kidExpenses);
     }

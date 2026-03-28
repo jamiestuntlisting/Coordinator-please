@@ -4,6 +4,7 @@
 
 import type {
   Visitor,
+  VisitorAppearance,
   NightConfig,
   GameState,
   Gender,
@@ -242,10 +243,12 @@ export class VisitorGenerator {
     const insuranceTalk = chance(0.5) ? pick(INSURANCE_TALK_LEGIT) : null;
 
     const dialogueResponses = this.generateDialogueResponses(true, personality, name);
+    const appearance = this.generateAppearance(gender);
 
     return {
       id: nextId(),
       name,
+      appearance,
       canDoTheJob: true,
       isStuntPerformer: true,
       claimedCity: LOCAL_CITY,
@@ -392,10 +395,12 @@ export class VisitorGenerator {
     } : null;
 
     const dialogueResponses = this.generateDialogueResponses(false, personality, name);
+    const appearance = this.generateAppearance(gender);
 
     return {
       id: nextId(),
       name,
+      appearance,
       canDoTheJob: canDoJob,
       isStuntPerformer,
       claimedCity,
@@ -446,6 +451,7 @@ export class VisitorGenerator {
     return {
       id: nextId(),
       name: 'Wig Guy',
+      appearance: this.generateAppearance('male'),
       canDoTheJob: false,
       isStuntPerformer: false,
       claimedCity: LOCAL_CITY,
@@ -499,6 +505,7 @@ export class VisitorGenerator {
     return {
       id: nextId(),
       name: 'SAG Representative',
+      appearance: this.generateAppearance('male'),
       canDoTheJob: false,
       isStuntPerformer: false,
       claimedCity: LOCAL_CITY,
@@ -567,6 +574,7 @@ export class VisitorGenerator {
       ...original,
       id: nextId(),
       name: newName,
+      appearance: this.generateAppearance(original.gender),
       headshot,
       bodyType: body,
       resume,
@@ -640,6 +648,7 @@ export class VisitorGenerator {
       hasPhoto: chance(0.5),
     } : null;
 
+    const appearance = this.generateAppearance(gender);
     const dialogueResponses = this.generateDialogueResponses(isLegit, personality, name);
     // Override greeting to reference family
     dialogueResponses['greeting'] = pick([
@@ -657,6 +666,7 @@ export class VisitorGenerator {
     return {
       id: nextId(),
       name,
+      appearance,
       canDoTheJob: isLegit,
       isStuntPerformer: isLegit,
       claimedCity: LOCAL_CITY,
@@ -722,6 +732,39 @@ export class VisitorGenerator {
     }
 
     return { height, weight, build };
+  }
+
+  generateAppearance(gender: Gender): VisitorAppearance {
+    const skinTones = [
+      { skin: 0xf5d0b0, shadow: 0xc8a880 },   // light
+      { skin: 0xe8c090, shadow: 0xb89868 },   // fair
+      { skin: 0xc4a070, shadow: 0x9a7848 },   // medium
+      { skin: 0xb08850, shadow: 0x886838 },   // olive
+      { skin: 0x8a6030, shadow: 0x684820 },   // brown
+      { skin: 0x6a4020, shadow: 0x4a2a10 },   // dark brown
+      { skin: 0xd4b090, shadow: 0xa88868 },   // warm
+      { skin: 0xc09870, shadow: 0x907050 },   // tan
+    ];
+    const skinChoice = pick(skinTones);
+
+    const hairColors = [0x1a1a1a, 0x2a1a0a, 0x4a3020, 0x6a4a2a, 0x8a6a3a, 0x3a2a1a, 0x5a3a1a, 0xaa7a40, 0xc09050, 0x1a0a0a];
+    const maleHairStyles: VisitorAppearance['hairStyle'][] = ['short', 'buzzcut', 'bald', 'medium'];
+    const femaleHairStyles: VisitorAppearance['hairStyle'][] = ['medium', 'long', 'ponytail', 'short'];
+    const shirtColors = [0x4a5a7a, 0x7a4a4a, 0x4a7a5a, 0x6a5a4a, 0x5a4a7a, 0x7a6a3a, 0x3a5a6a, 0x6a3a5a, 0x4a4a5a, 0x7a5a5a, 0x3a6a4a, 0x5a6a3a];
+    const pantsColors = [0x2a2a38, 0x3a3a2a, 0x2a3a3a, 0x383838, 0x2a2a2a, 0x3a2a2a, 0x28283a];
+
+    const resolvedGender = gender === 'any' ? (chance(0.5) ? 'male' : 'female') : gender;
+
+    return {
+      skinTone: skinChoice.skin,
+      skinShadow: skinChoice.shadow,
+      hairColor: pick(hairColors),
+      hairStyle: resolvedGender === 'male' ? pick(maleHairStyles) : pick(femaleHairStyles),
+      shirtColor: pick(shirtColors),
+      pantsColor: pick(pantsColors),
+      hasBeard: resolvedGender === 'male' && chance(0.3),
+      hasGlasses: chance(0.15),
+    };
   }
 
   pickPersonality(): PersonalityType {
@@ -912,7 +955,7 @@ export class VisitorGenerator {
       ]);
       responses['where_are_you_from_3'] = pick([
         '*defensive* What are you, immigration? I live here now. That\'s all that should matter. Can we move on?',
-        '*getting uncomfortable* I moved around a lot as a kid. LA is where I ended up. Is that a problem?',
+        '*getting uncomfortable* I moved around a lot as a kid. Localville is where I ended up. Is that a problem?',
         '*crosses arms* I don\'t see why my whole life story matters. I\'m standing right here. I\'m available. What else do you need?',
       ]);
     }
@@ -926,6 +969,23 @@ export class VisitorGenerator {
         'A friend took it for me.',
       ]);
 
+    // Headshot mismatch (asked when headshot doesn't match face)
+    if (isLegit) {
+      responses['headshot_mismatch'] = pick([
+        'What? That\'s me. I just got a haircut. People change, you know.',
+        'It\'s from a couple years ago. I\'ve gained a little weight since then. So what?',
+        'That\'s definitely me. The lighting was different. Studio lights wash everyone out.',
+      ]);
+    } else {
+      responses['headshot_mismatch'] = pick([
+        '*shifts nervously* What do you mean? That\'s me. Totally me.',
+        'I... uh... lost some weight since then. A lot of weight. It\'s me though.',
+        '*sweating* The photographer said it was a bad angle. It\'s definitely my headshot.',
+        '*looks at headshot* Oh. Uh. Yeah, that\'s... I mean, I had work done since then.',
+        '*avoids eye contact* My agent mixed up the headshots. That one\'s mine though. For sure.',
+      ]);
+    }
+
     // Book listing question
     if (isLegit) {
       responses['are_you_in_the_book'] = 'Should be. I update my listing every year.';
@@ -935,6 +995,31 @@ export class VisitorGenerator {
         'I just moved, so it might be under my old info.',
         'What book?',
         'Yeah, should be in there somewhere.',
+      ]);
+    }
+
+    // GET LOST response (departing dialogue)
+    if (isLegit) {
+      responses['get_lost'] = pick([
+        'Your loss, pal. I\'ll be on the next gig by morning.',
+        '*shakes head* You\'re making a mistake. But that\'s your problem.',
+        'Fine. I got three coordinators who\'d hire me tonight. Good luck finding someone better.',
+        'Alright. No hard feelings. But you\'re gonna wish you\'d kept me.',
+        '*gathers headshot* I\'ll remember this. This business is small.',
+        'Your call. But don\'t come crying when your guy can\'t do a 40-footer.',
+      ]);
+    } else {
+      responses['get_lost'] = pick([
+        '*mutters* This is bull. I came all the way down here for nothing.',
+        'Whatever, man. You don\'t know what you\'re missing.',
+        '*storms off* You\'ll regret this!',
+        'Fine! I didn\'t want your stupid gig anyway!',
+        '*quietly picks up headshot and leaves*',
+        'Alright alright, I\'m going. Jeez.',
+        '*under breath* ...jerk.',
+        'This ain\'t the last you\'ll see of me.',
+        'Yeah? Well my cousin works at the production office, so...',
+        '*kicks chair on the way out*',
       ]);
     }
 

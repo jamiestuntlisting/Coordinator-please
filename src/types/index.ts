@@ -76,9 +76,21 @@ export interface BribeOffer {
   dialogue: string;
 }
 
+export interface VisitorAppearance {
+  skinTone: number;       // hex color for skin
+  skinShadow: number;     // hex color for skin shadow
+  hairColor: number;      // hex color for hair
+  hairStyle: 'short' | 'medium' | 'long' | 'bald' | 'ponytail' | 'buzzcut';
+  shirtColor: number;     // hex color for shirt/top
+  pantsColor: number;     // hex color for pants
+  hasBeard: boolean;
+  hasGlasses: boolean;
+}
+
 export interface Visitor {
   id: string;
   name: string;
+  appearance: VisitorAppearance;
   canDoTheJob: boolean;
   isStuntPerformer: boolean;
   claimedCity: string;

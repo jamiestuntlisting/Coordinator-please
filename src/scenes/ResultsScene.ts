@@ -58,9 +58,11 @@ export class ResultsScene extends Phaser.Scene {
     gfx.lineStyle(1, 0x3a352e, 0.6);
     gfx.lineBetween(80, 78, 720, 78);
 
-    // Hire outcomes — report card style
+    // Hire outcomes — only show people who were actually cast (filter out rejections)
     let y = 88;
-    const hires = this.nightResult.hires;
+    const hires = this.nightResult.hires.filter((h: HireResult) =>
+      h.outcome !== 'passed_legit' && h.outcome !== 'passed_faker'
+    );
 
     hires.forEach((hire: HireResult) => {
       if (y > 400) return; // overflow guard

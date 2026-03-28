@@ -10,7 +10,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     noteDescription: '',
     roles: [
       {
-        title: 'Fight Double',
+        title: 'Fight Sequence',
         stuntType: 'fight',
         riskLevel: 'medium',
         requiredGender: 'male',
@@ -61,7 +61,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
         sagRequired: false,
       },
       {
-        title: 'Car Reaction',
+        title: 'Car Hit',
         stuntType: 'car_hit',
         riskLevel: 'medium',
         requiredGender: 'any',
@@ -99,7 +99,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
   {
     night: 3,
     noteType: 'added_role',
-    noteDescription: 'Production added an extra role mid-shift.',
+    noteDescription: 'Production wants everyone over 6\'0" tonight.',
     roles: [
       {
         title: 'Stair Fall',
@@ -112,7 +112,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
         sagRequired: false,
       },
       {
-        title: 'Fight Double',
+        title: 'Fight Sequence',
         stuntType: 'fight',
         riskLevel: 'medium',
         requiredGender: 'male',
@@ -376,7 +376,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
         sagRequired: true,
       },
       {
-        title: 'Fight Double',
+        title: 'Fight Sequence',
         stuntType: 'fight',
         riskLevel: 'medium',
         requiredGender: 'male',
