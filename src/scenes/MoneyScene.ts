@@ -138,12 +138,11 @@ export class MoneyScene extends Phaser.Scene {
 
     // Expenses
     const expenses: { label: string; amount: number }[] = [
-      { label: 'Rent', amount: state.rent },
-      { label: 'Child support (Wife #1)', amount: state.childSupportWife1 },
-      { label: 'Child support (Wife #2)', amount: state.childSupportWife2 },
-      { label: 'Car payment', amount: state.carPayment },
-      { label: 'Gym', amount: state.gym },
-      { label: 'Pager', amount: state.pager },
+      { label: 'Rent',             amount: state.rent },
+      { label: 'Car payment',      amount: state.carPayment },
+      { label: 'Physical therapy', amount: state.physicalTherapy },
+      { label: 'Gym',              amount: state.gym },
+      { label: 'Pager',            amount: state.pager },
     ];
 
     let totalExpenses = 0;

@@ -56,20 +56,22 @@ const SKILLS_LIST = [
 ];
 
 const CREDITS_LIST = [
-  'Die Hard 3', 'Lethal Weapon 4', 'Speed 2', 'Batman Forever',
-  'Broken Arrow', 'The Rock', 'Twister', 'Mission: Impossible',
-  'Waterworld', 'Heat', 'Crimson Tide', 'Braveheart',
-  'GoldenEye', 'Apollo 13', 'Desperado', 'Under Siege 2',
-  'Mortal Kombat', 'Judge Dredd', 'Congo', 'Outbreak',
+  'Die Hard 3 (1995)', 'Lethal Weapon 3 (1992)', 'Speed (1994)', 'Batman Forever (1995)',
+  'Broken Arrow (1995)', 'The Rock (1995)', 'Twister (1994)', 'Mission: Impossible (1995)',
+  'Waterworld (1995)', 'Heat (1995)', 'Crimson Tide (1994)', 'Braveheart (1993)',
+  'GoldenEye (1995)', 'Apollo 13 (1994)', 'Desperado (1995)', 'Under Siege 2 (1995)',
+  'Mortal Kombat (1993)', 'Judge Dredd (1993)', 'Cliffhanger (1993)', 'Outbreak (1994)',
+  'Total Recall (1990)', 'Die Hard 2 (1990)', 'Terminator 2 (1991)', 'The Fugitive (1993)',
+  'Point Break (1991)', 'Last Action Hero (1993)', 'Demolition Man (1993)', 'Hard Target (1993)',
 ];
 
 const COORDINATOR_NAMES = [
-  'Pat Romano', 'Jeff Imada', 'Terry Leonard', 'Buddy Joe Hooker',
-  'Dick Ziker', 'Ronnie Rondell', 'Mickey Gilbert', 'Conrad Palmisano',
-  'Glenn Wilder', 'Ernie Orsatti', 'Bob Minor', 'Jeannie Epper',
+  'Big Mike DeLuca', 'Sally Fontaine', 'Dutch Morrison', 'Ray Kaminski',
+  'Pepper Washington', 'Lou Bracco', 'Vince Taglia', 'Margie Coolidge',
+  'Hal Tremaine', 'Rick Stonewall',
 ];
 
-const LOCAL_CITY = 'Los Angeles';
+const LOCAL_CITY = 'Localville';
 const FAKER_CITIES = ['Atlanta', 'Vancouver', 'New York', 'Miami', 'Chicago'];
 
 const HOW_HEARD_OPTIONS = [
@@ -422,11 +424,15 @@ export class VisitorGenerator {
     const body = this.generateBodyType();
 
     const wigDialogue: Record<string, string> = {
-      greeting: `Hey, hey, hey! It's me again! Night ${night}, baby!`,
+      greeting: `Hey. *adjusts obviously crooked wig* I'm here for the gig. Night ${night}, baby!`,
+      tell_me_about_experience: '*wig slides to one side* Oh yeah, tons of experience. Wigs, stunts, you name it.',
       what_do_you_want: 'I got wigs! You need wigs? Every stunt needs a good wig!',
       no_thanks: 'You sure? I got a beautiful piece — real horsehair. Stallone wore one just like it.',
-      who_are_you: 'I\'m the wig guy! Everybody knows the wig guy!',
-      go_away: 'Alright, alright. But you know where to find me!',
+      who_are_you: '*pushes wig back into place* I\'m the wig guy! Everybody knows the wig guy!',
+      go_away: 'Alright, alright. *wig falls forward over eyes* But you know where to find me!',
+      where_are_you_from: '*straightens wig nervously* I\'m from right here! Born and raised... probably.',
+      are_you_sag: '*wig tilts sideways* SAG? I\'m in the... wig guild. Same thing.',
+      about_your_reel: '*wig nearly falls off* My reel? It\'s... being remastered. Lots of wig work on there.',
     };
 
     return {
@@ -674,6 +680,10 @@ export class VisitorGenerator {
         'Been doing this fifteen years. Started as a utility, worked my way up.',
         'I\'ve doubled for a couple leads — nothing huge, but I know what I\'m doing.',
         'My coordinator can vouch for me. I work clean, no problems.',
+        'Twenty years in the business. I started when falls paid fifty bucks and a handshake.',
+        'I was Bobby Barton\'s regular double for three years. He\'ll tell you himself.',
+        'I specialize in fire gags. Nobody does them cleaner.',
+        'Last month I did a 60-foot fall off a building for a Paramount picture. No pads, just boxes.',
       ]);
       responses['tell_me_about_experience_2'] = pick([
         'I doubled for a lead on that one Universal picture. Three weeks, no complaints. The coordinator brought me back for the sequel.',
@@ -690,6 +700,10 @@ export class VisitorGenerator {
         'Oh yeah, I\'ve done tons of stuff. You know, the usual.',
         'I did some extra work on a few shows. Same thing, right?',
         'I\'m a quick learner. How hard can it be?',
+        'I did some background work on a commercial. Stunt work is basically the same, right?',
+        'My friend is a stunt guy and he showed me some stuff. I pick things up fast.',
+        'I\'ve been training at the gym for this. I\'m in great shape.',
+        'I watched every Jackie Chan movie twice. I know what I\'m doing.',
       ]);
       responses['tell_me_about_experience_2'] = pick([
         'Well, I mean... I\'ve watched a LOT of behind-the-scenes stuff. I know how it works. I\'ve studied every Jackie Chan movie twice.',
@@ -705,7 +719,12 @@ export class VisitorGenerator {
 
     // SAG question
     if (isLegit) {
-      responses['are_you_sag'] = 'Yeah, of course. Card\'s right here.';
+      responses['are_you_sag'] = pick([
+        'Yeah, of course. Card\'s right here.',
+        'Current. Joined in \'88. Never let it lapse.',
+        'Yeah, SAG since before you were coordinating. Card\'s in my wallet.',
+        'Full member. Pension and everything.',
+      ]);
       responses['are_you_sag_2'] = pick([
         'Been current since \'89. Never lapsed. I take my membership seriously. It\'s the first bill I pay every month.',
         'Joined up right after my first feature. Haven\'t missed a payment in over a decade. This is my career.',
@@ -722,6 +741,9 @@ export class VisitorGenerator {
         'Yeah, sure. I think I left my card at home though.',
         'SAG? Uh, yeah. Definitely.',
         'My application is pending.',
+        'I\'m must-join. This would be my Taft-Hartley.',
+        'My agent is handling all that. He said it\'s fine.',
+        'Do I need SAG for this? I thought it was non-union tonight.',
       ]);
       responses['are_you_sag_2'] = pick([
         'I said I\'m SAG. Why do you keep asking? It\'s not like I carry it everywhere. Who does that?',
@@ -737,26 +759,34 @@ export class VisitorGenerator {
 
     // City question
     if (isLegit) {
-      responses['where_are_you_from'] = 'Born and raised here. LA all the way.';
+      responses['where_are_you_from'] = pick([
+        'Born and raised here. Localville all the way.',
+        'Right here. Grew up ten minutes from this lot.',
+        'Localville born and raised. My dad worked grip on westerns.',
+        'Been here my whole life. I know every coordinator in town.',
+      ]);
       responses['where_are_you_from_2'] = pick([
-        'Valley born. I know every lot from Burbank to Culver City. Grew up watching them film on my block.',
-        'Grew up in the Valley, moved to North Hollywood after high school. Been working sets since I could drive.',
-        'Third generation Angeleno. My dad was a grip at Paramount. This town is in my blood.',
+        'Born right here in Localville. I know every lot in this town. Grew up watching them film on my block.',
+        'Grew up right here, been working sets since I could drive. Never left.',
+        'Third generation local. My dad was a grip on this very lot. This town is in my blood.',
       ]);
       responses['where_are_you_from_3'] = pick([
         'My family\'s been here since the \'60s. This is home. I\'m not going anywhere. This city made me who I am.',
         'I know every back road to every studio in this town. You can\'t fake that kind of local knowledge. I belong here.',
-        'LA born, LA raised, LA \'til they put me in the ground. Ask me about any neighborhood and I\'ll tell you which shows shot there.',
+        'Localville born, Localville raised, Localville \'til they put me in the ground. Ask me about any neighborhood and I\'ll tell you which shows shot there.',
       ]);
     } else {
       responses['where_are_you_from'] = pick([
-        'LA. Yeah. Totally. Love it here.',
+        'Here. Yeah. Totally. Love it here.',
         'I\'ve been here a while now. Originally from... around.',
         'Oh, I\'m local. For sure.',
+        'I just moved here from... the next town over.',
+        'I\'m staying with a buddy. He\'s local.',
+        'Does it matter where I\'m from? I\'m here now.',
       ]);
       responses['where_are_you_from_2'] = pick([
         'I told you, I\'m from here. Why does it matter? I live here now, that\'s what counts.',
-        'I\'ve been in LA for... a while. Long enough. I know my way around, if that\'s what you\'re asking.',
+        'I\'ve been in Localville for... a while. Long enough. I know my way around, if that\'s what you\'re asking.',
         'Does it really matter where I grew up? I\'m here now and I want to work. That should be enough.',
       ]);
       responses['where_are_you_from_3'] = pick([

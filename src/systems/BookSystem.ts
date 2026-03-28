@@ -11,10 +11,9 @@ import type {
 
 // Placeholder coordinator data
 const EXTRA_COORDINATOR_NAMES = [
-  'Pat Romano', 'Jeff Imada', 'Terry Leonard', 'Buddy Joe Hooker',
-  'Dick Ziker', 'Ronnie Rondell', 'Mickey Gilbert', 'Conrad Palmisano',
-  'Glenn Wilder', 'Ernie Orsatti', 'Bob Minor', 'Jeannie Epper',
-  'Alan Oliney', 'Donna Evans', 'Phil Neilson', 'Gary Jensen',
+  'Big Mike DeLuca', 'Sally Fontaine', 'Dutch Morrison', 'Ray Kaminski',
+  'Pepper Washington', 'Lou Bracco', 'Vince Taglia', 'Margie Coolidge',
+  'Hal Tremaine', 'Rick Stonewall', 'Frankie Delano', 'Bev Hartwell',
 ];
 
 const EXTRA_PERFORMER_NAMES = [
@@ -23,7 +22,7 @@ const EXTRA_PERFORMER_NAMES = [
   'Sam Barrows', 'Kelly Winters', 'Troy Lancaster', 'Diane Kowalski',
 ];
 
-const CITIES = ['Los Angeles', 'Los Angeles', 'Los Angeles', 'New York', 'Atlanta', 'Vancouver'];
+const CITIES = ['Localville', 'Localville', 'Localville', 'New York', 'Atlanta', 'Vancouver'];
 
 const SKILLS_POOL = [
   'high fall', 'fire gag', 'ratchet pull', 'fight choreography',

@@ -59,10 +59,9 @@ class GameStateManager {
       wigGuyAppearances: 0,
 
       // Family expenses (fixed from balance config)
-      childSupportWife1: BALANCE.childSupportWife1,
-      childSupportWife2: BALANCE.childSupportWife2,
       rent: BALANCE.rent,
       carPayment: BALANCE.carPayment,
+      physicalTherapy: BALANCE.physicalTherapy,
       gym: BALANCE.gym,
       pager: BALANCE.pager,
       tonightKidExpense: null,

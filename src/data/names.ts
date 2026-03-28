@@ -28,27 +28,22 @@ export const LAST_NAMES: string[] = [
 ];
 
 export const COORDINATOR_NAMES: string[] = [
-  'Bobby Barker',
-  'Vic Armstrong',
-  'Terry Leonard',
-  'Ronnie Rondell',
-  'Gary Davis',
-  'Pat Romano',
-  'Chuck Picerni',
-  'Buddy Joe Hooker',
-  'Mickey Gilbert',
-  'Walter Scott',
-  'Bennie Dobbins',
-  'Diamond Farnsworth',
-  'Conrad Palmisano',
-  'Donna Keegan',
-  'Debbie Evans',
+  'Big Mike DeLuca',
+  'Sally Fontaine',
+  'Dutch Morrison',
+  'Ray Kaminski',
+  'Pepper Washington',
+  'Lou Bracco',
+  'Vince Taglia',
+  'Margie Coolidge',
+  'Hal Tremaine',
+  'Rick Stonewall',
 ];
 
-export const LOCAL_CITY: string = 'Los Angeles';
+export const LOCAL_CITY: string = 'Localville';
 
 export const CITIES: string[] = [
-  'Los Angeles',
+  'Localville',
   'Atlanta',
   'New York',
   'Vancouver',

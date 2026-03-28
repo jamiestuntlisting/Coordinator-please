@@ -19,9 +19,8 @@ export class MoneySystem {
   } {
     const breakdown: { name: string; cost: number }[] = [
       { name: 'Rent', cost: state.rent },
-      { name: 'Child Support (Wife #1)', cost: state.childSupportWife1 },
-      { name: 'Child Support (Wife #2)', cost: state.childSupportWife2 },
       { name: 'Car Payment', cost: state.carPayment },
+      { name: 'Physical Therapy', cost: state.physicalTherapy },
       { name: 'Gym Membership', cost: state.gym },
       { name: 'Pager Service', cost: state.pager },
     ];

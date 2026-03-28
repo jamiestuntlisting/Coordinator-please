@@ -14,9 +14,8 @@ export const BALANCE: BalanceConfig = {
 
   // -- Monthly expenses --
   rent: 30,
-  childSupportWife1: 25,
-  childSupportWife2: 25,
   carPayment: 15,
+  physicalTherapy: 20,
   gym: 5,
   pager: 3,
 

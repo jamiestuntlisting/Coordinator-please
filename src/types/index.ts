@@ -247,10 +247,9 @@ export interface GameState {
   wigGuyAppearances: number;
 
   // Family (fixed)
-  childSupportWife1: number;
-  childSupportWife2: number;
   rent: number;
   carPayment: number;
+  physicalTherapy: number;
   gym: number;
   pager: number;
   tonightKidExpense: KidExpense | null;
@@ -274,9 +273,8 @@ export interface BalanceConfig {
   dayRatePerRepTier: number;
 
   rent: number;
-  childSupportWife1: number;
-  childSupportWife2: number;
   carPayment: number;
+  physicalTherapy: number;
   gym: number;
   pager: number;
 

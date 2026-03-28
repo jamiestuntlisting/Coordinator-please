@@ -88,7 +88,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     wigGuyAppears: true,
     returningVisitorChance: 0,
     kidExpenseChance: 0.6,
-    openingMonologue: 'Night two. Already tired.',
+    openingMonologue: "I feel like I'm jet lagged but I'm at home. This is going to be a long week.",
     closingMonologue: 'Someone tried to bribe me $20. I thought about it for way too long.',
     hiringDeadline: 24,
   },
@@ -211,7 +211,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     returningVisitorChance: 0.7,
     kidExpenseChance: 0.8,
     openingMonologue: 'Halfway. My back is a federal crime.',
-    closingMonologue: "Wife #2's lawyer called. Something about arrears.",
+    closingMonologue: "My back is killing me. Physical therapy bill just went up again.",
     hiringDeadline: 23,
   },
 

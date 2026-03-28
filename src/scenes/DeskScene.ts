@@ -770,6 +770,19 @@ export class DeskScene extends Phaser.Scene {
     // Mouth
     gfx.fillStyle(0x8a5a4a, 0.6);
     gfx.fillEllipse(vx, vy - 2*s, 6*s, 2*s);
+
+    // Wig guy - badly fitting wig
+    if (this.currentVisitor?.isWigGuy) {
+      // Draw wig sitting crooked and too high
+      gfx.fillStyle(0x1a1a1a, 1); // jet black, obviously fake
+      gfx.fillEllipse(vx + 4*s, vy - 24*s, 28*s, 14*s); // offset to the right
+      // Visible hairline gap
+      gfx.fillStyle(skinColor, 0.9);
+      gfx.fillRect(vx - 10*s, vy - 18*s, 20*s, 3*s);
+      // Wig edge sticking up
+      gfx.fillStyle(0x1a1a1a, 1);
+      gfx.fillRect(vx + 10*s, vy - 28*s, 5*s, 6*s);
+    }
   }
 
   // ================================================================
@@ -1186,76 +1199,7 @@ export class DeskScene extends Phaser.Scene {
     });
     this.bottomHalfContainer.add(typeText);
 
-    // Bribe envelope
-    if (visitor.bribeOffer) {
-      const envY = photoY + photoH + 38;
-
-      // Manila envelope - slightly angled
-      const envGfx = this.add.graphics();
-      this.bottomHalfContainer.add(envGfx);
-
-      // Shadow underneath
-      envGfx.fillStyle(0x000000, 0.2);
-      envGfx.fillRect(hx + 3, envY + 3, 100, 36);
-
-      // Envelope body
-      envGfx.fillStyle(0xc4a060, 1);
-      envGfx.fillRect(hx, envY, 100, 36);
-      envGfx.lineStyle(1, 0xa88840, 1);
-      envGfx.strokeRect(hx, envY, 100, 36);
-
-      // Flap (triangle on top)
-      envGfx.fillStyle(0xb89050, 1);
-      envGfx.beginPath();
-      envGfx.moveTo(hx, envY);
-      envGfx.lineTo(hx + 50, envY + 12);
-      envGfx.lineTo(hx + 100, envY);
-      envGfx.closePath();
-      envGfx.fillPath();
-
-      // Dollar sign
-      const dollarText = this.add.text(hx + 8, envY + 10, `$${visitor.bribeOffer.amount}`, {
-        fontFamily: 'Courier New, monospace',
-        fontSize: '16px',
-        color: '#4a3a18',
-        fontStyle: 'bold',
-      });
-      this.bottomHalfContainer.add(dollarText);
-
-      // ACCEPT button (green background)
-      const acceptBg = this.add.graphics();
-      this.bottomHalfContainer.add(acceptBg);
-      acceptBg.fillStyle(0x2a4a2e, 1);
-      acceptBg.fillRoundedRect(hx, envY + 40, 48, 22, 3);
-      acceptBg.lineStyle(1, 0x4a7a4f, 1);
-      acceptBg.strokeRoundedRect(hx, envY + 40, 48, 22, 3);
-
-      const acceptBtn = this.add.text(hx + 5, envY + 43, 'ACCEPT', {
-        fontFamily: 'Courier New, monospace',
-        fontSize: '11px',
-        color: '#6aba6f',
-        fontStyle: 'bold',
-      }).setInteractive({ useHandCursor: true });
-      acceptBtn.on('pointerdown', () => this.handleBribe(visitor, true));
-      this.bottomHalfContainer.add(acceptBtn);
-
-      // REFUSE button (red background)
-      const refuseBg = this.add.graphics();
-      this.bottomHalfContainer.add(refuseBg);
-      refuseBg.fillStyle(0x4a2a2a, 1);
-      refuseBg.fillRoundedRect(hx + 54, envY + 40, 48, 22, 3);
-      refuseBg.lineStyle(1, 0xc4553a, 1);
-      refuseBg.strokeRoundedRect(hx + 54, envY + 40, 48, 22, 3);
-
-      const refuseBtn = this.add.text(hx + 59, envY + 43, 'REFUSE', {
-        fontFamily: 'Courier New, monospace',
-        fontSize: '11px',
-        color: '#e06050',
-        fontStyle: 'bold',
-      }).setInteractive({ useHandCursor: true });
-      refuseBtn.on('pointerdown', () => this.handleBribe(visitor, false));
-      this.bottomHalfContainer.add(refuseBtn);
-    }
+    // Bribe is now handled in dialogue area, not here
   }
 
   // ---- Resume Panel ----
@@ -1621,6 +1565,52 @@ export class DeskScene extends Phaser.Scene {
       this.rejectVisitor(visitor);
     });
     this.dialogueContainer.add(rejectBtn);
+
+    // Bribe ACCEPT/REFUSE buttons (if bribe is active and not yet handled)
+    if (visitor.bribeOffer && !this.bribeAccepted) {
+      const bribeBtnY = actionY;
+      const bribeBtnH = actionBtnH;
+
+      // ACCEPT bribe button
+      const acceptBribeBg = this.add.graphics();
+      this.dialogueContainer.add(acceptBribeBg);
+      acceptBribeBg.fillStyle(0x2a3a1e, 1);
+      acceptBribeBg.fillRoundedRect(580, bribeBtnY, 100, bribeBtnH, 6);
+      acceptBribeBg.lineStyle(2, 0x6a8a4f, 1);
+      acceptBribeBg.strokeRoundedRect(580, bribeBtnY, 100, bribeBtnH, 6);
+
+      const acceptBribeBtn = this.add.text(630, bribeBtnY + bribeBtnH / 2, 'ACCEPT $', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '14px',
+        color: '#6aba6f',
+        fontStyle: 'bold',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      acceptBribeBtn.on('pointerdown', () => {
+        this.handleBribe(visitor, true);
+        this.drawDialogue(visitor);
+      });
+      this.dialogueContainer.add(acceptBribeBtn);
+
+      // REFUSE bribe button
+      const refuseBribeBg = this.add.graphics();
+      this.dialogueContainer.add(refuseBribeBg);
+      refuseBribeBg.fillStyle(0x3a1a1a, 1);
+      refuseBribeBg.fillRoundedRect(690, bribeBtnY, 100, bribeBtnH, 6);
+      refuseBribeBg.lineStyle(2, 0xc4553a, 1);
+      refuseBribeBg.strokeRoundedRect(690, bribeBtnY, 100, bribeBtnH, 6);
+
+      const refuseBribeBtn = this.add.text(740, bribeBtnY + bribeBtnH / 2, 'REFUSE $', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '14px',
+        color: '#e06050',
+        fontStyle: 'bold',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      refuseBribeBtn.on('pointerdown', () => {
+        this.handleBribe(visitor, false);
+        this.drawDialogue(visitor);
+      });
+      this.dialogueContainer.add(refuseBribeBtn);
+    }
   }
 
   private renderConversationHistory(panelX: number, convoY: number, convoH: number): void {
@@ -1783,6 +1773,14 @@ export class DeskScene extends Phaser.Scene {
 
     // Show greeting
     this.showVisitorResponse(visitor.dialogueResponses['greeting'] ?? `Hey. I'm ${visitor.name}.`);
+
+    // Show bribe as a conversation event
+    if (visitor.bribeOffer) {
+      this.time.delayedCall(300, () => {
+        this.conversationHistory.push({ question: '', answer: `[An envelope slides across the table: $${visitor.bribeOffer!.amount}]` });
+        this.drawDialogue(visitor);
+      });
+    }
   }
 
   // ================================================================
@@ -1944,13 +1942,13 @@ export class DeskScene extends Phaser.Scene {
     this.overlayContainer.add(gfx);
 
     gfx.fillStyle(0x0a0a0f, 0.92);
-    gfx.fillRoundedRect(150, 200, 500, 400, 6);
+    gfx.fillRoundedRect(100, 180, 600, 520, 6);
     gfx.lineStyle(2, 0x8a7a50, 0.8);
-    gfx.strokeRoundedRect(150, 200, 500, 400, 6);
+    gfx.strokeRoundedRect(100, 180, 600, 520, 6);
 
-    const title = this.add.text(400, 220, 'ASSIGN TO ROLE:', {
+    const title = this.add.text(400, 210, 'ASSIGN TO ROLE:', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '18px',
+      fontSize: '28px',
       color: '#d4c5a0',
       fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -1961,13 +1959,13 @@ export class DeskScene extends Phaser.Scene {
     if (unfilledRoles.length === 0) {
       const noRoles = this.add.text(400, 380, 'No open roles.', {
         fontFamily: 'Courier New, monospace',
-        fontSize: '16px',
+        fontSize: '20px',
         color: '#6a6050',
       }).setOrigin(0.5);
       this.overlayContainer.add(noRoles);
     } else {
       unfilledRoles.forEach((role, i) => {
-        const ry = 250 + i * 50;
+        const ry = 270 + i * 70;
         const riskColors: Record<string, string> = {
           high: '#c4553a',
           medium: '#e8c36a',
@@ -1985,22 +1983,22 @@ export class DeskScene extends Phaser.Scene {
         const roleBg = this.add.graphics();
         this.overlayContainer.add(roleBg);
         roleBg.fillStyle(0x1a1816, 0.9);
-        roleBg.fillRoundedRect(175, ry - 4, 450, 44, 3);
+        roleBg.fillRoundedRect(125, ry - 4, 550, 60, 3);
         roleBg.lineStyle(1, 0x2a2a36, 0.6);
-        roleBg.strokeRoundedRect(175, ry - 4, 450, 44, 3);
+        roleBg.strokeRoundedRect(125, ry - 4, 550, 60, 3);
 
-        const roleBtn = this.add.text(185, ry,
+        const roleBtn = this.add.text(140, ry,
           `${role.title}  [${role.riskLevel.toUpperCase()}]${genderReq}`, {
           fontFamily: 'Courier New, monospace',
-          fontSize: '15px',
+          fontSize: '24px',
           color: riskColors[role.riskLevel] ?? '#d4c5a0',
           fontStyle: 'bold',
         }).setInteractive({ useHandCursor: true });
 
-        const reqText = this.add.text(200, ry + 22,
+        const reqText = this.add.text(155, ry + 32,
           `Needs: ${skillsReq} | ${heightReq} ${weightReq}${role.sagRequired ? ' | SAG REQ' : ''}`, {
           fontFamily: 'Courier New, monospace',
-          fontSize: '10px',
+          fontSize: '16px',
           color: '#6a6050',
         });
 

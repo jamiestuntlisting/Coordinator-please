@@ -81,10 +81,22 @@ export class CallSheetScene extends Phaser.Scene {
       fontStyle: 'bold',
     }).setOrigin(0.5);
 
+    // Location and date
+    this.add.text(120, 84, `LOCATION: Localville`, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '14px',
+      color: '#888070',
+    });
+    this.add.text(680, 84, `DATE: March ${14 + night}, 1995`, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '14px',
+      color: '#888070',
+    }).setOrigin(1, 0);
+
     // Deadline display
     const deadline = this.nightConfig.hiringDeadline;
     const deadlineStr = this.formatDeadline(deadline);
-    this.add.text(400, 84, `MUST HIRE BY: ${deadlineStr}`, {
+    this.add.text(400, 100, `MUST HIRE BY: ${deadlineStr}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#e8c36a',
@@ -92,7 +104,7 @@ export class CallSheetScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Column headers
-    const headerY = 108;
+    const headerY = 120;
     const headerStyle = { fontFamily: 'Courier New, monospace', fontSize: '14px', color: '#888070' };
     this.add.text(80, headerY, 'ROLE', headerStyle);
     this.add.text(230, headerY, 'STUNT', headerStyle);
@@ -103,14 +115,14 @@ export class CallSheetScene extends Phaser.Scene {
 
     // Horizontal rule under headers
     gfx.lineStyle(1, 0x3a352e, 0.8);
-    gfx.lineBetween(85, 126, 730, 126);
+    gfx.lineBetween(85, 138, 730, 138);
     gfx.lineStyle(1, 0x3a352e, 0.3);
-    gfx.lineBetween(85, 128, 730, 128);
+    gfx.lineBetween(85, 140, 730, 140);
 
     // Role rows
     const roles = this.nightConfig.roles;
     const rowHeight = 62;
-    const startY = 134;
+    const startY = 146;
 
     roles.forEach((role: RoleTemplate, i: number) => {
       const y = startY + i * rowHeight;
