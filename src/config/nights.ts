@@ -48,7 +48,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
   {
     night: 2,
     noteType: 'locals_only',
-    noteDescription: 'Production wants locals only tonight.',
+    noteDescription: 'From now on, locals only. No out-of-towners.',
     roles: [
       {
         title: 'High Fall',
@@ -99,7 +99,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
   {
     night: 3,
     noteType: 'added_role',
-    noteDescription: 'Production wants everyone over 6\'0" tonight.',
+    noteDescription: 'From now on, everyone must be over 6\'0". No exceptions.',
     roles: [
       {
         title: 'Stair Fall',
@@ -160,7 +160,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
   {
     night: 4,
     noteType: 'stunt_change',
-    noteDescription: 'Car hit is now a high fall. Remember that.',
+    noteDescription: 'From now on, the car hit is a high fall. Adjust accordingly.',
     roles: [
       {
         title: 'Car Hit',
@@ -221,7 +221,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
   {
     night: 5,
     noteType: 'budget_cut',
-    noteDescription: 'Budget cuts — no ND spots tonight.',
+    noteDescription: 'From now on, budget cuts. No more ND spots.',
     roles: [
       {
         title: 'Fire Gag',
@@ -272,7 +272,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
   {
     night: 6,
     noteType: 'non_union',
-    noteDescription: 'Going non-union tonight.',
+    noteDescription: 'From now on, SAG only. No non-union performers.',
     roles: [
       {
         title: 'Explosion Ratchet',
@@ -343,7 +343,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
   {
     night: 7,
     noteType: 'added_role',
-    noteDescription: 'Last-minute role added. Fill everything.',
+    noteDescription: 'From now on, every role gets filled. No empty slots. Period.',
     roles: [
       {
         title: 'Explosion Ratchet',

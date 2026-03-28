@@ -231,6 +231,7 @@ export class VisitorGenerator {
 
   /**
    * Generate a legitimate stunt performer.
+   * Occasionally has one small thing "off" — a subtle tell the player can catch.
    */
   private generateLegitVisitor(gender: Gender, nightConfig: NightConfig, _state: GameState): Visitor {
     const name = this.generateName(gender);
@@ -247,11 +248,14 @@ export class VisitorGenerator {
 
     // Legit performers usually have their card, but not always
     const hasSagCard = chance(0.8);
+    // ~15% chance of a "subtle tell" — everything perfect EXCEPT SAG card shows different city
+    const hasSubtleTell = hasSagCard && chance(0.15);
+    const sagCardCity = hasSubtleTell ? pick(FAKER_CITIES) : LOCAL_CITY;
     const sagCard: SagCard | null = hasSagCard ? {
       present: true,
       valid: true,
       name: name,
-      location: LOCAL_CITY,
+      location: sagCardCity,
     } : null;
 
     const resume: Resume = {
@@ -295,8 +299,8 @@ export class VisitorGenerator {
       canDoTheJob: true,
       isStuntPerformer: true,
       claimedCity: LOCAL_CITY,
-      actualCity: LOCAL_CITY,
-      isLocal: true,
+      actualCity: hasSubtleTell ? sagCardCity : LOCAL_CITY,
+      isLocal: !hasSubtleTell,
       howTheyHeard: howHeard,
       howTheyHeardLegit: true,
       gender,
@@ -327,6 +331,7 @@ export class VisitorGenerator {
   private generateFakerVisitor(gender: Gender, nightConfig: NightConfig, _state: GameState): Visitor {
     const fakerType = pick([
       'wrong_city', 'stolen_reel', 'not_in_book', 'expired_sag', 'borrowed_headshot', 'close_faker',
+      'sag_wrong_city', 'sag_wrong_city', 'almost_perfect', 'weight_off',
     ]);
 
     const name = this.generateName(gender);
@@ -394,6 +399,54 @@ export class VisitorGenerator {
         howHeard = pick(HOW_HEARD_OPTIONS);
         howHeardLegit = chance(0.5);
         inBook = chance(0.3);
+        break;
+
+      case 'sag_wrong_city':
+        // Perfect in every way — legit stunt performer, right skills, right look
+        // BUT their SAG card shows Atlanta/Vancouver/etc, not Localville
+        // The ONLY tell is the SAG card location
+        isStuntPerformer = true;
+        canDoJob = true; // they CAN do the job — but they're not local
+        matchesFace = true;
+        matchesBodyType = true;
+        sagStatus = 'current';
+        sagCardValid = true;
+        actualCity = pick(FAKER_CITIES);
+        claimedCity = LOCAL_CITY; // they CLAIM local
+        isLocal = false;
+        howHeard = pick(HOW_HEARD_OPTIONS);
+        howHeardLegit = true;
+        inBook = false; // not in local StuntListing
+        break;
+
+      case 'almost_perfect':
+        // Legit stunt performer, everything checks out, but SAG expired last month
+        // They don't mention it and their card looks fine at a glance
+        isStuntPerformer = true;
+        canDoJob = true;
+        matchesFace = true;
+        matchesBodyType = true;
+        sagStatus = 'expired';
+        sagCardValid = false;
+        howHeard = pick(HOW_HEARD_OPTIONS);
+        howHeardLegit = true;
+        inBook = chance(0.5);
+        break;
+
+      case 'weight_off':
+        // Legit performer but their listed weight is off by a noticeable amount
+        // Resume says 175, they're clearly 200+. Headshot is from years ago.
+        isStuntPerformer = true;
+        canDoJob = true;
+        matchesFace = true;
+        matchesBodyType = false; // headshot body doesn't match current body
+        sagStatus = 'current';
+        sagCardValid = true;
+        howHeard = pick(HOW_HEARD_OPTIONS);
+        howHeardLegit = true;
+        inBook = chance(0.4);
+        // Actual body weight is higher than listed
+        body.weight = body.weight + randomInt(15, 35);
         break;
     }
 

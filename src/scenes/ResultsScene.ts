@@ -425,6 +425,7 @@ export class ResultsScene extends Phaser.Scene {
       unfilled_role: 'Role went unfilled.',
       caught_duplicate_reel: 'Caught a duplicate reel.',
       caught_returning_visitor: 'Caught a returning visitor.',
+      not_local: 'Not local. Production said locals only.',
     };
     return labels[outcome] ?? outcome;
   }

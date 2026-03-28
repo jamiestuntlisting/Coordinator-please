@@ -28,7 +28,8 @@ export type HireOutcome =
   | 'passed_faker'
   | 'unfilled_role'
   | 'caught_duplicate_reel'
-  | 'caught_returning_visitor';
+  | 'caught_returning_visitor'
+  | 'not_local';
 
 // -- Core Interfaces --
 

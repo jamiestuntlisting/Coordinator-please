@@ -42,6 +42,7 @@ export const BALANCE: BalanceConfig = {
     size_mismatch: -2,
     passed_legit: 0,
     unfilled_role: -2,
+    not_local: -3,
   },
 
   // -- Injury chances (0-1, higher = more likely to be injured) --

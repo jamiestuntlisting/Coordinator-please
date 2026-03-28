@@ -3031,6 +3031,11 @@ export class DeskScene extends Phaser.Scene {
   private determineHireOutcome(visitor: Visitor, role: Role): HireOutcome {
     const isFaker = !visitor.canDoTheJob || !visitor.isStuntPerformer;
 
+    // Check locals-only rule (applies from Night 2 onward)
+    if (this.nightConfig.noteType === 'locals_only' && !visitor.isLocal) {
+      return 'not_local';
+    }
+
     if (role.sagRequired) {
       const sagValid = visitor.sagCard?.valid === true && visitor.resume.sagStatus === 'current';
       if (!sagValid) {
@@ -3126,6 +3131,8 @@ export class DeskScene extends Phaser.Scene {
         return `The stunt got upgraded and ${visitor.name} wasn't ready for it. Injury.`;
       case 'non_sag_on_sag_night':
         return `${visitor.name} is not SAG. This is a union call. Strike from the rep.`;
+      case 'not_local':
+        return `${visitor.name}'s SAG card says ${visitor.actualCity}. Production said locals only. You're in trouble.`;
       case 'unfilled_role':
         return `${role.title} went unfilled. The UPM wants a word.`;
       default:
