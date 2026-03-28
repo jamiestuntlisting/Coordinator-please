@@ -223,9 +223,14 @@ export class EveningScene extends Phaser.Scene {
     gfx.fillCircle(170, 140, 18);
     gfx.fillStyle(0x222230, 1);
     gfx.fillCircle(170, 140, 15);
+    // Clock hands for 5:15
+    // Hour hand (pointing to ~5 o'clock)
+    gfx.lineStyle(2, 0xd4c5a0, 0.5);
+    gfx.lineBetween(170, 140, 174, 147);
+    // Minute hand (pointing to 3 = quarter past)
+    gfx.lineStyle(1.5, 0xd4c5a0, 0.5);
+    gfx.lineBetween(170, 140, 180, 140);
     gfx.fillStyle(0xd4c5a0, 0.5);
-    gfx.fillRect(170, 133, 2, 9);
-    gfx.fillRect(170, 140, 10, 1.5);
     gfx.fillCircle(170, 140, 2);
 
     // Jacket

@@ -96,6 +96,7 @@ export class DeskScene extends Phaser.Scene {
   private bookResultText: Phaser.GameObjects.Text | null = null;
   private reelDisplayText: Phaser.GameObjects.Text | null = null;
   private bribeAccepted: boolean = false;
+  private bribeRefused: boolean = false;
   private conversationHistory: { question: string; answer: string }[] = [];
   private dialogueClickCounts: Record<string, number> = {};
   private reelAnimating: boolean = false;
@@ -163,6 +164,7 @@ export class DeskScene extends Phaser.Scene {
     this.bookResultText = null;
     this.reelDisplayText = null;
     this.bribeAccepted = false;
+    this.bribeRefused = false;
     this.grainTimer = 0;
     this.flickerTimer = 0;
     this.flickerInterval = randomInt(5000, 10000);
@@ -1527,15 +1529,21 @@ export class DeskScene extends Phaser.Scene {
     const actionY = 820;
     const actionBtnH = 36;
 
-    // HIRE button
+    // HIRE button — shows bribe amount if active
+    const hasBribe = visitor.bribeOffer && !this.bribeAccepted && !this.bribeRefused;
+    const hireLabelText = hasBribe
+      ? `HIRE (w/ $${visitor.bribeOffer!.amount})`
+      : 'HIRE';
+    const hireBtnW = hasBribe ? 300 : 250;
+
     const hireBg = this.add.graphics();
     this.dialogueContainer.add(hireBg);
     hireBg.fillStyle(0x1a3a1e, 1);
-    hireBg.fillRoundedRect(10, actionY, 250, actionBtnH, 6);
+    hireBg.fillRoundedRect(10, actionY, hireBtnW, actionBtnH, 6);
     hireBg.lineStyle(2, 0x4a7a4f, 1);
-    hireBg.strokeRoundedRect(10, actionY, 250, actionBtnH, 6);
+    hireBg.strokeRoundedRect(10, actionY, hireBtnW, actionBtnH, 6);
 
-    const hireBtn = this.add.text(135, actionY + actionBtnH / 2, 'HIRE', {
+    const hireBtn = this.add.text(10 + hireBtnW / 2, actionY + actionBtnH / 2, hireLabelText, {
       fontFamily: 'Courier New, monospace',
       fontSize: '20px',
       color: '#6aba6f',
@@ -1543,19 +1551,49 @@ export class DeskScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     hireBtn.on('pointerdown', () => {
       this.idleTimer = 0;
+      // Auto-accept bribe when hiring if not refused
+      if (visitor.bribeOffer && !this.bribeAccepted && !this.bribeRefused) {
+        this.handleBribe(visitor, true);
+      }
       this.showRolePicker(visitor);
     });
     this.dialogueContainer.add(hireBtn);
 
+    // REFUSE $ button next to HIRE (if bribe is active and not yet handled)
+    const refuseX = 10 + hireBtnW + 8;
+    if (hasBribe) {
+      const refuseBribeBg = this.add.graphics();
+      this.dialogueContainer.add(refuseBribeBg);
+      refuseBribeBg.fillStyle(0x3a1a1a, 0.8);
+      refuseBribeBg.fillRoundedRect(refuseX, actionY, 90, actionBtnH, 6);
+      refuseBribeBg.lineStyle(1, 0xc4553a, 0.8);
+      refuseBribeBg.strokeRoundedRect(refuseX, actionY, 90, actionBtnH, 6);
+
+      const refuseBribeBtn = this.add.text(refuseX + 45, actionY + actionBtnH / 2, 'REFUSE $', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '14px',
+        color: '#e06050',
+        fontStyle: 'bold',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      refuseBribeBtn.on('pointerdown', () => {
+        this.handleBribe(visitor, false);
+        this.bribeRefused = true;
+        this.drawDialogue(visitor);
+      });
+      this.dialogueContainer.add(refuseBribeBtn);
+    }
+
     // GET LOST button
+    const getLostX = hasBribe ? refuseX + 98 : 270;
+    const getLostW = hasBribe ? 280 : 300;
     const rejectBg = this.add.graphics();
     this.dialogueContainer.add(rejectBg);
     rejectBg.fillStyle(0x3a1a1a, 1);
-    rejectBg.fillRoundedRect(270, actionY, 300, actionBtnH, 6);
+    rejectBg.fillRoundedRect(getLostX, actionY, getLostW, actionBtnH, 6);
     rejectBg.lineStyle(2, 0xc4553a, 1);
-    rejectBg.strokeRoundedRect(270, actionY, 300, actionBtnH, 6);
+    rejectBg.strokeRoundedRect(getLostX, actionY, getLostW, actionBtnH, 6);
 
-    const rejectBtn = this.add.text(420, actionY + actionBtnH / 2, 'GET LOST', {
+    const rejectBtn = this.add.text(getLostX + getLostW / 2, actionY + actionBtnH / 2, 'GET LOST', {
       fontFamily: 'Courier New, monospace',
       fontSize: '20px',
       color: '#e06050',
@@ -1566,52 +1604,6 @@ export class DeskScene extends Phaser.Scene {
       this.rejectVisitor(visitor);
     });
     this.dialogueContainer.add(rejectBtn);
-
-    // Bribe ACCEPT/REFUSE buttons (if bribe is active and not yet handled)
-    if (visitor.bribeOffer && !this.bribeAccepted) {
-      const bribeBtnY = actionY;
-      const bribeBtnH = actionBtnH;
-
-      // ACCEPT bribe button
-      const acceptBribeBg = this.add.graphics();
-      this.dialogueContainer.add(acceptBribeBg);
-      acceptBribeBg.fillStyle(0x2a3a1e, 1);
-      acceptBribeBg.fillRoundedRect(580, bribeBtnY, 100, bribeBtnH, 6);
-      acceptBribeBg.lineStyle(2, 0x6a8a4f, 1);
-      acceptBribeBg.strokeRoundedRect(580, bribeBtnY, 100, bribeBtnH, 6);
-
-      const acceptBribeBtn = this.add.text(630, bribeBtnY + bribeBtnH / 2, 'ACCEPT $', {
-        fontFamily: 'Courier New, monospace',
-        fontSize: '14px',
-        color: '#6aba6f',
-        fontStyle: 'bold',
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-      acceptBribeBtn.on('pointerdown', () => {
-        this.handleBribe(visitor, true);
-        this.drawDialogue(visitor);
-      });
-      this.dialogueContainer.add(acceptBribeBtn);
-
-      // REFUSE bribe button
-      const refuseBribeBg = this.add.graphics();
-      this.dialogueContainer.add(refuseBribeBg);
-      refuseBribeBg.fillStyle(0x3a1a1a, 1);
-      refuseBribeBg.fillRoundedRect(690, bribeBtnY, 100, bribeBtnH, 6);
-      refuseBribeBg.lineStyle(2, 0xc4553a, 1);
-      refuseBribeBg.strokeRoundedRect(690, bribeBtnY, 100, bribeBtnH, 6);
-
-      const refuseBribeBtn = this.add.text(740, bribeBtnY + bribeBtnH / 2, 'REFUSE $', {
-        fontFamily: 'Courier New, monospace',
-        fontSize: '14px',
-        color: '#e06050',
-        fontStyle: 'bold',
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-      refuseBribeBtn.on('pointerdown', () => {
-        this.handleBribe(visitor, false);
-        this.drawDialogue(visitor);
-      });
-      this.dialogueContainer.add(refuseBribeBtn);
-    }
   }
 
   private renderConversationHistory(panelX: number, convoY: number, convoH: number): void {
@@ -1740,6 +1732,7 @@ export class DeskScene extends Phaser.Scene {
     this.currentVisitor = visitor;
     this.idleTimer = 0;
     this.bribeAccepted = false;
+    this.bribeRefused = false;
     this.conversationHistory = [];
     this.dialogueClickCounts = {};
     if (this.thoughtBubble) {
@@ -1775,13 +1768,7 @@ export class DeskScene extends Phaser.Scene {
     // Show greeting
     this.showVisitorResponse(visitor.dialogueResponses['greeting'] ?? `Hey. I'm ${visitor.name}.`);
 
-    // Show bribe as a conversation event
-    if (visitor.bribeOffer) {
-      this.time.delayedCall(300, () => {
-        this.conversationHistory.push({ question: '', answer: `[An envelope slides across the table: $${visitor.bribeOffer!.amount}]` });
-        this.drawDialogue(visitor);
-      });
-    }
+    // Bribe is now shown on the HIRE button — no separate conversation event needed
   }
 
   // ================================================================
@@ -2219,8 +2206,8 @@ export class DeskScene extends Phaser.Scene {
       }
 
       wasInjured = Math.random() < injuryChance;
-    } else if (role.riskLevel !== 'nd') {
-      wasInjured = false;
+    } else {
+      wasInjured = false; // legit performers don't get hurt
     }
 
     if (wasInjured) {
@@ -2288,9 +2275,20 @@ export class DeskScene extends Phaser.Scene {
 
     if (heightFit && weightFit && genderFit && skillFit) {
       return 'correct_right_role';
-    } else {
-      return 'correct_slight_mismatch';
     }
+
+    // Gender mismatch is the worst — wrong look entirely
+    if (!genderFit) {
+      return 'wrong_gender';
+    }
+
+    // Height or weight outside range — visible size mismatch on camera
+    if (!heightFit || !weightFit) {
+      return 'size_mismatch';
+    }
+
+    // Skills don't match but size/gender OK — small penalty
+    return 'correct_slight_mismatch';
   }
 
   private rejectVisitor(visitor: Visitor): void {

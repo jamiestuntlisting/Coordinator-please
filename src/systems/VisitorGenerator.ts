@@ -158,6 +158,12 @@ export class VisitorGenerator {
       visitors.splice(randomInt(1, Math.max(1, visitors.length - 1)), 0, this.generateWigGuy(nightConfig.night));
     }
 
+    // Legacy hustler - all refs share their last name
+    if (nightConfig.night >= 2 && chance(0.3)) {
+      const legacyVisitor = this.generateLegacyVisitor(nightConfig);
+      visitors.splice(randomInt(1, Math.max(1, visitors.length - 1)), 0, legacyVisitor);
+    }
+
     // Possibly add SAG rep
     if (chance(nightConfig.sagRepChance)) {
       visitors.push(this.generateSagRep());
@@ -265,6 +271,7 @@ export class VisitorGenerator {
       isWigGuy: false,
       isProductionOverride: false,
       assignedRoleId: null,
+      isLegacy: false,
     };
   }
 
@@ -414,6 +421,7 @@ export class VisitorGenerator {
       isWigGuy: false,
       isProductionOverride: false,
       assignedRoleId: null,
+      isLegacy: false,
     };
   }
 
@@ -470,6 +478,7 @@ export class VisitorGenerator {
       isWigGuy: true,
       isProductionOverride: false,
       assignedRoleId: null,
+      isLegacy: false,
     };
   }
 
@@ -522,6 +531,7 @@ export class VisitorGenerator {
       isWigGuy: false,
       isProductionOverride: false,
       assignedRoleId: null,
+      isLegacy: false,
     };
   }
 
@@ -564,6 +574,115 @@ export class VisitorGenerator {
       isReturning: true,
       originalVisitorId: original.id,
       hasNewerHeadshot: true,
+    };
+  }
+
+  /**
+   * Generate a legacy visitor — all coordinator refs share their last name (nepotism tell).
+   * 50/50 legit or faker.
+   */
+  private generateLegacyVisitor(nightConfig: NightConfig): Visitor {
+    const gender: Gender = chance(0.5) ? 'male' : 'female';
+    const lastName = pick(LAST_NAMES);
+    const firstName = gender === 'male' ? pick(FIRST_NAMES_MALE) : pick(FIRST_NAMES_FEMALE);
+    const name = `${firstName} ${lastName}`;
+
+    // All coordinator refs share the last name — the key tell
+    const refs: CoordRef[] = [
+      { name: `${pick(FIRST_NAMES_MALE)} ${lastName}`, realCoordinator: false, city: LOCAL_CITY },
+      { name: `${pick(FIRST_NAMES_FEMALE)} ${lastName}`, realCoordinator: false, city: LOCAL_CITY },
+      { name: `${pick(FIRST_NAMES_MALE)} ${lastName}`, realCoordinator: false, city: LOCAL_CITY },
+    ];
+
+    const isLegit = chance(0.5);
+    const personality: PersonalityType = pick(['confident', 'smooth', 'aggressive']);
+    const body = this.generateBodyType();
+    const skills = isLegit ? pickN(SKILLS_LIST, randomInt(3, 6)) : [pick(['fight choreography', 'explosion reaction'])];
+
+    const headshotType: HeadshotType = chance(0.7) ? 'color_8x10' : 'bw_8x10';
+    const headshot: Headshot = {
+      type: headshotType,
+      matchesFace: isLegit ? true : chance(0.5),
+      matchesBodyType: isLegit ? true : chance(0.5),
+    };
+
+    const sagStatus: SagStatus = isLegit ? 'current' : (chance(0.5) ? 'current' : 'claims_yes');
+    const sagCard: SagCard | null = {
+      present: true,
+      valid: isLegit ? true : sagStatus === 'current',
+      name: name,
+    };
+
+    const resume: Resume = {
+      skills,
+      credits: pickN(CREDITS_LIST, randomInt(2, 5)),
+      coordinatorRefs: refs,
+      sagStatus,
+      listedHeight: this.heightToString(body.height),
+      listedWeight: `${body.weight}`,
+    };
+
+    const reel: SkillReel | null = chance(0.6) ? {
+      animationId: `anim_${randomInt(1, 8)}`,
+      titleCardName: name,
+      bodyType: { ...body },
+    } : null;
+
+    const bribeOffer = this.maybeBribe(nightConfig);
+
+    const bookListing: BookListing | null = isLegit && chance(0.7) ? {
+      name,
+      city: LOCAL_CITY,
+      height: resume.listedHeight,
+      weight: resume.listedWeight,
+      skills: skills.slice(0, randomInt(2, skills.length)),
+      coordinatorCredits: refs.map(r => r.name),
+      hasPhoto: chance(0.5),
+    } : null;
+
+    const dialogueResponses = this.generateDialogueResponses(isLegit, personality, name);
+    // Override greeting to reference family
+    dialogueResponses['greeting'] = pick([
+      `My uncle ${refs[0].name} said you'd have something for me.`,
+      `The ${lastName}s have been doing stunts since before you were born.`,
+      `Hey. ${firstName} ${lastName}. My dad ${refs[1].name} sent me.`,
+    ]);
+    dialogueResponses['tell_me_about_experience'] = pick([
+      `I grew up on sets. The ${lastName} family has been in this business for decades.`,
+      `My whole family does stunts. It's in the blood.`,
+    ]);
+
+    const insuranceTalk = isLegit && chance(0.5) ? pick(INSURANCE_TALK_LEGIT) : null;
+
+    return {
+      id: nextId(),
+      name,
+      canDoTheJob: isLegit,
+      isStuntPerformer: isLegit,
+      claimedCity: LOCAL_CITY,
+      actualCity: LOCAL_CITY,
+      isLocal: true,
+      howTheyHeard: `My family told me. The ${lastName}s always know.`,
+      howTheyHeardLegit: isLegit,
+      gender,
+      bodyType: body,
+      headshot,
+      resume,
+      sagCard,
+      bookListing,
+      skillReel: reel,
+      personality,
+      insuranceTalk,
+      bribeOffer,
+      dialogueResponses,
+      hasNewerHeadshot: false,
+      isReturning: false,
+      originalVisitorId: null,
+      isSagRep: false,
+      isWigGuy: false,
+      isProductionOverride: false,
+      assignedRoleId: null,
+      isLegacy: true,
     };
   }
 

@@ -16,6 +16,8 @@ export type EndingTier = 'fired' | 'd' | 'c' | 'b' | 'a' | 's';
 export type HireOutcome =
   | 'correct_right_role'
   | 'correct_slight_mismatch'
+  | 'wrong_gender'
+  | 'size_mismatch'
   | 'wrong_hire_nd_no_injury'
   | 'wrong_hire_nd_minor_injury'
   | 'wrong_hire_medium_injury'
@@ -102,6 +104,7 @@ export interface Visitor {
   isWigGuy: boolean;
   isProductionOverride: boolean;
   assignedRoleId: string | null;
+  isLegacy: boolean;
 }
 
 export interface Role {
