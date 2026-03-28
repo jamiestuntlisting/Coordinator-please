@@ -483,6 +483,9 @@ export class DeskScene extends Phaser.Scene {
 
     // --- Time display ---
     this.drawTimeDisplay();
+
+    // --- Call Sheet button (top-left) ---
+    this.drawCallSheetButton();
   }
 
   private showIntertitle(): void {
@@ -727,6 +730,178 @@ export class DeskScene extends Phaser.Scene {
       color: '#c4553a',
     }).setOrigin(0.5, 0);
     this.topHalfContainer.add(deadlineLabel);
+  }
+
+  private drawCallSheetButton(): void {
+    const cbGfx = this.add.graphics();
+    this.topHalfContainer.add(cbGfx);
+
+    // Small clipboard icon + button in top-left
+    const bx = 10;
+    const by = 6;
+    const bw = 100;
+    const bh = 26;
+
+    cbGfx.fillStyle(0x1a1816, 0.8);
+    cbGfx.fillRoundedRect(bx, by, bw, bh, 4);
+    cbGfx.lineStyle(1, 0x3a352e, 0.7);
+    cbGfx.strokeRoundedRect(bx, by, bw, bh, 4);
+
+    // Clipboard icon (tiny)
+    cbGfx.fillStyle(0x6a5a3a, 0.8);
+    cbGfx.fillRect(bx + 6, by + 5, 12, 16);
+    cbGfx.fillStyle(0xd4c5a0, 0.4);
+    cbGfx.fillRect(bx + 8, by + 8, 8, 1);
+    cbGfx.fillRect(bx + 8, by + 11, 8, 1);
+    cbGfx.fillRect(bx + 8, by + 14, 6, 1);
+    // Clip
+    cbGfx.fillStyle(0x8a7a5a, 0.9);
+    cbGfx.fillRect(bx + 9, by + 3, 6, 4);
+
+    const cbText = this.add.text(bx + 24, by + 5, 'CALL\nSHEET', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '9px',
+      color: '#a09880',
+      lineSpacing: 0,
+    });
+    this.topHalfContainer.add(cbText);
+
+    const cbZone = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh)
+      .setInteractive({ useHandCursor: true });
+    this.topHalfContainer.add(cbZone);
+    cbZone.on('pointerdown', () => {
+      this.showCallSheetOverlay();
+    });
+  }
+
+  private showCallSheetOverlay(): void {
+    this.overlayContainer.removeAll(true);
+
+    const gfx = this.add.graphics();
+    this.overlayContainer.add(gfx);
+
+    // Full overlay
+    gfx.fillStyle(0x0a0a0f, 0.95);
+    gfx.fillRoundedRect(30, 30, 740, 830, 6);
+    gfx.lineStyle(2, 0x4a453e, 0.8);
+    gfx.strokeRoundedRect(30, 30, 740, 830, 6);
+
+    // Paper texture
+    gfx.fillStyle(0x1e1c18, 1);
+    gfx.fillRect(40, 40, 720, 810);
+
+    // Title
+    this.add.text(400, 60, `CALL SHEET — NIGHT ${this.night}`, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '24px',
+      color: '#d4c5a0',
+      fontStyle: 'bold',
+    }).setOrigin(0.5);
+    this.overlayContainer.add(this.children.list[this.children.list.length - 1]);
+
+    // Location & date
+    const locText = this.add.text(70, 90, `LOCATION: Localville    DATE: March ${14 + this.night}, 1995`, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '16px',
+      color: '#888070',
+    });
+    this.overlayContainer.add(locText);
+
+    // Deadline
+    const deadlineStr = this.formatTime(this.nightConfig.hiringDeadline);
+    const dlText = this.add.text(400, 115, `MUST HIRE BY: ${deadlineStr}`, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '20px',
+      color: '#e8c36a',
+      fontStyle: 'bold',
+    }).setOrigin(0.5);
+    this.overlayContainer.add(dlText);
+
+    // Separator
+    gfx.lineStyle(1, 0x3a352e, 0.8);
+    gfx.lineBetween(60, 140, 740, 140);
+
+    // Roles
+    let ry = 150;
+    this.roles.forEach((role) => {
+      const isFilled = role.filledBy !== null;
+      const heightStr = `${Math.floor(role.heightRange[0] / 12)}'${role.heightRange[0] % 12}"-${Math.floor(role.heightRange[1] / 12)}'${role.heightRange[1] % 12}"`;
+      const weightStr = `${role.weightRange[0]}-${role.weightRange[1]} lbs`;
+      const genderReq = role.requiredGender === 'any' ? 'ANY' : role.requiredGender.toUpperCase();
+      const riskColors: Record<string, string> = { high: '#c4553a', medium: '#e8c36a', nd: '#4a7a4f' };
+
+      // Row bg
+      gfx.fillStyle(isFilled ? 0x1a2a1a : 0x141210, 0.5);
+      gfx.fillRoundedRect(55, ry, 690, 70, 3);
+
+      const titleText = this.add.text(75, ry + 6, role.title, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '22px',
+        color: '#d4c5a0',
+        fontStyle: 'bold',
+      });
+      this.overlayContainer.add(titleText);
+
+      const riskText = this.add.text(75, ry + 32, `${role.riskLevel.toUpperCase()}  ${genderReq}  ${heightStr}  ${weightStr}`, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '14px',
+        color: riskColors[role.riskLevel] ?? '#888070',
+      });
+      this.overlayContainer.add(riskText);
+
+      if (role.requiredSkills.length > 0) {
+        const skillsText = this.add.text(75, ry + 50, `Skills: ${role.requiredSkills.map(s => s.replace(/_/g, ' ')).join(', ')}`, {
+          fontFamily: 'Courier New, monospace',
+          fontSize: '13px',
+          color: '#6a9a6e',
+        });
+        this.overlayContainer.add(skillsText);
+      }
+
+      // Status
+      const statusLabel = isFilled ? 'FILLED' : 'OPEN';
+      const statusColor = isFilled ? '#4a7a4f' : '#e8c36a';
+      const statusText = this.add.text(720, ry + 10, statusLabel, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '18px',
+        color: statusColor,
+        fontStyle: 'bold',
+      }).setOrigin(1, 0);
+      this.overlayContainer.add(statusText);
+
+      // SAG badge
+      if (role.sagRequired) {
+        const sagText = this.add.text(720, ry + 34, 'SAG REQ', {
+          fontFamily: 'Courier New, monospace',
+          fontSize: '12px',
+          color: '#c4553a',
+          fontStyle: 'bold',
+        }).setOrigin(1, 0);
+        this.overlayContainer.add(sagText);
+      }
+
+      ry += 78;
+    });
+
+    // Close button
+    const closeBg = this.add.graphics();
+    this.overlayContainer.add(closeBg);
+    closeBg.fillStyle(0x2a2618, 1);
+    closeBg.fillRoundedRect(340, ry + 10, 120, 36, 5);
+    closeBg.lineStyle(1, 0x5a4a2a, 1);
+    closeBg.strokeRoundedRect(340, ry + 10, 120, 36, 5);
+
+    const closeBtn = this.add.text(400, ry + 22, 'CLOSE', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '18px',
+      color: '#e8c36a',
+      fontStyle: 'bold',
+    }).setOrigin(0.5, 0).setInteractive({ useHandCursor: true });
+    this.overlayContainer.add(closeBtn);
+
+    closeBtn.on('pointerdown', () => {
+      this.overlayContainer.removeAll(true);
+    });
   }
 
   // ---- Visitor sprite ----

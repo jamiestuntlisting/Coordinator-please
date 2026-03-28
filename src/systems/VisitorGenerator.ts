@@ -187,7 +187,7 @@ export class VisitorGenerator {
 
     for (let i = 0; i < nightConfig.visitorCount; i++) {
       const isLegit = chance(legitChance);
-      const gender: Gender = chance(0.5) ? 'male' : 'female';
+      const gender: Gender = chance(0.8) ? 'male' : 'female'; // 4:1 men:women ratio
       const visitor = isLegit
         ? this.generateLegitVisitor(gender, nightConfig, state)
         : this.generateFakerVisitor(gender, nightConfig, state);
@@ -645,7 +645,7 @@ export class VisitorGenerator {
    * 50/50 legit or faker.
    */
   private generateLegacyVisitor(nightConfig: NightConfig): Visitor {
-    const gender: Gender = chance(0.5) ? 'male' : 'female';
+    const gender: Gender = chance(0.8) ? 'male' : 'female'; // 4:1 ratio
     const lastName = pick(LAST_NAMES);
     const firstName = gender === 'male' ? pick(FIRST_NAMES_MALE) : pick(FIRST_NAMES_FEMALE);
     const name = `${firstName} ${lastName}`;
