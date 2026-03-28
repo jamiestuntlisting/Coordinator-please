@@ -1825,9 +1825,7 @@ export class DeskScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     hireBtn.on('pointerdown', () => {
       this.idleTimer = 0;
-      if (visitor.bribeOffer && !this.bribeAccepted && !this.bribeRefused) {
-        this.handleBribe(visitor, true);
-      }
+      // Bribe is accepted only after actually assigning to a role (in hireVisitor)
       this.showRolePicker(visitor);
     });
     this.dialogueContainer.add(hireBtn);
@@ -2787,6 +2785,11 @@ export class DeskScene extends Phaser.Scene {
   private hireVisitor(visitor: Visitor, role: Role): void {
     role.filledBy = visitor.id;
     visitor.assignedRoleId = role.id;
+
+    // Accept bribe now that they're actually hired
+    if (visitor.bribeOffer && !this.bribeAccepted && !this.bribeRefused) {
+      this.handleBribe(visitor, true);
+    }
 
     const outcome = this.determineHireOutcome(visitor, role);
 

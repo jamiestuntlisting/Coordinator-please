@@ -4,9 +4,9 @@ export const BALANCE: BalanceConfig = {
   // -- Starting values -- (low: always on the edge, needs bribes to survive)
   startingReputation: 5,
   startingMoney: 10,
-  maxStrikes: 5,
-  strikesForWarning: 3,
-  strikesForFinalWarning: 4,
+  maxStrikes: 3,
+  strikesForWarning: 1,
+  strikesForFinalWarning: 2,
 
   // -- Day rate --
   dayRateBase: 150,
