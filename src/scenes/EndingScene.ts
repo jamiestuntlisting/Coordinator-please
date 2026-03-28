@@ -168,11 +168,11 @@ export class EndingScene extends Phaser.Scene {
 
     const tierLabels: Record<string, string> = {
       fired: 'FIRED',
-      d: 'D TIER — Barely Survived',
-      c: 'C TIER — Got Through It',
-      b: 'B TIER — Solid Work',
-      a: 'A TIER — Respected',
-      s: 'S TIER — Legend',
+      d: 'ULTRA-LOW BUDGET — One step from a student film',
+      c: 'MODIFIED LOW BUDGET — Barely professional',
+      b: 'LOW BUDGET — Steady work',
+      a: 'THEATRICAL — The real deal',
+      s: 'MAJOR STUDIO — Legend',
     };
 
     const titleColor = tierColors[tier] ?? '#d4c5a0';
@@ -190,9 +190,11 @@ export class EndingScene extends Phaser.Scene {
 
     this.add.text(400, 55, titleText, {
       fontFamily: 'Courier New, monospace',
-      fontSize: tier === 's' ? '36px' : '32px',
+      fontSize: tier === 's' ? '28px' : '24px',
       color: titleColor,
       fontStyle: 'bold',
+      wordWrap: { width: 700 },
+      align: 'center',
     }).setOrigin(0.5);
 
     // Ending text
@@ -375,54 +377,61 @@ export class EndingScene extends Phaser.Scene {
       ].join('\n'),
 
       d: [
-        'You survived. Barely.',
+        'Ultra-low budget. One mistake away from a student film.',
         '',
         'Seven nights of bad coffee, worse decisions,',
         'and people who definitely lied on their resumes.',
         '',
-        'Your reputation is shot. Your back hurts.',
-        "But you're still breathing. That counts for something.",
+        "Next week you're coordinating a car commercial",
+        "in a grocery store parking lot. Non-union.",
+        "At least it's work.",
       ].join('\n'),
 
       c: [
-        'You got through it.',
+        'Modified low budget. You got through it.',
         '',
         'Not your best work, not your worst.',
         "Some good calls, some bad ones. The usual.",
         '',
-        "The phone might ring again. Might not.",
-        "Either way, rent's due.",
+        "The next gig is a cable movie in Localville.",
+        "Twelve-hour days, SAG modified low.",
+        "The phone rang. You answered.",
       ].join('\n'),
 
       b: [
-        'Solid work.',
+        'Low budget. Steady, reliable work.',
         '',
         'You kept people safe. Mostly.',
         'You made good calls under pressure.',
-        "The AD said you're welcome back anytime.",
+        "The AD said you're welcome back.",
         '',
-        "That's about as good as a compliment gets in this business.",
+        "Next month it's a low-budget feature.",
+        "Real stunts. Real pay. Real SAG contract.",
+        "You're building something.",
       ].join('\n'),
 
       a: [
-        'You earned respect.',
+        'Theatrical. You made it to the show.',
         '',
-        'Seven nights, zero catastrophes.',
+        'Seven nights, no catastrophes.',
         'People trust you. Coordinators remember your name.',
-        "You're getting calls for the next gig before this one wraps.",
+        "You're getting calls for the next gig before",
+        "this one wraps.",
         '',
+        "Full theatrical SAG contract. Studio lot.",
         "In this town, that's everything.",
       ].join('\n'),
 
       s: [
-        'They\'ll talk about this one.',
+        'Major studio. They\'ll talk about this one.',
         '',
         'Seven nights. No injuries. Every role filled right.',
         'The performers trust you with their lives.',
         'The coordinators want you on speed dial.',
         '',
-        "Bobby Barker himself called to say nice work.",
-        "In 30 years, you'll tell this story at the bar.",
+        "You just got a call from a major studio.",
+        "They want you for their summer tentpole.",
+        "Full rate. First position. Your name on the call sheet.",
         '',
         "Legend.",
       ].join('\n'),
