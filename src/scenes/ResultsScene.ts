@@ -150,6 +150,51 @@ export class ResultsScene extends Phaser.Scene {
       y += 4;
     });
 
+    // UPM handwritten note for unfilled roles
+    const unfilledRoles = hires.filter(h => h.outcome === 'unfilled_role');
+    if (unfilledRoles.length > 0) {
+      y += 8;
+      // Sticky note / handwritten note background
+      const noteGfx = this.add.graphics();
+      noteGfx.fillStyle(0xd8c870, 0.9); // yellow sticky note
+      noteGfx.fillRect(85, y, 630, 46 + unfilledRoles.length * 20);
+      // Slight shadow
+      noteGfx.fillStyle(0x000000, 0.15);
+      noteGfx.fillRect(88, y + 3, 630, 46 + unfilledRoles.length * 20);
+      // Tape at top
+      noteGfx.fillStyle(0xc8c0a0, 0.5);
+      noteGfx.fillRect(350, y - 6, 60, 14);
+
+      // Handwritten-style text (italic courier to simulate)
+      this.add.text(105, y + 8, 'NOTE FROM UPM:', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '14px',
+        color: '#2a2a10',
+        fontStyle: 'bold',
+      });
+
+      let noteY = y + 26;
+      unfilledRoles.forEach((hire: HireResult) => {
+        const msgs = [
+          `"${hire.roleTitle}" went unfilled. We need to talk.`,
+          `Where's my ${hire.roleTitle.toLowerCase()}? Come see me.`,
+          `Nobody for "${hire.roleTitle}"? Seriously?`,
+          `I'm hearing "${hire.roleTitle}" had no one. My office. Tomorrow.`,
+        ];
+        const msg = msgs[Math.floor(Math.random() * msgs.length)];
+        this.add.text(115, noteY, msg, {
+          fontFamily: 'Courier New, monospace',
+          fontSize: '14px',
+          color: '#1a1a08',
+          fontStyle: 'italic',
+          wordWrap: { width: 580 },
+        });
+        noteY += 20;
+      });
+
+      y += 54 + unfilledRoles.length * 20;
+    }
+
     // Summary section — separator
     y = Math.max(y + 5, 350);
     gfx.lineStyle(2, 0x3a352e, 0.8);

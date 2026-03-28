@@ -210,7 +210,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     wigGuyAppears: true,
     returningVisitorChance: 0.7,
     kidExpenseChance: 0.8,
-    openingMonologue: 'Halfway there. I think.',
+    openingMonologue: 'Halfway there. I think. I don\'t do math on overnights.',
     closingMonologue: "My back is killing me. Physical therapy bill just went up again.",
     hiringDeadline: 23,
   },

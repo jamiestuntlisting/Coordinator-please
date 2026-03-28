@@ -245,11 +245,14 @@ export class VisitorGenerator {
       matchesBodyType: true,
     };
 
-    const sagCard: SagCard = {
+    // Legit performers usually have their card, but not always
+    const hasSagCard = chance(0.8);
+    const sagCard: SagCard | null = hasSagCard ? {
       present: true,
       valid: true,
       name: name,
-    };
+      location: LOCAL_CITY,
+    } : null;
 
     const resume: Resume = {
       skills,
@@ -400,10 +403,13 @@ export class VisitorGenerator {
       matchesBodyType,
     };
 
-    const sagCard: SagCard | null = sagCardPresent ? {
-      present: sagCardPresent,
+    // Fakers don't always have their card either; when they do, location reveals actual city
+    const fakerHasCard = sagCardPresent && chance(0.6);
+    const sagCard: SagCard | null = fakerHasCard ? {
+      present: true,
       valid: sagCardValid,
       name: sagCardName,
+      location: actualCity,  // SAG card shows REAL city — a tell!
     } : null;
 
     // Fakers sometimes list credits from the FUTURE (films that don't exist yet in 1995)
@@ -573,7 +579,7 @@ export class VisitorGenerator {
         listedHeight: '5\'8"',
         listedWeight: '160',
       },
-      sagCard: { present: true, valid: true, name: 'SAG Representative' },
+      sagCard: { present: true, valid: true, name: 'SAG Representative', location: LOCAL_CITY },
       bookListing: null,
       skillReel: null,
       personality: 'confident',
@@ -664,11 +670,13 @@ export class VisitorGenerator {
     };
 
     const sagStatus: SagStatus = isLegit ? 'current' : (chance(0.5) ? 'current' : 'claims_yes');
-    const sagCard: SagCard | null = {
+    const legacyHasCard = chance(0.7);
+    const sagCard: SagCard | null = legacyHasCard ? {
       present: true,
       valid: isLegit ? true : sagStatus === 'current',
       name: name,
-    };
+      location: LOCAL_CITY,
+    } : null;
 
     const legacyCredits = pickNUnique(CREDITS_LIST, randomInt(2, 4), this.usedCredits);
     if (!isLegit && chance(0.3)) {

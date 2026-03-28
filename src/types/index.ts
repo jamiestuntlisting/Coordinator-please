@@ -57,6 +57,7 @@ export interface SagCard {
   present: boolean;
   valid: boolean;
   name: string;
+  location: string;  // city on the card — a tell if it doesn't match claimed city
 }
 
 export interface BodyType {

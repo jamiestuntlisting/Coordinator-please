@@ -2072,10 +2072,20 @@ export class DeskScene extends Phaser.Scene {
       });
       this.bottomHalfContainer.add(statusText);
 
-      // Membership number (fake)
-      const memNum = this.add.text(cx + 8, cy + 68, `#${Math.floor(Math.random() * 900000 + 100000)}`, {
+      // Location on card — important tell for fakers!
+      const locColor = visitor.sagCard.location === visitor.claimedCity ? '#4a4a4a' : '#8a2a2a';
+      const locText = this.add.text(cx + 8, cy + 66, visitor.sagCard.location, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '10px',
+        fontSize: '11px',
+        color: locColor,
+        fontStyle: 'bold',
+      });
+      this.bottomHalfContainer.add(locText);
+
+      // Membership number
+      const memNum = this.add.text(cx + 8, cy + 82, `#${Math.floor(Math.random() * 900000 + 100000)}`, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '9px',
         color: '#4a4a4a',
       });
       this.bottomHalfContainer.add(memNum);
