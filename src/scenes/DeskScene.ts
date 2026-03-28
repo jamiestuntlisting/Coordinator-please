@@ -98,6 +98,10 @@ export class DeskScene extends Phaser.Scene {
   private bribeAccepted: boolean = false;
   private conversationHistory: { question: string; answer: string }[] = [];
   private dialogueClickCounts: Record<string, number> = {};
+  private reelAnimating: boolean = false;
+  private reelAnimFrame: number = 0;
+  private reelAnimElapsed: number = 0;
+  private pendingReelVisitor: Visitor | null = null;
 
   // Intertitle
   private showingIntertitle: boolean = false;
@@ -168,6 +172,10 @@ export class DeskScene extends Phaser.Scene {
     this.visitorFadeIn = false;
     this.visitorFadeElapsed = 0;
     this.visitorSpriteContainer = null;
+    this.reelAnimating = false;
+    this.reelAnimFrame = 0;
+    this.reelAnimElapsed = 0;
+    this.pendingReelVisitor = null;
 
     // Store in GameStateManager
     this.gsm.updateState({
@@ -205,9 +213,6 @@ export class DeskScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     if (this.nightDone) return;
     this.idleTimer += delta;
-    if (this.idleTimer > this.idleThreshold && !this.thoughtBubble) {
-      this.showThoughtBubble();
-    }
 
     // Film grain shimmer
     this.grainTimer += delta;
@@ -231,6 +236,21 @@ export class DeskScene extends Phaser.Scene {
       this.visitorSpriteContainer.setAlpha(progress);
       if (progress >= 1) {
         this.visitorFadeIn = false;
+      }
+    }
+
+    // Reel animation
+    if (this.reelAnimating && this.reelDisplayText) {
+      this.reelAnimElapsed += delta;
+      if (this.reelAnimElapsed > 150) {
+        this.reelAnimElapsed = 0;
+        this.reelAnimFrame++;
+        const frames = ['\u25b6 PLAYING...', '\u25b6\u25b6 PLAYING...', '\u25b6\u25b6\u25b6 PLAYING...', '\u25b6 PLAYING...'];
+        this.reelDisplayText.setText(frames[this.reelAnimFrame % frames.length]);
+        if (this.reelAnimFrame >= 8) {
+          this.reelAnimating = false;
+          this.showReelResult();
+        }
       }
     }
   }
@@ -763,10 +783,10 @@ export class DeskScene extends Phaser.Scene {
 
     // Dark panel background
     gfx.fillStyle(0x0d0d12, 1);
-    gfx.fillRect(0, 862, 800, 38);
+    gfx.fillRect(0, 872, 800, 28);
     // Thin gold top border
     gfx.lineStyle(1, 0x8a7a50, 1);
-    gfx.lineBetween(0, 862, 800, 862);
+    gfx.lineBetween(0, 872, 800, 872);
 
     const state = this.gsm.getCurrentState();
     const filledCount = this.roles.filter(r => r.filledBy !== null).length;
@@ -774,7 +794,7 @@ export class DeskScene extends Phaser.Scene {
     const timeStr = this.formatTime(state.timeOfNight);
 
     // Night info
-    const nightLabel = this.add.text(16, 870, `NIGHT ${this.night}/7`, {
+    const nightLabel = this.add.text(16, 876, `NIGHT ${this.night}/7`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#d4c5a0',
@@ -783,7 +803,7 @@ export class DeskScene extends Phaser.Scene {
     this.statusBar.add(nightLabel);
 
     // Time
-    const timeLabel = this.add.text(130, 870, timeStr, {
+    const timeLabel = this.add.text(130, 876, timeStr, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#d4c5a0',
@@ -791,7 +811,7 @@ export class DeskScene extends Phaser.Scene {
     this.statusBar.add(timeLabel);
 
     // Roles
-    const rolesLabel = this.add.text(240, 870, `Roles: ${filledCount}/${totalRoles}`, {
+    const rolesLabel = this.add.text(240, 876, `Roles: ${filledCount}/${totalRoles}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#d4c5a0',
@@ -799,7 +819,7 @@ export class DeskScene extends Phaser.Scene {
     this.statusBar.add(rolesLabel);
 
     // Money in gold
-    const moneyLabel = this.add.text(400, 870, `$${state.money}`, {
+    const moneyLabel = this.add.text(400, 876, `$${state.money}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '18px',
       color: '#e8c36a',
@@ -809,7 +829,7 @@ export class DeskScene extends Phaser.Scene {
 
     // Coffee cup icon + depleting level
     const coffeeX = 490;
-    const coffeeY = 869;
+    const coffeeY = 875;
     gfx.fillStyle(0x3a3a44, 1);
     gfx.fillRect(coffeeX, coffeeY, 10, 14);
     gfx.fillStyle(0x2a2a32, 1);
@@ -823,7 +843,7 @@ export class DeskScene extends Phaser.Scene {
 
     // Rep bar
     const barX = 540;
-    const barY = 871;
+    const barY = 877;
     const barW = 150;
     const barH = 12;
 
@@ -857,7 +877,7 @@ export class DeskScene extends Phaser.Scene {
 
     // Main desk workspace background
     gfx.fillStyle(0x16140f, 1);
-    gfx.fillRect(0, 380, 800, 360);
+    gfx.fillRect(0, 380, 800, 320);
 
     // Warm-gold divider line separating top and bottom
     gfx.lineStyle(2, 0x8a7a50, 0.6);
@@ -865,29 +885,29 @@ export class DeskScene extends Phaser.Scene {
 
     // Panel dividers with subtle depth
     gfx.lineStyle(1, 0x2a261e, 1);
-    gfx.lineBetween(200, 385, 200, 735);
-    gfx.lineBetween(540, 385, 540, 735);
+    gfx.lineBetween(200, 385, 200, 695);
+    gfx.lineBetween(540, 385, 540, 695);
 
     // Panel backgrounds in slightly different shades
     // Headshot panel
     gfx.fillStyle(0x171510, 1);
-    gfx.fillRect(1, 381, 199, 354);
+    gfx.fillRect(1, 381, 199, 314);
     // Resume panel
     gfx.fillStyle(0x18160e, 1);
-    gfx.fillRect(201, 381, 338, 354);
+    gfx.fillRect(201, 381, 338, 314);
     // Book/Reel panel
     gfx.fillStyle(0x161410, 1);
-    gfx.fillRect(541, 381, 259, 354);
+    gfx.fillRect(541, 381, 259, 314);
 
     // Subtle inner borders for each panel
     gfx.lineStyle(1, 0x1e1c16, 0.5);
-    gfx.strokeRect(4, 384, 193, 348);
-    gfx.strokeRect(204, 384, 332, 348);
-    gfx.strokeRect(544, 384, 252, 348);
+    gfx.strokeRect(4, 384, 193, 308);
+    gfx.strokeRect(204, 384, 332, 308);
+    gfx.strokeRect(544, 384, 252, 308);
 
     // Paper texture on resume panel (faint horizontal lines every 12px)
     gfx.lineStyle(1, 0x1e1c14, 0.15);
-    for (let py = 396; py < 732; py += 12) {
+    for (let py = 396; py < 695; py += 12) {
       gfx.lineBetween(205, py, 535, py);
     }
 
@@ -1374,14 +1394,34 @@ export class DeskScene extends Phaser.Scene {
     const px = 544;
     let py = 390;
 
-    const headerText = this.add.text(px, py, 'STUNTLISTING BOOK', {
+    // Book cover
+    const bookGfx = this.add.graphics();
+    this.bottomHalfContainer.add(bookGfx);
+    // Leather cover
+    bookGfx.fillStyle(0x2a1a0e, 1);
+    bookGfx.fillRoundedRect(px - 8, py - 6, 250, 140, 4);
+    // Spine
+    bookGfx.fillStyle(0x1a0e06, 1);
+    bookGfx.fillRect(px - 8, py - 6, 8, 140);
+    // Page edges
+    bookGfx.fillStyle(0xd8d0c0, 0.3);
+    bookGfx.fillRect(px + 238, py - 2, 4, 132);
+    // Wear marks
+    bookGfx.fillStyle(0x3a2a1a, 0.4);
+    bookGfx.fillRect(px + 20, py + 30, 180, 1);
+    bookGfx.fillRect(px + 15, py + 70, 190, 1);
+    bookGfx.fillRect(px + 25, py + 100, 170, 1);
+
+    const headerText = this.add.text(px + 120, py + 8, 'STUNTLISTING\nBOOK', {
       fontFamily: 'Courier New, monospace',
       fontSize: '14px',
-      color: '#6a6050',
+      color: '#8a6a3a',
+      fontStyle: 'bold',
+      align: 'center',
       letterSpacing: 2,
-    });
+    }).setOrigin(0.5, 0);
     this.bottomHalfContainer.add(headerText);
-    py += 20;
+    py += 42;
 
     // Look Up button
     const lastName = visitor.name.split(' ').slice(-1)[0] || visitor.name;
@@ -1481,24 +1521,12 @@ export class DeskScene extends Phaser.Scene {
   private drawDialogue(visitor: Visitor): void {
     this.dialogueContainer.removeAll(true);
 
-    const panelX = 10;
-    const btnY = 742;
-    const convoY = 778;
-    const convoH = 44;
-
     const gfx = this.add.graphics();
     this.dialogueContainer.add(gfx);
 
-    // Conversation history panel background
-    gfx.fillStyle(0x0e0e14, 0.92);
-    gfx.fillRoundedRect(panelX, convoY, 520, convoH, 4);
-    gfx.lineStyle(1, 0x2a2a36, 0.8);
-    gfx.strokeRoundedRect(panelX, convoY, 520, convoH, 4);
-
-    // Render conversation history
-    this.renderConversationHistory(panelX, convoY, convoH);
-
-    // Dialogue option buttons — full width, row above conversation
+    // Question buttons row
+    const btnY = 705;
+    const btnH = 36;
     const options = [
       { key: 'tell_me_about_experience', label: 'Experience?' },
       { key: 'about_your_reel', label: 'Skills?' },
@@ -1506,10 +1534,10 @@ export class DeskScene extends Phaser.Scene {
       { key: 'are_you_sag', label: 'SAG?' },
     ];
 
-    const btnW = 150;
-    const btnH = 34;
-    const btnGap = 6;
-    const startX = panelX;
+    const totalW = 780;
+    const btnGap = 8;
+    const btnW = (totalW - btnGap * 3) / 4;
+    const startX = 10;
 
     options.forEach((opt, i) => {
       const bx = startX + i * (btnW + btnGap);
@@ -1522,7 +1550,7 @@ export class DeskScene extends Phaser.Scene {
 
       const btn = this.add.text(bx + btnW / 2, btnY + btnH / 2, opt.label, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '14px',
+        fontSize: '16px',
         color: '#e8c36a',
         fontStyle: 'bold',
       }).setOrigin(0.5).setInteractive({ useHandCursor: true });
@@ -1540,20 +1568,29 @@ export class DeskScene extends Phaser.Scene {
       this.dialogueContainer.add(btn);
     });
 
-    // Action buttons — HIRE and GET LOST, big and prominent
-    const actionY = convoY + convoH + 6;
-    const actionBtnW = 180;
-    const actionBtnH = 40;
+    // Conversation box
+    const convoY = 748;
+    const convoH = 80;
+    gfx.fillStyle(0x0e0e14, 0.92);
+    gfx.fillRoundedRect(10, convoY, 780, convoH, 4);
+    gfx.lineStyle(1, 0x2a2a36, 0.8);
+    gfx.strokeRoundedRect(10, convoY, 780, convoH, 4);
+
+    this.renderConversationHistory(10, convoY, convoH);
+
+    // Action buttons
+    const actionY = 834;
+    const actionBtnH = 34;
 
     // HIRE button
     const hireBg = this.add.graphics();
     this.dialogueContainer.add(hireBg);
     hireBg.fillStyle(0x1a3a1e, 1);
-    hireBg.fillRoundedRect(panelX, actionY, actionBtnW, actionBtnH, 6);
+    hireBg.fillRoundedRect(10, actionY, 250, actionBtnH, 6);
     hireBg.lineStyle(2, 0x4a7a4f, 1);
-    hireBg.strokeRoundedRect(panelX, actionY, actionBtnW, actionBtnH, 6);
+    hireBg.strokeRoundedRect(10, actionY, 250, actionBtnH, 6);
 
-    const hireBtn = this.add.text(panelX + actionBtnW / 2, actionY + actionBtnH / 2, 'HIRE', {
+    const hireBtn = this.add.text(135, actionY + actionBtnH / 2, 'HIRE', {
       fontFamily: 'Courier New, monospace',
       fontSize: '20px',
       color: '#6aba6f',
@@ -1569,11 +1606,11 @@ export class DeskScene extends Phaser.Scene {
     const rejectBg = this.add.graphics();
     this.dialogueContainer.add(rejectBg);
     rejectBg.fillStyle(0x3a1a1a, 1);
-    rejectBg.fillRoundedRect(panelX + actionBtnW + 10, actionY, actionBtnW + 40, actionBtnH, 6);
+    rejectBg.fillRoundedRect(270, actionY, 300, actionBtnH, 6);
     rejectBg.lineStyle(2, 0xc4553a, 1);
-    rejectBg.strokeRoundedRect(panelX + actionBtnW + 10, actionY, actionBtnW + 40, actionBtnH, 6);
+    rejectBg.strokeRoundedRect(270, actionY, 300, actionBtnH, 6);
 
-    const rejectBtn = this.add.text(panelX + actionBtnW + 10 + (actionBtnW + 40) / 2, actionY + actionBtnH / 2, 'GET LOST', {
+    const rejectBtn = this.add.text(420, actionY + actionBtnH / 2, 'GET LOST', {
       fontFamily: 'Courier New, monospace',
       fontSize: '20px',
       color: '#e06050',
@@ -1599,9 +1636,9 @@ export class DeskScene extends Phaser.Scene {
       // (greeting text is set via showVisitorResponse after drawDialogue)
       this.currentDialogueText = this.add.text(panelX + 8, ty, '', {
         fontFamily: 'Courier New, monospace',
-        fontSize: '14px',
+        fontSize: '16px',
         color: '#d4c5a0',
-        wordWrap: { width: 500 },
+        wordWrap: { width: 760 },
         lineSpacing: 2,
       });
       this.dialogueContainer.add(this.currentDialogueText);
@@ -1617,9 +1654,9 @@ export class DeskScene extends Phaser.Scene {
       // Question (dim)
       const qText = this.add.text(panelX + 8, ty, `> ${entry.question}`, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '12px',
+        fontSize: '14px',
         color: '#6a6050',
-        wordWrap: { width: 500 },
+        wordWrap: { width: 760 },
       });
       this.dialogueContainer.add(qText);
       ty += lineH + 2;
@@ -1629,9 +1666,9 @@ export class DeskScene extends Phaser.Scene {
       // Answer (bright)
       const aText = this.add.text(panelX + 8, ty, entry.answer, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '14px',
+        fontSize: '16px',
         color: '#d4c5a0',
-        wordWrap: { width: 500 },
+        wordWrap: { width: 760 },
         lineSpacing: 1,
       });
       this.dialogueContainer.add(aText);
@@ -1786,49 +1823,50 @@ export class DeskScene extends Phaser.Scene {
 
   private playReel(visitor: Visitor): void {
     if (!this.reelDisplayText || !visitor.skillReel) return;
-
-    this.reelDisplayText.setText('>> PLAYING...');
+    this.reelAnimating = true;
+    this.reelAnimFrame = 0;
+    this.reelAnimElapsed = 0;
+    this.pendingReelVisitor = visitor;
+    this.reelDisplayText.setText('\u25b6 PLAYING...');
     this.reelDisplayText.setColor('#e8c36a');
+  }
 
-    this.time.delayedCall(800, () => {
-      if (!this.reelDisplayText || !visitor.skillReel) return;
-      const reel = visitor.skillReel;
-      const state = this.gsm.getCurrentState();
+  private showReelResult(): void {
+    const visitor = this.pendingReelVisitor;
+    if (!this.reelDisplayText || !visitor?.skillReel) return;
+    const reel = visitor.skillReel;
+    const state = this.gsm.getCurrentState();
 
-      const dupCheck = this.reelSystem.checkForDuplicate(reel, state.seenReels);
+    const dupCheck = this.reelSystem.checkForDuplicate(reel, state.seenReels);
+    const animation = REEL_ANIMATIONS.find(a => a.id === reel.animationId);
+    const animDesc = animation ? animation.description : reel.animationId.replace(/_/g, ' ');
+    const animType = animation ? animation.stuntType : 'unknown';
+    const bodyMismatch = this.reelSystem.checkBodyTypeMismatch(reel, visitor);
 
-      const animation = REEL_ANIMATIONS.find(a => a.id === reel.animationId);
-      const animDesc = animation ? animation.description : reel.animationId.replace(/_/g, ' ');
-      const animType = animation ? animation.stuntType : 'unknown';
+    const lines = [
+      `TITLE: ${reel.titleCardName}`,
+      `Stunt: ${animType}`,
+      animDesc,
+      `Build: ${reel.bodyType.build} ${reel.bodyType.height}" / ${reel.bodyType.weight}lb`,
+    ];
 
-      const bodyMismatch = this.reelSystem.checkBodyTypeMismatch(reel, visitor);
+    if (dupCheck.isDuplicate) {
+      lines.push('');
+      lines.push('** DUPLICATE REEL **');
+      lines.push(`Same footage shown by: ${dupCheck.originalOwner}`);
+      this.reelDisplayText.setColor('#c4553a');
+      this.showDuplicateReelCallout(visitor, dupCheck.originalOwner!);
+    } else if (bodyMismatch) {
+      lines.push('');
+      lines.push('Body type mismatch with reel.');
+      this.reelDisplayText.setColor('#e8c36a');
+    } else {
+      this.reelDisplayText.setColor('#d4c5a0');
+    }
 
-      const lines = [
-        `TITLE: ${reel.titleCardName}`,
-        `Stunt: ${animType}`,
-        animDesc,
-        `Build: ${reel.bodyType.build} ${reel.bodyType.height}" / ${reel.bodyType.weight}lb`,
-      ];
-
-      if (dupCheck.isDuplicate) {
-        lines.push('');
-        lines.push(`** DUPLICATE REEL **`);
-        lines.push(`Same footage shown by: ${dupCheck.originalOwner}`);
-        this.reelDisplayText!.setColor('#c4553a');
-
-        this.showDuplicateReelCallout(visitor, dupCheck.originalOwner!);
-      } else if (bodyMismatch) {
-        lines.push('');
-        lines.push('Body type mismatch with reel.');
-        this.reelDisplayText!.setColor('#e8c36a');
-      } else {
-        this.reelDisplayText!.setColor('#d4c5a0');
-      }
-
-      this.reelDisplayText!.setText(lines.join('\n'));
-
-      this.reelSystem.recordReel(reel, visitor.name, state.seenReels);
-    });
+    this.reelDisplayText.setText(lines.join('\n'));
+    this.reelSystem.recordReel(reel, visitor.name, state.seenReels);
+    this.pendingReelVisitor = null;
   }
 
   private showDuplicateReelCallout(visitor: Visitor, originalOwner: string): void {
@@ -1984,7 +2022,7 @@ export class DeskScene extends Phaser.Scene {
     cancelBg.lineStyle(1, 0x4a4a56, 1);
     cancelBg.strokeRoundedRect(350, 565, 100, 26, 4);
 
-    const cancelBtn = this.add.text(400, 572, 'CANCEL', {
+    const cancelBtn = this.add.text(400, 578, 'CANCEL', {
       fontFamily: 'Courier New, monospace',
       fontSize: '14px',
       color: '#888070',

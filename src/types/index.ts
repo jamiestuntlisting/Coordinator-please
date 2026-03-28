@@ -204,6 +204,7 @@ export interface NightConfig {
   kidExpenseChance: number;
   openingMonologue: string;
   closingMonologue: string;
+  hiringDeadline: number;
 }
 
 export interface RoleTemplate {

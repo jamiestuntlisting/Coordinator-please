@@ -39,6 +39,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     kidExpenseChance: 0,
     openingMonologue: "A week of overnights. I would say I've done worse... if I could even remember...",
     closingMonologue: 'Not bad. 11 hours in the dark. But I survived.',
+    hiringDeadline: 24,
   },
 
   // ============================================================
@@ -89,6 +90,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     kidExpenseChance: 0.6,
     openingMonologue: 'Night two. Already tired.',
     closingMonologue: 'Someone tried to bribe me $20. I thought about it for way too long.',
+    hiringDeadline: 24,
   },
 
   // ============================================================
@@ -149,6 +151,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     kidExpenseChance: 0,
     openingMonologue: "How does everyone know what I'm hiring for? It's 1 AM.",
     closingMonologue: 'Three nights down. Four to go.',
+    hiringDeadline: 23.5,
   },
 
   // ============================================================
@@ -209,6 +212,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     kidExpenseChance: 0.8,
     openingMonologue: 'Halfway. My back is a federal crime.',
     closingMonologue: "Wife #2's lawyer called. Something about arrears.",
+    hiringDeadline: 23,
   },
 
   // ============================================================
@@ -259,6 +263,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     kidExpenseChance: 0.5,
     openingMonologue: 'No ND spots tonight. Nowhere to hide.',
     closingMonologue: 'My cousin does HVAC. Benefits. Sleeps at night.',
+    hiringDeadline: 24,
   },
 
   // ============================================================
@@ -329,6 +334,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     kidExpenseChance: 0.8,
     openingMonologue: "Going non-union tonight. This'll be interesting.",
     closingMonologue: 'One more night. One. More. Night.',
+    hiringDeadline: 23,
   },
 
   // ============================================================
@@ -399,5 +405,6 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     kidExpenseChance: 0.6,
     openingMonologue: 'Last night. Whatever happens, this is the last night.',
     closingMonologue: "After tonight, I'm done. For at least a week. Maybe forever.",
+    hiringDeadline: 22,
   },
 ];

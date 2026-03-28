@@ -81,8 +81,18 @@ export class CallSheetScene extends Phaser.Scene {
       fontStyle: 'bold',
     }).setOrigin(0.5);
 
+    // Deadline display
+    const deadline = this.nightConfig.hiringDeadline;
+    const deadlineStr = this.formatDeadline(deadline);
+    this.add.text(400, 84, `MUST HIRE BY: ${deadlineStr}`, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '16px',
+      color: '#e8c36a',
+      fontStyle: 'bold',
+    }).setOrigin(0.5);
+
     // Column headers
-    const headerY = 94;
+    const headerY = 108;
     const headerStyle = { fontFamily: 'Courier New, monospace', fontSize: '14px', color: '#888070' };
     this.add.text(80, headerY, 'ROLE', headerStyle);
     this.add.text(230, headerY, 'STUNT', headerStyle);
@@ -93,14 +103,14 @@ export class CallSheetScene extends Phaser.Scene {
 
     // Horizontal rule under headers
     gfx.lineStyle(1, 0x3a352e, 0.8);
-    gfx.lineBetween(85, 112, 730, 112);
+    gfx.lineBetween(85, 126, 730, 126);
     gfx.lineStyle(1, 0x3a352e, 0.3);
-    gfx.lineBetween(85, 114, 730, 114);
+    gfx.lineBetween(85, 128, 730, 128);
 
     // Role rows
     const roles = this.nightConfig.roles;
     const rowHeight = 62;
-    const startY = 120;
+    const startY = 134;
 
     roles.forEach((role: RoleTemplate, i: number) => {
       const y = startY + i * rowHeight;
@@ -326,6 +336,15 @@ export class CallSheetScene extends Phaser.Scene {
     if (this.vhs) {
       this.vhs.updateGrain(delta);
     }
+  }
+
+  private formatDeadline(t: number): string {
+    let hour = Math.floor(t);
+    const minutes = Math.floor((t - hour) * 60);
+    if (hour >= 24) hour -= 24;
+    const dh = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+    const ap = (Math.floor(t) >= 24) ? 'AM' : (hour >= 12 && hour < 24) ? 'PM' : 'AM';
+    return `${dh}:${minutes.toString().padStart(2, '0')} ${ap}`;
   }
 
   private drawReadyGlow(x: number, y: number, w: number, h: number, alpha: number): void {

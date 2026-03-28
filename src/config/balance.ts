@@ -39,7 +39,7 @@ export const BALANCE: BalanceConfig = {
     wrong_hire_high_serious_injury: -5,
     wrong_hire_upgraded_nd_injury: -5,
     non_sag_on_sag_night: -4,
-    passed_legit: -1,
+    passed_legit: 0,
     unfilled_role: -2,
   },
 
