@@ -261,7 +261,7 @@ export class VisitorGenerator {
     };
 
     const reel: SkillReel | null = chance(0.7) ? {
-      animationId: `anim_${randomInt(1, 8)}`,
+      animationId: `anim_${randomInt(1, 12)}`,
       titleCardName: name,
       bodyType: { ...body },
     } : null;
@@ -282,7 +282,7 @@ export class VisitorGenerator {
 
     const insuranceTalk = chance(0.5) ? pick(INSURANCE_TALK_LEGIT) : null;
 
-    const dialogueResponses = this.generateDialogueResponses(true, personality, name);
+    const dialogueResponses = this.generateDialogueResponses(true, personality, name, resume.coordinatorRefs);
     const appearance = this.generateAppearance(gender);
 
     return {
@@ -426,7 +426,7 @@ export class VisitorGenerator {
 
     const differentBody: BodyType = reelBodyMatch ? { ...body } : this.generateBodyType();
     const reel: SkillReel | null = chance(0.6) ? {
-      animationId: `anim_${randomInt(1, 8)}`,
+      animationId: `anim_${randomInt(1, 12)}`,
       titleCardName: reelName,
       bodyType: differentBody,
     } : null;
@@ -443,7 +443,7 @@ export class VisitorGenerator {
       hasPhoto: chance(0.3),
     } : null;
 
-    const dialogueResponses = this.generateDialogueResponses(false, personality, name);
+    const dialogueResponses = this.generateDialogueResponses(false, personality, name, resume.coordinatorRefs);
     const appearance = this.generateAppearance(gender);
 
     return {
@@ -615,7 +615,7 @@ export class VisitorGenerator {
       listedWeight: `${body.weight}`,
     };
 
-    const dialogueResponses = this.generateDialogueResponses(false, original.personality, newName);
+    const dialogueResponses = this.generateDialogueResponses(false, original.personality, newName, resume.coordinatorRefs);
     // Add a tell — they reference the same coordinator or have similar phrasing
     dialogueResponses['how_did_you_hear'] = original.dialogueResponses['how_did_you_hear'] || pick(HOW_HEARD_FAKER);
 
@@ -685,7 +685,7 @@ export class VisitorGenerator {
     };
 
     const reel: SkillReel | null = chance(0.6) ? {
-      animationId: `anim_${randomInt(1, 8)}`,
+      animationId: `anim_${randomInt(1, 12)}`,
       titleCardName: name,
       bodyType: { ...body },
     } : null;
@@ -703,7 +703,7 @@ export class VisitorGenerator {
     } : null;
 
     const appearance = this.generateAppearance(gender);
-    const dialogueResponses = this.generateDialogueResponses(isLegit, personality, name);
+    const dialogueResponses = this.generateDialogueResponses(isLegit, personality, name, refs);
     // Override greeting to reference family
     dialogueResponses['greeting'] = pick([
       `My uncle ${refs[0].name} said you'd have something for me.`,
@@ -889,6 +889,7 @@ export class VisitorGenerator {
     isLegit: boolean,
     personality: PersonalityType,
     name: string,
+    coordRefs?: CoordRef[],
   ): Record<string, string> {
     const responses: Record<string, string> = {};
 
@@ -934,36 +935,43 @@ export class VisitorGenerator {
       responses['how_did_you_hear'] = pick(HOW_HEARD_FAKER);
     }
 
-    // Experience question
+    // Experience question — reference actual coordinator refs from resume
+    const refName = coordRefs && coordRefs.length > 0 ? coordRefs[0].name : 'my coordinator';
+    const refName2 = coordRefs && coordRefs.length > 1 ? coordRefs[1].name : refName;
+
     if (isLegit) {
+      // Legit: mentions a name that IS on their resume refs
       responses['tell_me_about_experience'] = pick([
         'Been doing this fifteen years. Started as a utility, worked my way up.',
-        'I\'ve doubled for a couple leads — nothing huge, but I know what I\'m doing.',
-        'My coordinator can vouch for me. I work clean, no problems.',
+        `Call ${refName}. He'll tell you I work clean, no problems. I'm on his resume, check it.`,
         'Twenty years in the business. I started when falls paid fifty bucks and a handshake.',
-        'I was Bobby Barton\'s regular double for three years. He\'ll tell you himself.',
+        `I worked three shows with ${refName} last year. Call him right now if you want. He's in my refs.`,
         'I specialize in fire gags. Nobody does them cleaner.',
         'Last month I did a 60-foot fall off a building for a Paramount picture. No pads, just boxes.',
+        `${refName} hired me six times in a row. Ask him yourself — he'll pick up.`,
       ]);
       responses['tell_me_about_experience_2'] = pick([
-        'I doubled for a lead on that one Universal picture. Three weeks, no complaints. The coordinator brought me back for the sequel.',
-        'Did a whole season on a TV show — car hits, ratchet pulls, the works. Ask anyone on that crew, they\'ll tell you I\'m solid.',
-        'Last year I did six features back to back. Every one wrapped without a single safety incident on my watch.',
+        `I doubled for a lead on that one Universal picture. Three weeks, no complaints. ${refName} brought me back for the sequel.`,
+        'Did a whole season on a TV show — car hits, ratchet pulls, the works. Ask anyone on that crew.',
+        `Last year I did six features back to back. ${refName2} can confirm. Every one wrapped clean.`,
       ]);
       responses['tell_me_about_experience_3'] = pick([
-        `Look, call ${pick(COORDINATOR_NAMES)}. They'll tell you I show up on time, know my marks, and I don't complain. That's all you need to know.`,
-        'I\'ve been at this since before half these kids were born. This isn\'t a hobby for me — it\'s my life. I take it seriously.',
-        'You want references? I\'ve got a stack of coordinators who\'ll vouch for me. I don\'t need to prove anything, but I will.',
+        `Look, call ${refName}. He'll tell you I show up on time, know my marks, and I don't complain.`,
+        'I\'ve been at this since before half these kids were born. This isn\'t a hobby for me — it\'s my life.',
+        `You want references? ${refName} and ${refName2} will both pick up. I don't need to prove anything, but I will.`,
       ]);
     } else {
+      // Faker: sometimes mentions a name that is NOT on their resume — a tell
+      const fakeCoordName = pick(COORDINATOR_NAMES.filter(c => !coordRefs?.some(r => r.name === c)));
       responses['tell_me_about_experience'] = pick([
         'Oh yeah, I\'ve done tons of stuff. You know, the usual.',
         'I did some extra work on a few shows. Same thing, right?',
         'I\'m a quick learner. How hard can it be?',
-        'I did some background work on a commercial. Stunt work is basically the same, right?',
+        `Yeah, call ${fakeCoordName}. He knows me. We go way back.`,
         'My friend is a stunt guy and he showed me some stuff. I pick things up fast.',
         'I\'ve been training at the gym for this. I\'m in great shape.',
         'I watched every Jackie Chan movie twice. I know what I\'m doing.',
+        `${fakeCoordName} said he'd put in a word for me. We worked together... once.`,
       ]);
       responses['tell_me_about_experience_2'] = pick([
         'Well, I mean... I\'ve watched a LOT of behind-the-scenes stuff. I know how it works. I\'ve studied every Jackie Chan movie twice.',

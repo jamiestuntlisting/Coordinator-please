@@ -103,6 +103,14 @@ export class DeskScene extends Phaser.Scene {
   private clockElapsed: number = 0;
   private clockText: Phaser.GameObjects.Text | null = null;
   private statusTimeText: Phaser.GameObjects.Text | null = null;
+
+  // Talking animation
+  private isTalking: boolean = false;
+  private talkElapsed: number = 0;
+  private talkDuration: number = 1800; // ms of mouth movement
+  private talkFrame: number = 0;
+  private faceGfx: Phaser.GameObjects.Graphics | null = null;
+  private talkExpression: 'neutral' | 'angry' | 'nervous' | 'smug' = 'neutral';
   private dialogueClickCounts: Record<string, number> = {};
   private reelAnimating: boolean = false;
   private reelAnimFrame: number = 0;
@@ -186,6 +194,11 @@ export class DeskScene extends Phaser.Scene {
     this.clockElapsed = 0;
     this.clockText = null;
     this.statusTimeText = null;
+    this.isTalking = false;
+    this.talkElapsed = 0;
+    this.talkFrame = 0;
+    this.faceGfx = null;
+    this.talkExpression = 'neutral';
 
     // Store in GameStateManager
     this.gsm.updateState({
@@ -246,6 +259,21 @@ export class DeskScene extends Phaser.Scene {
       this.visitorSpriteContainer.setAlpha(progress);
       if (progress >= 1) {
         this.visitorFadeIn = false;
+      }
+    }
+
+    // Talking animation — mouth moves, expression changes
+    if (this.isTalking && this.faceGfx && this.currentVisitor) {
+      this.talkElapsed += delta;
+      const frameInterval = 120; // fast mouth movement
+      if (this.talkElapsed > this.talkFrame * frameInterval) {
+        this.talkFrame++;
+        this.drawFaceExpression(this.talkFrame, this.talkExpression);
+      }
+      if (this.talkElapsed >= this.talkDuration) {
+        this.isTalking = false;
+        // Draw resting face
+        this.drawFaceExpression(-1, 'neutral');
       }
     }
 
@@ -832,7 +860,7 @@ export class DeskScene extends Phaser.Scene {
       gfx.fillRect(vx + 4*s, vy - 6*s, 2*s, 6*s);
     }
 
-    // Glasses
+    // Glasses (drawn on body layer, under face layer)
     if (app.hasGlasses) {
       gfx.lineStyle(1.5*s, 0x2a2a2a, 0.8);
       gfx.strokeCircle(vx - 5*s, vy - 12*s, 3.5*s);
@@ -840,21 +868,10 @@ export class DeskScene extends Phaser.Scene {
       gfx.lineBetween(vx - 1.5*s, vy - 12*s, vx + 1.5*s, vy - 12*s);
     }
 
-    // Eyes
-    gfx.fillStyle(0xffffff, 0.9);
-    gfx.fillEllipse(vx - 5*s, vy - 12*s, 5*s, 3*s);
-    gfx.fillEllipse(vx + 5*s, vy - 12*s, 5*s, 3*s);
-    gfx.fillStyle(0x1a1a1a, 1);
-    gfx.fillCircle(vx - 5*s, vy - 12*s, 1.5*s);
-    gfx.fillCircle(vx + 5*s, vy - 12*s, 1.5*s);
-
-    // Nose
-    gfx.fillStyle(skinShadow, 0.5);
-    gfx.fillTriangle(vx, vy - 8*s, vx - 2*s, vy - 4*s, vx + 2*s, vy - 4*s);
-
-    // Mouth
-    gfx.fillStyle(0x8a5a4a, 0.6);
-    gfx.fillEllipse(vx, vy - 2*s, 6*s, 2*s);
+    // Face features — drawn on separate graphics so we can animate them
+    this.faceGfx = this.add.graphics();
+    this.visitorSpriteContainer!.add(this.faceGfx);
+    this.drawFaceExpression(-1, 'neutral'); // -1 = resting face
 
     // Wig guy - badly fitting wig
     if (this.currentVisitor?.isWigGuy) {
@@ -868,6 +885,143 @@ export class DeskScene extends Phaser.Scene {
       gfx.fillStyle(0x1a1a1a, 1);
       gfx.fillRect(vx + 10*s, vy - 28*s, 5*s, 6*s);
     }
+  }
+
+  // ---- Face expression animation ----
+
+  private drawFaceExpression(frame: number, expression: 'neutral' | 'angry' | 'nervous' | 'smug'): void {
+    if (!this.faceGfx || !this.currentVisitor) return;
+    this.faceGfx.clear();
+
+    const vx = 400;
+    const vy = 160;
+    const s = 4.0;
+    const app = this.currentVisitor.appearance;
+    const skinShadow = app.skinShadow;
+    const fg = this.faceGfx;
+
+    // Mouth frames: -1 = resting, 0+ = talking animation
+    const mouthFrame = frame < 0 ? -1 : frame % 6;
+
+    // ---- Eyes ----
+    // Expression affects eye shape/brow position
+    const browOffset = expression === 'angry' ? 2*s : (expression === 'nervous' ? -1*s : 0);
+    const eyeSquint = expression === 'angry' ? 0.6 : (expression === 'smug' ? 0.7 : 1.0);
+
+    // Eyebrows
+    fg.fillStyle(app.hairColor, 0.7);
+    if (expression === 'angry') {
+      // Angry V brows
+      fg.fillTriangle(vx - 9*s, vy - 16*s + browOffset, vx - 2*s, vy - 14*s + browOffset, vx - 9*s, vy - 15*s + browOffset);
+      fg.fillTriangle(vx + 9*s, vy - 16*s + browOffset, vx + 2*s, vy - 14*s + browOffset, vx + 9*s, vy - 15*s + browOffset);
+    } else if (expression === 'nervous') {
+      // Raised worried brows
+      fg.fillRect(vx - 9*s, vy - 17*s + browOffset, 7*s, 1.5*s);
+      fg.fillRect(vx + 2*s, vy - 17*s + browOffset, 7*s, 1.5*s);
+    } else {
+      // Neutral brows
+      fg.fillRect(vx - 9*s, vy - 16*s, 7*s, 1.5*s);
+      fg.fillRect(vx + 2*s, vy - 16*s, 7*s, 1.5*s);
+    }
+
+    // Eye whites
+    fg.fillStyle(0xffffff, 0.9);
+    fg.fillEllipse(vx - 5*s, vy - 12*s, 5*s, 3*s * eyeSquint);
+    fg.fillEllipse(vx + 5*s, vy - 12*s, 5*s, 3*s * eyeSquint);
+
+    // Pupils — shift slightly based on expression
+    const pupilShiftX = expression === 'nervous' ? 0.5*s : (expression === 'smug' ? -0.3*s : 0);
+    fg.fillStyle(0x1a1a1a, 1);
+    fg.fillCircle(vx - 5*s + pupilShiftX, vy - 12*s, 1.5*s);
+    fg.fillCircle(vx + 5*s + pupilShiftX, vy - 12*s, 1.5*s);
+
+    // Blink on certain frames
+    if (mouthFrame === 3) {
+      // Blink — close eyes briefly
+      fg.fillStyle(app.skinTone, 0.95);
+      fg.fillEllipse(vx - 5*s, vy - 12*s, 5*s, 3*s);
+      fg.fillEllipse(vx + 5*s, vy - 12*s, 5*s, 3*s);
+      fg.fillStyle(app.hairColor, 0.5);
+      fg.fillRect(vx - 7*s, vy - 12.5*s, 5*s, 1*s);
+      fg.fillRect(vx + 2*s, vy - 12.5*s, 5*s, 1*s);
+    }
+
+    // ---- Nose ----
+    fg.fillStyle(skinShadow, 0.5);
+    fg.fillTriangle(vx, vy - 8*s, vx - 2*s, vy - 4*s, vx + 2*s, vy - 4*s);
+
+    // ---- Mouth ----
+    fg.fillStyle(0x8a5a4a, 0.7);
+
+    if (mouthFrame < 0) {
+      // Resting face — closed or slight smile
+      if (expression === 'smug') {
+        // Slight smirk
+        fg.fillEllipse(vx + 1*s, vy - 2*s, 6*s, 2*s);
+      } else if (expression === 'angry') {
+        // Tight frown
+        fg.fillRect(vx - 3*s, vy - 2*s, 6*s, 1.5*s);
+      } else {
+        // Neutral closed
+        fg.fillEllipse(vx, vy - 2*s, 6*s, 2*s);
+      }
+    } else {
+      // Talking frames — mouth opens/closes in a cycle
+      switch (mouthFrame) {
+        case 0: // slightly open
+          fg.fillEllipse(vx, vy - 2*s, 5*s, 2.5*s);
+          fg.fillStyle(0x3a1a1a, 0.6);
+          fg.fillEllipse(vx, vy - 1.5*s, 3*s, 1.5*s);
+          break;
+        case 1: // wide open
+          fg.fillEllipse(vx, vy - 1.5*s, 6*s, 4*s);
+          fg.fillStyle(0x3a1a1a, 0.7);
+          fg.fillEllipse(vx, vy - 1*s, 4*s, 3*s);
+          break;
+        case 2: // medium "O"
+          fg.fillEllipse(vx, vy - 2*s, 4*s, 3*s);
+          fg.fillStyle(0x3a1a1a, 0.6);
+          fg.fillEllipse(vx, vy - 1.5*s, 2.5*s, 2*s);
+          break;
+        case 3: // closed (blink frame)
+          fg.fillEllipse(vx, vy - 2*s, 6*s, 1.5*s);
+          break;
+        case 4: // wide talking
+          fg.fillEllipse(vx, vy - 1*s, 7*s, 3.5*s);
+          fg.fillStyle(0x3a1a1a, 0.7);
+          fg.fillEllipse(vx, vy - 0.5*s, 5*s, 2.5*s);
+          // Teeth hint
+          fg.fillStyle(0xdddddd, 0.4);
+          fg.fillRect(vx - 2*s, vy - 2*s, 4*s, 1*s);
+          break;
+        case 5: // back to slightly open
+          fg.fillEllipse(vx, vy - 2*s, 5*s, 2*s);
+          fg.fillStyle(0x3a1a1a, 0.5);
+          fg.fillEllipse(vx, vy - 1.5*s, 3*s, 1*s);
+          break;
+      }
+    }
+  }
+
+  private startTalking(personality?: string): void {
+    if (!this.currentVisitor) return;
+
+    // Pick expression based on personality
+    const p = personality ?? this.currentVisitor.personality;
+    if (p === 'aggressive' || p === 'angry') {
+      this.talkExpression = 'angry';
+    } else if (p === 'nervous' || p === 'desperate') {
+      this.talkExpression = 'nervous';
+    } else if (p === 'smooth' || p === 'confident') {
+      this.talkExpression = 'smug';
+    } else {
+      this.talkExpression = 'neutral';
+    }
+
+    this.isTalking = true;
+    this.talkElapsed = 0;
+    this.talkFrame = 0;
+    this.talkDuration = 1200 + randomInt(0, 800); // 1.2-2s of talking
   }
 
   // ================================================================
@@ -1283,6 +1437,7 @@ export class DeskScene extends Phaser.Scene {
         // Headshot doesn't match — trigger mismatch dialogue
         const response = visitor.dialogueResponses['headshot_mismatch'] ?? 'Uh... that\'s me. Definitely me.';
         this.conversationHistory.push({ question: 'This headshot doesn\'t look like you...', answer: response });
+        this.startTalking('nervous');
         this.drawDialogue(visitor);
       } else {
         this.conversationHistory.push({ question: '', answer: '[Headshot matches. Looks legit.]' });
@@ -1612,6 +1767,9 @@ export class DeskScene extends Phaser.Scene {
         const response = visitor.dialogueResponses[responseKey] ?? visitor.dialogueResponses[opt.key] ?? '...';
         this.conversationHistory.push({ question: opt.label, answer: response });
 
+        // Visitor talks — mouth moves, expression changes
+        this.startTalking();
+
         // Show SAG card visual when asking about SAG
         if (opt.key === 'are_you_sag' && count === 1) {
           this.showSagCardVisual(visitor);
@@ -1845,6 +2003,7 @@ export class DeskScene extends Phaser.Scene {
 
     // Show greeting
     this.showVisitorResponse(visitor.dialogueResponses['greeting'] ?? `Hey. I'm ${visitor.name}.`);
+    this.startTalking();
 
     // Bribe is now shown on the HIRE button — no separate conversation event needed
   }
@@ -2017,7 +2176,9 @@ export class DeskScene extends Phaser.Scene {
     this.pendingReelVisitor = null;
   }
 
-  private drawReelVisual(stuntType: string, titleName: string, isDuplicate: boolean, bodyMismatch: boolean, dupOwner: string | null): void {
+  private drawReelVisual(rawStuntType: string, titleName: string, isDuplicate: boolean, bodyMismatch: boolean, dupOwner: string | null): void {
+    // Normalize stunt type — handle both underscore and space variants
+    const stuntType = rawStuntType.replace(/ /g, '_');
     // Draw inside the reel monitor area (in bottomHalfContainer)
     const reelGfx = this.add.graphics();
     this.bottomHalfContainer.add(reelGfx);
@@ -2121,6 +2282,76 @@ export class DeskScene extends Phaser.Scene {
       reelGfx.fillCircle(figX - 10, figY, 8);
       reelGfx.fillStyle(0xf5d799, 0.5);
       reelGfx.fillCircle(figX - 10, figY, 4);
+    } else if (stuntType === 'fire_run') {
+      // Running figure on fire
+      reelGfx.fillCircle(figX + 5, figY - 10, 4);
+      reelGfx.fillRect(figX + 4, figY - 6, 3, 12);
+      // Running legs
+      reelGfx.fillRect(figX, figY + 6, 2, 8);
+      reelGfx.fillRect(figX + 8, figY + 4, 2, 8);
+      // Arms pumping
+      reelGfx.fillRect(figX - 2, figY - 4, 6, 2);
+      reelGfx.fillRect(figX + 6, figY - 1, 6, 2);
+      // Flames trailing behind
+      reelGfx.fillStyle(0xe8a030, 0.7);
+      reelGfx.fillTriangle(figX - 8, figY - 14, figX - 14, figY + 2, figX - 4, figY + 2);
+      reelGfx.fillTriangle(figX - 4, figY - 16, figX - 10, figY - 2, figX, figY - 2);
+      reelGfx.fillStyle(0xc44020, 0.5);
+      reelGfx.fillTriangle(figX - 2, figY - 12, figX - 6, figY, figX + 2, figY);
+      // Motion lines
+      reelGfx.lineStyle(1, 0xd4c5a0, 0.3);
+      reelGfx.lineBetween(figX - 15, figY - 6, figX - 22, figY - 6);
+      reelGfx.lineBetween(figX - 12, figY + 2, figX - 20, figY + 2);
+    } else if (stuntType === 'fight_and_fall') {
+      // Fight on a rooftop then falling
+      // Two fighters on a ledge
+      reelGfx.fillCircle(figX - 12, figY - 10, 3);
+      reelGfx.fillRect(figX - 13, figY - 7, 3, 10);
+      reelGfx.fillRect(figX - 10, figY - 5, 10, 2); // punch
+      reelGfx.fillCircle(figX + 5, figY - 8, 3);
+      reelGfx.fillRect(figX + 4, figY - 5, 3, 10);
+      // Ledge
+      reelGfx.fillStyle(0x4a4a5a, 0.8);
+      reelGfx.fillRect(figX - 25, figY + 5, 40, 3);
+      // Falling figure below
+      reelGfx.fillStyle(0xd4c5a0, 0.7);
+      reelGfx.fillCircle(figX + 20, figY + 14, 3);
+      reelGfx.fillRect(figX + 19, figY + 17, 3, 8);
+      // Fall arrow
+      reelGfx.fillStyle(0xc4553a, 0.5);
+      reelGfx.fillTriangle(figX + 25, figY + 28, figX + 22, figY + 22, figX + 28, figY + 22);
+    } else if (stuntType === 'motorcycle') {
+      // Motorcycle sliding
+      reelGfx.fillStyle(0x4a4a6a, 0.8);
+      reelGfx.fillRect(figX - 18, figY + 4, 24, 8);
+      reelGfx.fillRect(figX - 14, figY - 2, 16, 6);
+      // Wheels
+      reelGfx.fillStyle(0x1a1a2a, 1);
+      reelGfx.fillCircle(figX - 14, figY + 12, 4);
+      reelGfx.fillCircle(figX + 4, figY + 12, 4);
+      // Rider sliding off
+      reelGfx.fillStyle(0xd4c5a0, 0.9);
+      reelGfx.fillCircle(figX + 16, figY - 4, 4);
+      reelGfx.fillRect(figX + 15, figY, 3, 10);
+      // Sparks
+      reelGfx.fillStyle(0xf5d799, 0.7);
+      reelGfx.fillRect(figX - 20, figY + 10, 2, 2);
+      reelGfx.fillRect(figX - 24, figY + 8, 2, 2);
+      reelGfx.fillRect(figX - 22, figY + 12, 1, 1);
+    } else if (stuntType === 'acting') {
+      // Close-up face — actor, not stunt performer
+      reelGfx.fillStyle(0xc4a882, 0.9);
+      reelGfx.fillEllipse(figX, figY, 28, 34);
+      // Eyes
+      reelGfx.fillStyle(0xffffff, 0.8);
+      reelGfx.fillEllipse(figX - 6, figY - 4, 6, 4);
+      reelGfx.fillEllipse(figX + 6, figY - 4, 6, 4);
+      reelGfx.fillStyle(0x1a1a1a, 1);
+      reelGfx.fillCircle(figX - 6, figY - 4, 2);
+      reelGfx.fillCircle(figX + 6, figY - 4, 2);
+      // Mouth
+      reelGfx.fillStyle(0x8a4a3a, 0.6);
+      reelGfx.fillEllipse(figX, figY + 8, 10, 5);
     } else {
       // Generic - standing figure
       reelGfx.fillCircle(figX, figY - 8, 4);
@@ -2182,7 +2413,8 @@ export class DeskScene extends Phaser.Scene {
     }
   }
 
-  private drawReelAnimFrame(stuntType: string, frame: number): void {
+  private drawReelAnimFrame(rawStuntType: string, frame: number): void {
+    const stuntType = rawStuntType.replace(/ /g, '_');
     // Animate inside the reel monitor area
     const mx = 558;
     const my = 562;
@@ -2272,13 +2504,76 @@ export class DeskScene extends Phaser.Scene {
       clearGfx.fillRect(swingX - 1, figY - 4, 3, 12);
       clearGfx.fillRect(swingX - 10, figY - 2, 8, 2);
       clearGfx.fillRect(swingX + 3, figY - 2, 8, 2);
-    } else {
-      // Actor close-up — just a face acting
+    } else if (stuntType === 'fire_run') {
+      // Running on fire — figure runs across screen with trailing flames
+      const runX = figX - 20 + phase * 12;
+      clearGfx.fillCircle(runX + 5, figY - 10, 4);
+      clearGfx.fillRect(runX + 4, figY - 6, 3, 12);
+      // Alternating run legs
+      if (phase % 2 === 0) {
+        clearGfx.fillRect(runX, figY + 6, 2, 8);
+        clearGfx.fillRect(runX + 8, figY + 4, 2, 6);
+      } else {
+        clearGfx.fillRect(runX + 2, figY + 4, 2, 6);
+        clearGfx.fillRect(runX + 6, figY + 6, 2, 8);
+      }
+      // Pumping arms
+      clearGfx.fillRect(runX - 2 + (phase % 2) * 4, figY - 4, 6, 2);
+      // Flames growing
+      const flameSize = 8 + phase * 2;
+      clearGfx.fillStyle(0xe8a030, 0.6);
+      clearGfx.fillTriangle(runX - 6, figY - flameSize, runX - 12, figY + 4, runX, figY + 4);
+      clearGfx.fillStyle(0xc44020, 0.5);
+      clearGfx.fillTriangle(runX - 2, figY - flameSize - 4, runX - 8, figY, runX + 4, figY);
+    } else if (stuntType === 'fight_and_fall') {
+      // Fight then fall — two phases
+      if (phase < 2) {
+        // Fighting on rooftop
+        clearGfx.fillCircle(figX - 12, figY - 10, 4);
+        clearGfx.fillRect(figX - 13, figY - 6, 3, 12);
+        const punchX = phase === 0 ? 10 : 14;
+        clearGfx.fillRect(figX - 10, figY - 4, punchX, 2);
+        clearGfx.fillCircle(figX + 8, figY - 8, 4);
+        clearGfx.fillRect(figX + 7, figY - 4, 3, 12);
+        // Ledge
+        clearGfx.fillStyle(0x4a4a5a, 0.8);
+        clearGfx.fillRect(figX - 25, figY + 8, 50, 3);
+      } else {
+        // Falling
+        const fallY = figY - 10 + (phase - 2) * 10;
+        clearGfx.fillCircle(figX, fallY, 4);
+        clearGfx.fillRect(figX - 1, fallY + 4, 3, 10);
+        clearGfx.fillRect(figX - 8, fallY + 2 + phase, 6, 2);
+        clearGfx.fillRect(figX + 3, fallY + 6 - phase, 6, 2);
+        // Ledge above
+        clearGfx.fillStyle(0x4a4a5a, 0.6);
+        clearGfx.fillRect(figX - 25, figY - 10, 50, 3);
+      }
+    } else if (stuntType === 'motorcycle') {
+      // Motorcycle sliding — bike slides, rider separates
+      const slideX = figX - 25 + phase * 8;
+      clearGfx.fillStyle(0x4a4a6a, 0.8);
+      clearGfx.fillRect(slideX, figY + 4, 22, 7);
+      clearGfx.fillRect(slideX + 4, figY - 1, 14, 5);
+      clearGfx.fillStyle(0x1a1a2a, 1);
+      clearGfx.fillCircle(slideX + 4, figY + 11, 3);
+      clearGfx.fillCircle(slideX + 18, figY + 11, 3);
+      // Sparks
+      clearGfx.fillStyle(0xf5d799, 0.8);
+      for (let sp = 0; sp < 3; sp++) {
+        clearGfx.fillRect(slideX - 4 - sp * 5, figY + 10 + randomInt(-2, 2), 2, 2);
+      }
+      // Rider rolling away
+      clearGfx.fillStyle(0xd4c5a0, 0.9);
+      const riderX = slideX + 24 + phase * 3;
+      clearGfx.fillCircle(riderX, figY - 2 + (phase % 2) * 4, 4);
+      clearGfx.fillRect(riderX - 1, figY + 2 + (phase % 2) * 2, 3, 8);
+    } else if (stuntType === 'acting') {
+      // Actor close-up — face with changing expressions
       clearGfx.fillStyle(0xc4a882, 0.9);
       clearGfx.fillEllipse(figX, figY, 28, 34);
-      // Eyes
       clearGfx.fillStyle(0x1a1a1a, 1);
-      const eyeOpen = phase % 2 === 0;
+      const eyeOpen = phase % 3 !== 2;
       if (eyeOpen) {
         clearGfx.fillCircle(figX - 6, figY - 4, 2);
         clearGfx.fillCircle(figX + 6, figY - 4, 2);
@@ -2286,12 +2581,19 @@ export class DeskScene extends Phaser.Scene {
         clearGfx.fillRect(figX - 8, figY - 4, 4, 1);
         clearGfx.fillRect(figX + 4, figY - 4, 4, 1);
       }
-      // Mouth changes expression
       clearGfx.fillStyle(0x8a4a3a, 0.6);
       if (phase === 0) clearGfx.fillEllipse(figX, figY + 8, 8, 2);
-      else if (phase === 1) clearGfx.fillEllipse(figX, figY + 8, 10, 4);
+      else if (phase === 1) clearGfx.fillEllipse(figX, figY + 8, 10, 5);
       else if (phase === 2) clearGfx.fillEllipse(figX, figY + 8, 6, 6);
       else clearGfx.fillEllipse(figX, figY + 8, 8, 3);
+    } else {
+      // Generic standing figure
+      clearGfx.fillCircle(figX, figY - 8, 4);
+      clearGfx.fillRect(figX - 1, figY - 4, 3, 14);
+      clearGfx.fillRect(figX - 6, figY - 2, 4, 2);
+      clearGfx.fillRect(figX + 3, figY - 2, 4, 2);
+      clearGfx.fillRect(figX - 3, figY + 10, 2, 6);
+      clearGfx.fillRect(figX + 2, figY + 10, 2, 6);
     }
 
     // REC indicator blinks
@@ -2601,6 +2903,7 @@ export class DeskScene extends Phaser.Scene {
     // Show their departing dialogue
     const getLostResponse = visitor.dialogueResponses['get_lost'] ?? `*${visitor.name} leaves quietly*`;
     this.showVisitorResponse(getLostResponse);
+    this.startTalking('angry');
     this.time.delayedCall(1200, () => this.nextVisitor());
   }
 

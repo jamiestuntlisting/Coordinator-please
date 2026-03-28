@@ -60,6 +60,30 @@ export const REEL_ANIMATIONS: ReelAnimation[] = [
     description: 'Pyro mortar launch, eight-foot air, face-first landing onto pads.',
     bodyType: { height: 69, weight: 170, build: 'average' },
   },
+  {
+    id: 'anim_9',
+    stuntType: 'fire run',
+    description: 'Full body burn running forty feet through alley, dive through window.',
+    bodyType: { height: 70, weight: 175, build: 'athletic' },
+  },
+  {
+    id: 'anim_10',
+    stuntType: 'fight_and_fall',
+    description: 'Rooftop fight sequence ending in three-story backward fall.',
+    bodyType: { height: 71, weight: 180, build: 'athletic' },
+  },
+  {
+    id: 'anim_11',
+    stuntType: 'motorcycle',
+    description: 'Motorcycle slide at 35mph into controlled low-side, roll to feet.',
+    bodyType: { height: 69, weight: 170, build: 'average' },
+  },
+  {
+    id: 'anim_12',
+    stuntType: 'acting',
+    description: 'Dramatic close-up reaction take, emotional range showcase.',
+    bodyType: { height: 68, weight: 165, build: 'average' },
+  },
 ];
 
 export class ReelSystem {
