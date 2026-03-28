@@ -277,9 +277,9 @@ export class DeskScene extends Phaser.Scene {
       }
     }
 
-    // Real-time clock — tick up every 3 seconds of real time = 1 minute game time
+    // Real-time clock — tick up every 1.5 seconds of real time = 1 minute game time (2x speed)
     this.clockElapsed += delta;
-    if (this.clockElapsed >= 3000) {
+    if (this.clockElapsed >= 1500) {
       this.clockElapsed = 0;
       const state = this.gsm.getCurrentState();
       const newTime = state.timeOfNight + (1 / 60); // +1 minute
@@ -1595,36 +1595,43 @@ export class DeskScene extends Phaser.Scene {
   // ---- Book + Reel Panel ----
   private drawBookAndReel(visitor: Visitor): void {
     const px = 544;
-    let py = 390;
+    let py = 386;
 
-    // Book cover
+    // Book — compact leather-bound look
     const bookGfx = this.add.graphics();
     this.bottomHalfContainer.add(bookGfx);
+
+    const bookH = 120;
     // Leather cover
     bookGfx.fillStyle(0x2a1a0e, 1);
-    bookGfx.fillRoundedRect(px - 8, py - 6, 250, 140, 4);
-    // Spine
+    bookGfx.fillRoundedRect(px - 4, py, 248, bookH, 3);
+    // Spine with stitching
     bookGfx.fillStyle(0x1a0e06, 1);
-    bookGfx.fillRect(px - 8, py - 6, 8, 140);
-    // Page edges
-    bookGfx.fillStyle(0xd8d0c0, 0.3);
-    bookGfx.fillRect(px + 238, py - 2, 4, 132);
-    // Wear marks
-    bookGfx.fillStyle(0x3a2a1a, 0.4);
-    bookGfx.fillRect(px + 20, py + 30, 180, 1);
-    bookGfx.fillRect(px + 15, py + 70, 190, 1);
-    bookGfx.fillRect(px + 25, py + 100, 170, 1);
+    bookGfx.fillRect(px - 4, py, 6, bookH);
+    bookGfx.lineStyle(1, 0x3a2a1a, 0.4);
+    for (let sy = py + 8; sy < py + bookH - 4; sy += 8) {
+      bookGfx.fillStyle(0x4a3a2a, 0.3);
+      bookGfx.fillRect(px - 3, sy, 4, 2);
+    }
+    // Page edges (right)
+    bookGfx.fillStyle(0xd8d0c0, 0.25);
+    bookGfx.fillRect(px + 240, py + 4, 3, bookH - 8);
+    // Bottom page edge
+    bookGfx.fillStyle(0xd8d0c0, 0.15);
+    bookGfx.fillRect(px + 6, py + bookH - 3, 234, 3);
+    // Gold emboss title
+    bookGfx.fillStyle(0x8a6a3a, 0.15);
+    bookGfx.fillRect(px + 30, py + 4, 180, 18);
 
-    const headerText = this.add.text(px + 120, py + 8, 'STUNTLISTING\nBOOK', {
+    const headerText = this.add.text(px + 120, py + 6, 'STUNTLISTING', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '14px',
+      fontSize: '13px',
       color: '#8a6a3a',
       fontStyle: 'bold',
-      align: 'center',
-      letterSpacing: 2,
+      letterSpacing: 1,
     }).setOrigin(0.5, 0);
     this.bottomHalfContainer.add(headerText);
-    py += 42;
+    py += 24;
 
     // Look Up button
     const lastName = visitor.name.split(' ').slice(-1)[0] || visitor.name;
@@ -1632,26 +1639,26 @@ export class DeskScene extends Phaser.Scene {
     const lookupBg = this.add.graphics();
     this.bottomHalfContainer.add(lookupBg);
     lookupBg.fillStyle(0x2a2618, 1);
-    lookupBg.fillRoundedRect(px, py, 220, 34, 3);
+    lookupBg.fillRoundedRect(px + 6, py, 226, 30, 3);
     lookupBg.lineStyle(1, 0x5a4a2a, 1);
-    lookupBg.strokeRoundedRect(px, py, 220, 34, 3);
+    lookupBg.strokeRoundedRect(px + 6, py, 226, 30, 3);
 
-    const lookupBtn = this.add.text(px + 8, py + 7, `LOOK UP: ${lastName}`, {
+    const lookupBtn = this.add.text(px + 14, py + 6, `LOOK UP: ${lastName}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '15px',
       color: '#e8c36a',
       fontStyle: 'bold',
     }).setInteractive({ useHandCursor: true });
     this.bottomHalfContainer.add(lookupBtn);
-    py += 40;
+    py += 34;
 
     // Book result area
-    this.bookResultText = this.add.text(px, py, '', {
+    this.bookResultText = this.add.text(px + 6, py, '', {
       fontFamily: 'Courier New, monospace',
       fontSize: '11px',
       color: '#d4c5a0',
-      wordWrap: { width: 200 },
-      lineSpacing: 3,
+      wordWrap: { width: 220 },
+      lineSpacing: 2,
     });
     this.bottomHalfContainer.add(this.bookResultText);
 
@@ -1660,8 +1667,8 @@ export class DeskScene extends Phaser.Scene {
       this.lookUpBook(visitor);
     });
 
-    // Reel section
-    const reelY = 540;
+    // Reel section — positioned below book with clear gap
+    const reelY = 515;
     const reelGfx = this.add.graphics();
     this.bottomHalfContainer.add(reelGfx);
 
@@ -1976,8 +1983,7 @@ export class DeskScene extends Phaser.Scene {
       this.thoughtBubble = null;
     }
 
-    // Advance time
-    this.gsm.advanceTime(randomInt(15, 35));
+    // No time jump — clock ticks continuously in update loop
 
     // Drain coffee
     const state = this.gsm.getCurrentState();
@@ -2652,6 +2658,7 @@ export class DeskScene extends Phaser.Scene {
         roleId: '',
         roleTitle: '(caught duplicate reel)',
         outcome: 'caught_duplicate_reel',
+        outcomeDetail: `Caught using ${originalOwner}'s reel. Busted.`,
         repChange: repGain,
         wasInjured: false,
         injury: null,
@@ -2822,12 +2829,15 @@ export class DeskScene extends Phaser.Scene {
       state.injuryLog.push(injury);
     }
 
+    const outcomeDetail = this.getSpecificOutcomeDetail(visitor, role, outcome);
+
     const result: HireResult = {
       visitorId: visitor.id,
       visitorName: visitor.name,
       roleId: role.id,
       roleTitle: role.title,
       outcome,
+      outcomeDetail,
       repChange,
       wasInjured,
       injury,
@@ -2886,6 +2896,63 @@ export class DeskScene extends Phaser.Scene {
 
     // Skills don't match but size/gender OK — small penalty
     return 'correct_slight_mismatch';
+  }
+
+  private getSpecificOutcomeDetail(visitor: Visitor, role: Role, outcome: HireOutcome): string {
+    const vHeight = `${Math.floor(visitor.bodyType.height / 12)}'${visitor.bodyType.height % 12}"`;
+    const rHeightLo = `${Math.floor(role.heightRange[0] / 12)}'${role.heightRange[0] % 12}"`;
+    const rHeightHi = `${Math.floor(role.heightRange[1] / 12)}'${role.heightRange[1] % 12}"`;
+    const heightDiff = visitor.bodyType.height > role.heightRange[1]
+      ? visitor.bodyType.height - role.heightRange[1]
+      : role.heightRange[0] - visitor.bodyType.height;
+
+    switch (outcome) {
+      case 'correct_right_role':
+        return 'Good hire. Nailed it.';
+      case 'correct_slight_mismatch':
+        return 'Close enough. Got the job done.';
+      case 'wrong_gender':
+        return `We needed a ${role.requiredGender}. You sent us a ${visitor.gender}. The AD is furious.`;
+      case 'size_mismatch': {
+        const heightFit = visitor.bodyType.height >= role.heightRange[0] && visitor.bodyType.height <= role.heightRange[1];
+        const weightFit = visitor.bodyType.weight >= role.weightRange[0] && visitor.bodyType.weight <= role.weightRange[1];
+        if (!heightFit) {
+          return `${visitor.name} is ${vHeight}. Role needed ${rHeightLo}-${rHeightHi}. That's ${heightDiff}" off. Wardrobe is flipping out.`;
+        }
+        if (!weightFit) {
+          return `${visitor.name} is ${visitor.bodyType.weight} lbs. Role needed ${role.weightRange[0]}-${role.weightRange[1]}. Costume doesn't fit.`;
+        }
+        return 'Size mismatch. Doesn\'t match the actor.';
+      }
+      case 'wrong_hire_nd_no_injury':
+        if (!visitor.isStuntPerformer) {
+          return `${visitor.name} was an actor, not a stunt performer. Got lucky — no one noticed.`;
+        }
+        return 'Wrong call, but no harm done.';
+      case 'wrong_hire_nd_minor_injury':
+        if (!visitor.isStuntPerformer) {
+          return `${visitor.name} is not a stunt performer. Minor scrapes on set.`;
+        }
+        return 'Wrong call. Minor scrapes.';
+      case 'wrong_hire_medium_injury':
+        if (!visitor.isStuntPerformer) {
+          return `${visitor.name} was an actor pretending to be a stunt person. Someone got hurt.`;
+        }
+        return `Bad hire. ${visitor.name} couldn't handle the gag. Someone got hurt.`;
+      case 'wrong_hire_high_serious_injury':
+        if (!visitor.isStuntPerformer) {
+          return `${visitor.name} was NOT a stunt performer. Serious injury. You're in deep trouble.`;
+        }
+        return `${visitor.name} wasn't qualified for this. Serious injury on set.`;
+      case 'wrong_hire_upgraded_nd_injury':
+        return `The stunt got upgraded and ${visitor.name} wasn't ready for it. Injury.`;
+      case 'non_sag_on_sag_night':
+        return `${visitor.name} is not SAG. This is a union call. Strike from the rep.`;
+      case 'unfilled_role':
+        return `${role.title} went unfilled. The UPM wants a word.`;
+      default:
+        return outcome;
+    }
   }
 
   private rejectVisitor(visitor: Visitor): void {
@@ -3104,6 +3171,7 @@ export class DeskScene extends Phaser.Scene {
         roleId: role.id,
         roleTitle: role.title,
         outcome,
+        outcomeDetail: `${role.title} went unfilled. The UPM wants a word.`,
         repChange,
         wasInjured: false,
         injury: null,

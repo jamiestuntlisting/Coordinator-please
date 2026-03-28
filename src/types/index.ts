@@ -180,6 +180,7 @@ export interface HireResult {
   roleId: string;
   roleTitle: string;
   outcome: HireOutcome;
+  outcomeDetail: string;  // specific description of what went wrong/right
   repChange: number;
   wasInjured: boolean;
   injury: Injury | null;

@@ -1,9 +1,9 @@
 import type { BalanceConfig } from '../types/index';
 
 export const BALANCE: BalanceConfig = {
-  // -- Starting values --
-  startingReputation: 50,
-  startingMoney: 50,
+  // -- Starting values -- (low: always on the edge, needs bribes to survive)
+  startingReputation: 5,
+  startingMoney: 10,
   maxStrikes: 5,
   strikesForWarning: 3,
   strikesForFinalWarning: 4,
@@ -53,12 +53,12 @@ export const BALANCE: BalanceConfig = {
   // -- Coffee --
   coffeeDrainPerVisitor: 12,
 
-  // -- Ending thresholds --
+  // -- Ending thresholds (scaled for low start) --
   endingThresholds: {
-    s: { minRep: 85, maxStrikes: 0, minMoney: 500 },
-    a: { minRep: 70, maxStrikes: 1 },
-    b: { minRep: 55, maxStrikes: 2 },
-    c: { minRep: 40 },
+    s: { minRep: 40, maxStrikes: 0, minMoney: 200 },
+    a: { minRep: 30, maxStrikes: 1 },
+    b: { minRep: 20, maxStrikes: 2 },
+    c: { minRep: 10 },
     d: { minRep: 0 },
   },
 };

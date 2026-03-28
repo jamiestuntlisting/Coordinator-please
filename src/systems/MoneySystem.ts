@@ -62,7 +62,8 @@ export class MoneySystem {
           visitorName: v.name,
           roleId: v.assignedRoleId!,
           roleTitle: role?.title ?? 'Unknown',
-          outcome: 'correct_right_role' as const, // placeholder — real outcome set by game logic
+          outcome: 'correct_right_role' as const,
+          outcomeDetail: 'Good hire.',
           repChange: 0,
           wasInjured: false,
           injury: null,

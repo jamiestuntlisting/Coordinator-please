@@ -69,7 +69,7 @@ export class ResultsScene extends Phaser.Scene {
 
       const isGood = hire.outcome === 'correct_right_role' || hire.outcome === 'correct_slight_mismatch';
       const isUnfilled = hire.outcome === 'unfilled_role';
-      const outcomeLabel = this.getOutcomeLabel(hire.outcome);
+      const outcomeLabel = hire.outcomeDetail || this.getOutcomeLabel(hire.outcome);
 
       // Row background
       gfx.fillStyle(isGood ? 0x1a2a1a : (isUnfilled ? 0x1a1a1a : 0x2a1a1a), 0.3);
@@ -104,11 +104,12 @@ export class ResultsScene extends Phaser.Scene {
         fontStyle: 'bold',
       });
 
-      // Outcome description
+      // Outcome description (specific detail about what went wrong/right)
       this.add.text(110, y + 22, outcomeLabel, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '14px',
+        fontSize: '13px',
         color: '#888070',
+        wordWrap: { width: 520 },
       });
 
       // Rep change on right side
@@ -124,27 +125,33 @@ export class ResultsScene extends Phaser.Scene {
 
       // Injury panel
       if (hire.wasInjured && hire.injury) {
-        // Red injury panel
+        // Measure text to size box correctly
+        const injuryMsg = `INJURY: ${hire.injury.description}`;
+        const estimatedLines = Math.ceil(injuryMsg.length / 50);
+        const panelH = 10 + estimatedLines * 18;
+
+        // Red injury panel — sized to fit text
         gfx.fillStyle(0x3a1515, 0.6);
-        gfx.fillRect(95, y - 2, 610, 26);
+        gfx.fillRect(95, y - 2, 620, panelH);
         gfx.lineStyle(1, 0xc4553a, 0.4);
-        gfx.strokeRect(95, y - 2, 610, 26);
+        gfx.strokeRect(95, y - 2, 620, panelH);
 
         // Red cross symbol
         const crossGfx = this.add.graphics();
         const cx = 110;
-        const cy = y + 10;
+        const cy = y + panelH / 2;
         crossGfx.fillStyle(0xc4553a, 0.9);
         crossGfx.fillRect(cx - 5, cy - 2, 10, 4);
         crossGfx.fillRect(cx - 2, cy - 5, 4, 10);
 
-        this.add.text(125, y + 2, `INJURY: ${hire.injury.description}`, {
+        this.add.text(125, y + 2, injuryMsg, {
           fontFamily: 'Courier New, monospace',
-          fontSize: '14px',
+          fontSize: '13px',
           color: '#c4553a',
           fontStyle: 'bold',
+          wordWrap: { width: 570 },
         });
-        y += 28;
+        y += panelH + 4;
       }
 
       y += 4;
@@ -176,10 +183,12 @@ export class ResultsScene extends Phaser.Scene {
       let noteY = y + 26;
       unfilledRoles.forEach((hire: HireResult) => {
         const msgs = [
-          `"${hire.roleTitle}" went unfilled. We need to talk.`,
-          `Where's my ${hire.roleTitle.toLowerCase()}? Come see me.`,
-          `Nobody for "${hire.roleTitle}"? Seriously?`,
-          `I'm hearing "${hire.roleTitle}" had no one. My office. Tomorrow.`,
+          `"${hire.roleTitle}" went unfilled. This is your LAST warning.`,
+          `Where's my ${hire.roleTitle.toLowerCase()}? I'm calling your agent in the morning.`,
+          `Nobody for "${hire.roleTitle}"? You're done after this week.`,
+          `I'm hearing "${hire.roleTitle}" had no one. Start packing your desk.`,
+          `You left "${hire.roleTitle}" empty? I've got three coordinators who'd kill for your job.`,
+          `No one for "${hire.roleTitle}." I'm documenting this. HR will be in touch.`,
         ];
         const msg = msgs[Math.floor(Math.random() * msgs.length)];
         this.add.text(115, noteY, msg, {
