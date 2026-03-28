@@ -26,7 +26,7 @@ export class TitleScene extends Phaser.Scene {
     this.glowPhase = 0;
 
     const W = 800;
-    const H = 600;
+    const H = 900;
 
     // ===== BACKGROUND: Sky gradient =====
     const skyGfx = this.add.graphics();
@@ -52,6 +52,16 @@ export class TitleScene extends Phaser.Scene {
       { x: 770, y: 15, s: 1.5, a: 0.5 }, { x: 80, y: 80, s: 1, a: 0.15 },
       { x: 155, y: 90, s: 1.5, a: 0.35 }, { x: 440, y: 88, s: 1, a: 0.25 },
       { x: 580, y: 95, s: 2, a: 0.3 }, { x: 680, y: 85, s: 1, a: 0.2 },
+      // Extended stars for taller sky
+      { x: 70, y: 120, s: 1, a: 0.25 }, { x: 200, y: 140, s: 1.5, a: 0.35 },
+      { x: 330, y: 110, s: 1, a: 0.2 }, { x: 480, y: 150, s: 2, a: 0.4 },
+      { x: 560, y: 130, s: 1, a: 0.3 }, { x: 700, y: 105, s: 1.5, a: 0.25 },
+      { x: 100, y: 180, s: 1, a: 0.2 }, { x: 250, y: 200, s: 1.5, a: 0.3 },
+      { x: 400, y: 170, s: 1, a: 0.15 }, { x: 550, y: 190, s: 2, a: 0.35 },
+      { x: 650, y: 160, s: 1, a: 0.2 }, { x: 750, y: 185, s: 1.5, a: 0.3 },
+      { x: 50, y: 240, s: 1, a: 0.2 }, { x: 190, y: 260, s: 1.5, a: 0.25 },
+      { x: 370, y: 230, s: 1, a: 0.15 }, { x: 520, y: 250, s: 2, a: 0.3 },
+      { x: 670, y: 220, s: 1, a: 0.2 }, { x: 770, y: 270, s: 1.5, a: 0.25 },
       // Star clusters
       { x: 300, y: 32, s: 1, a: 0.3 }, { x: 303, y: 36, s: 1, a: 0.25 },
       { x: 297, y: 38, s: 1.5, a: 0.35 },
@@ -115,12 +125,12 @@ export class TitleScene extends Phaser.Scene {
     // ===== FOREGROUND: Film lot ground =====
     const groundGfx = this.add.graphics();
     groundGfx.fillStyle(0x111115, 1);
-    groundGfx.fillRect(0, 510, W, 90);
+    groundGfx.fillRect(0, 780, W, 120);
     // Subtle asphalt texture lines
     groundGfx.fillStyle(0x151519, 0.5);
     for (let i = 0; i < 12; i++) {
       const lx = Math.random() * W;
-      groundGfx.fillRect(lx, 520 + Math.random() * 60, 30 + Math.random() * 80, 1);
+      groundGfx.fillRect(lx, 790 + Math.random() * 80, 30 + Math.random() * 80, 1);
     }
 
     // ===== FILM EQUIPMENT SILHOUETTES =====
@@ -128,82 +138,82 @@ export class TitleScene extends Phaser.Scene {
     equipGfx.fillStyle(0x0c0c12, 1);
 
     // C-stand (far left)
-    equipGfx.fillRect(35, 420, 5, 92); // pole
+    equipGfx.fillRect(35, 660, 5, 122); // pole
     // Turtle base — three legs radiating
-    equipGfx.fillTriangle(20, 512, 55, 512, 37, 508);
-    equipGfx.fillRect(18, 510, 8, 4);
-    equipGfx.fillRect(50, 510, 8, 4);
-    equipGfx.fillRect(34, 510, 8, 6);
+    equipGfx.fillTriangle(20, 782, 55, 782, 37, 778);
+    equipGfx.fillRect(18, 780, 8, 4);
+    equipGfx.fillRect(50, 780, 8, 4);
+    equipGfx.fillRect(34, 780, 8, 6);
     // Arm extending right
-    equipGfx.fillRect(40, 425, 40, 3);
+    equipGfx.fillRect(40, 665, 40, 3);
     // Knuckle
-    equipGfx.fillCircle(40, 425, 4);
+    equipGfx.fillCircle(40, 665, 4);
     // Flag/floppy
-    equipGfx.fillRect(70, 410, 35, 25);
+    equipGfx.fillRect(70, 650, 35, 25);
 
     // Light stand with barn doors (center-left)
-    equipGfx.fillRect(175, 430, 6, 82);
+    equipGfx.fillRect(175, 670, 6, 112);
     // Riser sections
-    equipGfx.fillRect(173, 465, 10, 3);
-    equipGfx.fillRect(173, 495, 10, 3);
+    equipGfx.fillRect(173, 705, 10, 3);
+    equipGfx.fillRect(173, 745, 10, 3);
     // Base legs
-    equipGfx.fillTriangle(155, 512, 200, 512, 178, 505);
-    equipGfx.fillRect(153, 510, 8, 4);
-    equipGfx.fillRect(195, 510, 8, 4);
+    equipGfx.fillTriangle(155, 782, 200, 782, 178, 775);
+    equipGfx.fillRect(153, 780, 8, 4);
+    equipGfx.fillRect(195, 780, 8, 4);
     // Light head with barn doors
-    equipGfx.fillRect(158, 418, 40, 16);
+    equipGfx.fillRect(158, 658, 40, 16);
     // Barn door flaps
-    equipGfx.fillRect(156, 414, 4, 24);
-    equipGfx.fillRect(196, 414, 4, 24);
-    equipGfx.fillRect(160, 414, 36, 3); // top barn door
-    equipGfx.fillRect(160, 435, 36, 3); // bottom barn door
+    equipGfx.fillRect(156, 654, 4, 24);
+    equipGfx.fillRect(196, 654, 4, 24);
+    equipGfx.fillRect(160, 654, 36, 3); // top barn door
+    equipGfx.fillRect(160, 675, 36, 3); // bottom barn door
 
     // Stacked road cases (center area, behind glow)
-    equipGfx.fillRect(290, 478, 70, 34);
-    equipGfx.fillRect(295, 462, 60, 18);
-    equipGfx.fillRect(300, 452, 50, 12);
+    equipGfx.fillRect(290, 748, 70, 34);
+    equipGfx.fillRect(295, 732, 60, 18);
+    equipGfx.fillRect(300, 722, 50, 12);
     // Handles on cases
     equipGfx.fillStyle(0x0f0f15, 0.8);
-    equipGfx.fillRect(310, 485, 15, 3);
-    equipGfx.fillRect(340, 485, 15, 3);
-    equipGfx.fillRect(310, 468, 12, 3);
+    equipGfx.fillRect(310, 755, 15, 3);
+    equipGfx.fillRect(340, 755, 15, 3);
+    equipGfx.fillRect(310, 738, 12, 3);
     equipGfx.fillStyle(0x0c0c12, 1);
 
     // Camera dolly (center-right)
-    equipGfx.fillRect(500, 492, 80, 12); // platform
-    equipGfx.fillRect(510, 504, 8, 8); // wheel housing
-    equipGfx.fillRect(560, 504, 8, 8); // wheel housing
-    equipGfx.fillCircle(514, 512, 5); // wheel
-    equipGfx.fillCircle(564, 512, 5); // wheel
+    equipGfx.fillRect(500, 762, 80, 12); // platform
+    equipGfx.fillRect(510, 774, 8, 8); // wheel housing
+    equipGfx.fillRect(560, 774, 8, 8); // wheel housing
+    equipGfx.fillCircle(514, 782, 5); // wheel
+    equipGfx.fillCircle(564, 782, 5); // wheel
     // Dolly arm
-    equipGfx.fillRect(535, 450, 6, 42);
+    equipGfx.fillRect(535, 720, 6, 42);
     // Camera head
-    equipGfx.fillRect(520, 438, 30, 16);
-    equipGfx.fillRect(550, 442, 10, 8); // lens
+    equipGfx.fillRect(520, 708, 30, 16);
+    equipGfx.fillRect(550, 712, 10, 8); // lens
 
     // Popup tent frame (far right)
-    equipGfx.fillRect(650, 440, 4, 72);
-    equipGfx.fillRect(740, 440, 4, 72);
-    equipGfx.fillRect(648, 438, 100, 4);
+    equipGfx.fillRect(650, 710, 4, 72);
+    equipGfx.fillRect(740, 710, 4, 72);
+    equipGfx.fillRect(648, 708, 100, 4);
     // Cross braces
-    equipGfx.fillRect(648, 460, 100, 2);
+    equipGfx.fillRect(648, 730, 100, 2);
     // Tent fabric suggestion
     equipGfx.fillStyle(0x0c0c12, 0.7);
-    equipGfx.fillRect(650, 438, 96, 24);
+    equipGfx.fillRect(650, 708, 96, 24);
     equipGfx.fillStyle(0x0c0c12, 1);
     // Legs
-    equipGfx.fillRect(650, 510, 4, 4);
-    equipGfx.fillRect(740, 510, 4, 4);
+    equipGfx.fillRect(650, 780, 4, 4);
+    equipGfx.fillRect(740, 780, 4, 4);
 
     // Additional C-stand (right side)
-    equipGfx.fillRect(620, 455, 4, 57);
-    equipGfx.fillTriangle(610, 512, 635, 512, 622, 508);
-    equipGfx.fillRect(608, 510, 6, 4);
-    equipGfx.fillRect(631, 510, 6, 4);
+    equipGfx.fillRect(620, 725, 4, 57);
+    equipGfx.fillTriangle(610, 782, 635, 782, 622, 778);
+    equipGfx.fillRect(608, 780, 6, 4);
+    equipGfx.fillRect(631, 780, 6, 4);
 
     // ===== WORK LIGHT GLOW (downward from under title) =====
     // Glow emanates from just below "PLEASE" and lights the city below
-    const glowCenterY = 250;
+    const glowCenterY = 400;
     const glowContainer = this.add.graphics();
     const glowLayers = [
       { rx: 320, ry: 240, a: 0.015 },
@@ -230,16 +240,16 @@ export class TitleScene extends Phaser.Scene {
     const lightGfx = this.add.graphics();
     // Stand pole — extends down from light to ground
     lightGfx.fillStyle(0x1a1a22, 1);
-    lightGfx.fillRect(397, glowCenterY + 8, 6, 512 - (glowCenterY + 8)); // long pole to ground
+    lightGfx.fillRect(397, glowCenterY + 8, 6, 782 - (glowCenterY + 8)); // long pole to ground
     // Riser knuckles
     lightGfx.fillRect(394, glowCenterY + 60, 12, 3);
     lightGfx.fillRect(394, glowCenterY + 120, 12, 3);
     // Tripod base
     lightGfx.fillStyle(0x0c0c12, 1);
-    lightGfx.fillTriangle(375, 512, 425, 512, 400, 505);
-    lightGfx.fillRect(373, 510, 8, 4);
-    lightGfx.fillRect(421, 510, 8, 4);
-    lightGfx.fillRect(396, 510, 8, 5);
+    lightGfx.fillTriangle(375, 782, 425, 782, 400, 775);
+    lightGfx.fillRect(373, 780, 8, 4);
+    lightGfx.fillRect(421, 780, 8, 4);
+    lightGfx.fillRect(396, 780, 8, 5);
     // Light housing — rectangular with barn doors
     lightGfx.fillStyle(0x222230, 1);
     lightGfx.fillRect(375, glowCenterY - 8, 50, 18); // housing body
@@ -272,21 +282,21 @@ export class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Subtitle
-    this.add.text(400, 340, 'A Stunt Coordination Game', {
+    this.add.text(400, 490, 'A Stunt Coordination Game', {
       fontFamily: 'Courier New, monospace',
       fontSize: '20px',
       color: '#888070',
     }).setOrigin(0.5);
 
     // Year
-    this.add.text(400, 370, '1995', {
+    this.add.text(400, 520, '1995', {
       fontFamily: 'Courier New, monospace',
       fontSize: '18px',
       color: '#999080',
     }).setOrigin(0.5);
 
     // ===== CLICK TO START (blinking) =====
-    const startText = this.add.text(400, 430, '[ CLICK TO START ]', {
+    const startText = this.add.text(400, 580, '[ CLICK TO START ]', {
       fontFamily: 'Courier New, monospace',
       fontSize: '22px',
       color: '#e8c36a',
@@ -381,7 +391,7 @@ export class TitleScene extends Phaser.Scene {
     // VHS tracking line
     if (this.vhsTrackingLine) {
       this.trackingY += delta * 0.015;
-      if (this.trackingY > 620) this.trackingY = -20;
+      if (this.trackingY > 920) this.trackingY = -20;
       this.vhsTrackingLine.clear();
       this.vhsTrackingLine.fillStyle(0xffffff, 0.02);
       this.vhsTrackingLine.fillRect(0, this.trackingY, 800, 3);

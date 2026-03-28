@@ -32,12 +32,12 @@ export class CallSheetScene extends Phaser.Scene {
 
     // Paper background — slightly off-white dark parchment
     gfx.fillStyle(0x1e1c18, 1);
-    gfx.fillRect(40, 20, 720, 560);
+    gfx.fillRect(40, 20, 720, 860);
 
     // Subtle paper grain (faint noise dots)
     for (let i = 0; i < 300; i++) {
       const px = 42 + Math.random() * 716;
-      const py = 22 + Math.random() * 556;
+      const py = 22 + Math.random() * 856;
       const bright = Math.random() > 0.5 ? 0x2a2822 : 0x161410;
       gfx.fillStyle(bright, 0.4);
       gfx.fillRect(px, py, 1, 1);
@@ -45,9 +45,9 @@ export class CallSheetScene extends Phaser.Scene {
 
     // Paper border — double line
     gfx.lineStyle(2, 0x3a352e, 1);
-    gfx.strokeRect(40, 20, 720, 560);
+    gfx.strokeRect(40, 20, 720, 860);
     gfx.lineStyle(1, 0x3a352e, 0.5);
-    gfx.strokeRect(44, 24, 712, 552);
+    gfx.strokeRect(44, 24, 712, 852);
 
     // Hole punches — 3 small circles along left edge
     const holePunchX = 54;
@@ -255,7 +255,7 @@ export class CallSheetScene extends Phaser.Scene {
     }
 
     // Ready button — larger with pulsing glow
-    const btnY = Math.min(noteY + 90, 540);
+    const btnY = Math.min(noteY + 90, 810);
     const btnW = 220;
     const btnH = 50;
     const btnX = 400 - btnW / 2;

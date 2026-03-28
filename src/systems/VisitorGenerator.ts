@@ -675,17 +675,47 @@ export class VisitorGenerator {
         'I\'ve doubled for a couple leads — nothing huge, but I know what I\'m doing.',
         'My coordinator can vouch for me. I work clean, no problems.',
       ]);
+      responses['tell_me_about_experience_2'] = pick([
+        'I doubled for a lead on that one Universal picture. Three weeks, no complaints. The coordinator brought me back for the sequel.',
+        'Did a whole season on a TV show — car hits, ratchet pulls, the works. Ask anyone on that crew, they\'ll tell you I\'m solid.',
+        'Last year I did six features back to back. Every one wrapped without a single safety incident on my watch.',
+      ]);
+      responses['tell_me_about_experience_3'] = pick([
+        `Look, call ${pick(COORDINATOR_NAMES)}. They'll tell you I show up on time, know my marks, and I don't complain. That's all you need to know.`,
+        'I\'ve been at this since before half these kids were born. This isn\'t a hobby for me — it\'s my life. I take it seriously.',
+        'You want references? I\'ve got a stack of coordinators who\'ll vouch for me. I don\'t need to prove anything, but I will.',
+      ]);
     } else {
       responses['tell_me_about_experience'] = pick([
         'Oh yeah, I\'ve done tons of stuff. You know, the usual.',
         'I did some extra work on a few shows. Same thing, right?',
         'I\'m a quick learner. How hard can it be?',
       ]);
+      responses['tell_me_about_experience_2'] = pick([
+        'Well, I mean... I\'ve watched a LOT of behind-the-scenes stuff. I know how it works. I\'ve studied every Jackie Chan movie twice.',
+        'My roommate does stunts. He\'s shown me a bunch of stuff. I feel like I basically already know it all.',
+        'I took a stage combat class once at a community college. The teacher said I was a natural.',
+      ]);
+      responses['tell_me_about_experience_3'] = pick([
+        '*shifts nervously* Can we talk about something else? I\'m better in person than on paper, you know?',
+        'Look, everyone starts somewhere, right? Just give me a shot. You won\'t regret it. Probably.',
+        '*getting defensive* Why do you keep asking about experience? Some of the best people in this business started with nothing.',
+      ]);
     }
 
     // SAG question
     if (isLegit) {
       responses['are_you_sag'] = 'Yeah, of course. Card\'s right here.';
+      responses['are_you_sag_2'] = pick([
+        'Been current since \'89. Never lapsed. I take my membership seriously. It\'s the first bill I pay every month.',
+        'Joined up right after my first feature. Haven\'t missed a payment in over a decade. This is my career.',
+        'Full member, current dues, no issues. I can give you my membership number right now if you want to call it in.',
+      ]);
+      responses['are_you_sag_3'] = pick([
+        'You can call the office right now if you want. I\'ve got nothing to hide. Everything\'s on the level.',
+        'Look, I know there are people out there faking it. I\'m not one of them. My card is real, my dues are paid, end of story.',
+        'I take this union seriously. It\'s the only thing standing between us and getting killed for minimum wage. Of course I\'m current.',
+      ]);
     } else {
       responses['are_you_sag'] = pick([
         'I\'m... in the process. You know how it is.',
@@ -693,16 +723,46 @@ export class VisitorGenerator {
         'SAG? Uh, yeah. Definitely.',
         'My application is pending.',
       ]);
+      responses['are_you_sag_2'] = pick([
+        'I said I\'m SAG. Why do you keep asking? It\'s not like I carry it everywhere. Who does that?',
+        'My agent is handling all that paperwork. I\'m sure it\'s fine. It should be processed by now.',
+        'I mean, I\'ve been meaning to get that sorted out. It\'s basically done though. Practically.',
+      ]);
+      responses['are_you_sag_3'] = pick([
+        '*getting agitated* Look, do you want me to work or not? I can do the job. That\'s what matters, right?',
+        '*voice rising* This is starting to feel like an interrogation. I told you my situation. Take it or leave it.',
+        '*looks away* Fine, maybe it\'s not totally finalized. But I know people who work non-union all the time. It\'s not a big deal.',
+      ]);
     }
 
     // City question
     if (isLegit) {
       responses['where_are_you_from'] = 'Born and raised here. LA all the way.';
+      responses['where_are_you_from_2'] = pick([
+        'Valley born. I know every lot from Burbank to Culver City. Grew up watching them film on my block.',
+        'Grew up in the Valley, moved to North Hollywood after high school. Been working sets since I could drive.',
+        'Third generation Angeleno. My dad was a grip at Paramount. This town is in my blood.',
+      ]);
+      responses['where_are_you_from_3'] = pick([
+        'My family\'s been here since the \'60s. This is home. I\'m not going anywhere. This city made me who I am.',
+        'I know every back road to every studio in this town. You can\'t fake that kind of local knowledge. I belong here.',
+        'LA born, LA raised, LA \'til they put me in the ground. Ask me about any neighborhood and I\'ll tell you which shows shot there.',
+      ]);
     } else {
       responses['where_are_you_from'] = pick([
         'LA. Yeah. Totally. Love it here.',
         'I\'ve been here a while now. Originally from... around.',
         'Oh, I\'m local. For sure.',
+      ]);
+      responses['where_are_you_from_2'] = pick([
+        'I told you, I\'m from here. Why does it matter? I live here now, that\'s what counts.',
+        'I\'ve been in LA for... a while. Long enough. I know my way around, if that\'s what you\'re asking.',
+        'Does it really matter where I grew up? I\'m here now and I want to work. That should be enough.',
+      ]);
+      responses['where_are_you_from_3'] = pick([
+        '*defensive* What are you, immigration? I live here now. That\'s all that should matter. Can we move on?',
+        '*getting uncomfortable* I moved around a lot as a kid. LA is where I ended up. Is that a problem?',
+        '*crosses arms* I don\'t see why my whole life story matters. I\'m standing right here. I\'m available. What else do you need?',
       ]);
     }
 
@@ -735,6 +795,30 @@ export class VisitorGenerator {
         'It\'s mostly me on there. Mostly.',
         'I borrowed some footage from a friend.',
       ]);
+
+    if (isLegit) {
+      responses['about_your_reel_2'] = pick([
+        'Shot it on my buddy\'s Betacam. Every hit, every fall — that\'s me, no doubles. What you see is what you get.',
+        'I edited it myself. Pulled the best stuff from the last five years. Every gag on there is something I\'m proud of.',
+        'A buddy of mine at a post house helped me with the edit, but every stunt on that tape is mine. One hundred percent.',
+      ]);
+      responses['about_your_reel_3'] = pick([
+        'You\'ll see a 40-foot fall in there. That\'s the real deal. No wires, no pads below frame. Just me and gravity.',
+        'That reel is my resume in motion. I put my body on the line for every single one of those shots. It speaks for itself.',
+        'I\'m proud of that tape. It took years to build up that kind of work. Every coordinator who\'s seen it has called me back.',
+      ]);
+    } else {
+      responses['about_your_reel_2'] = pick([
+        'I mean, the important thing is I can do the work, right? Not what\'s on tape. Tapes can be deceiving anyway.',
+        'The camera doesn\'t always capture everything. Trust me, I\'m better in person than what\'s on that reel.',
+        'I\'m planning to reshoot the whole thing soon. The quality isn\'t great but the skills are there. Mostly.',
+      ]);
+      responses['about_your_reel_3'] = pick([
+        '*looks away* It\'s a good reel. That\'s all that matters. Can we talk about something else?',
+        '*fidgeting* Look, not everyone has access to professional equipment. The content is what counts, right? Right?',
+        '*defensive* Why are you scrutinizing my reel so hard? Just watch it and judge for yourself. Or don\'t. Whatever.',
+      ]);
+    }
 
     return responses;
   }

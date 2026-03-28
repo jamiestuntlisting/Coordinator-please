@@ -25,12 +25,12 @@ export class ResultsScene extends Phaser.Scene {
 
     // Paper-textured background panel (incident report style)
     gfx.fillStyle(0x1e1c18, 1);
-    gfx.fillRect(40, 15, 720, 570);
+    gfx.fillRect(40, 15, 720, 870);
 
     // Paper grain texture
     for (let i = 0; i < 250; i++) {
       const px = 42 + Math.random() * 716;
-      const py = 17 + Math.random() * 566;
+      const py = 17 + Math.random() * 866;
       const bright = Math.random() > 0.5 ? 0x2a2822 : 0x161410;
       gfx.fillStyle(bright, 0.35);
       gfx.fillRect(px, py, 1, 1);
@@ -38,9 +38,9 @@ export class ResultsScene extends Phaser.Scene {
 
     // Double-line border
     gfx.lineStyle(2, 0x3a352e, 1);
-    gfx.strokeRect(40, 15, 720, 570);
+    gfx.strokeRect(40, 15, 720, 870);
     gfx.lineStyle(1, 0x3a352e, 0.4);
-    gfx.strokeRect(44, 19, 712, 562);
+    gfx.strokeRect(44, 19, 712, 862);
 
     // Header area with border
     gfx.lineStyle(2, 0x4a453e, 0.8);
@@ -301,7 +301,7 @@ export class ResultsScene extends Phaser.Scene {
     }
 
     // Continue button
-    const btnY = 540;
+    const btnY = 830;
     const btnW = 200;
     const btnH = 42;
     const btnX = 400 - btnW / 2;

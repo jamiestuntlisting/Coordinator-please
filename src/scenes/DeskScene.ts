@@ -97,6 +97,7 @@ export class DeskScene extends Phaser.Scene {
   private reelDisplayText: Phaser.GameObjects.Text | null = null;
   private bribeAccepted: boolean = false;
   private conversationHistory: { question: string; answer: string }[] = [];
+  private dialogueClickCounts: Record<string, number> = {};
 
   // Intertitle
   private showingIntertitle: boolean = false;
@@ -235,7 +236,7 @@ export class DeskScene extends Phaser.Scene {
   }
 
   // ================================================================
-  // TOP HALF: The Dark Film Set (y: 0-280)
+  // TOP HALF: The Dark Film Set (y: 0-380)
   // ================================================================
 
   private drawTopHalf(): void {
@@ -247,10 +248,11 @@ export class DeskScene extends Phaser.Scene {
 
     const skyColors = [
       0x0a0a1a, 0x09091a, 0x080818, 0x070716,
-      0x060614, 0x050512, 0x050510, 0x05050c,
-      0x05050a, 0x050508,
+      0x060614, 0x060613, 0x050512, 0x050511,
+      0x050510, 0x05050e, 0x05050c, 0x05050b,
+      0x05050a, 0x050509, 0x050508, 0x050508,
     ];
-    const stripH = 22;
+    const stripH = 24;
     for (let i = 0; i < skyColors.length; i++) {
       skyGfx.fillStyle(skyColors[i], 1);
       skyGfx.fillRect(0, i * stripH, 800, stripH);
@@ -265,6 +267,8 @@ export class DeskScene extends Phaser.Scene {
       { x: 650, y: 15 }, { x: 720, y: 30 }, { x: 90, y: 55 }, { x: 180, y: 70 },
       { x: 340, y: 65 }, { x: 470, y: 58 }, { x: 600, y: 72 }, { x: 740, y: 60 },
       { x: 50, y: 85 }, { x: 300, y: 90 }, { x: 555, y: 82 },
+      { x: 70, y: 110 }, { x: 200, y: 130 }, { x: 400, y: 115 },
+      { x: 550, y: 125 }, { x: 700, y: 100 }, { x: 150, y: 150 },
     ];
     starPositions.forEach(s => {
       const alpha = 0.2 + Math.random() * 0.5;
@@ -285,16 +289,16 @@ export class DeskScene extends Phaser.Scene {
     const groundGfx = this.add.graphics();
     this.topHalfContainer.add(groundGfx);
     groundGfx.fillStyle(0x151518, 1);
-    groundGfx.fillRect(0, 220, 800, 60);
+    groundGfx.fillRect(0, 320, 800, 60);
     // pavement cracks
     groundGfx.lineStyle(1, 0x1c1c20, 0.4);
-    groundGfx.lineBetween(0, 235, 800, 235);
-    groundGfx.lineBetween(0, 252, 800, 252);
-    groundGfx.lineBetween(0, 268, 800, 268);
+    groundGfx.lineBetween(0, 335, 800, 335);
+    groundGfx.lineBetween(0, 352, 800, 352);
+    groundGfx.lineBetween(0, 368, 800, 368);
     groundGfx.lineStyle(1, 0x1a1a1e, 0.25);
-    groundGfx.lineBetween(100, 240, 250, 242);
-    groundGfx.lineBetween(500, 256, 700, 255);
-    groundGfx.lineBetween(300, 265, 480, 267);
+    groundGfx.lineBetween(100, 340, 250, 342);
+    groundGfx.lineBetween(500, 356, 700, 355);
+    groundGfx.lineBetween(300, 365, 480, 367);
 
     // --- Equipment Silhouettes ---
     const equipGfx = this.add.graphics();
@@ -304,80 +308,80 @@ export class DeskScene extends Phaser.Scene {
 
     // C-STAND (left) - vertical pole, horizontal arm, flag/scrim, triangular base with 3 legs
     equipGfx.fillStyle(eShadow, 1);
-    equipGfx.fillRect(52, 80, 3, 140);         // vertical pole
-    equipGfx.fillRect(40, 80, 30, 3);           // horizontal arm
+    equipGfx.fillRect(52, 108, 3, 212);         // vertical pole
+    equipGfx.fillRect(40, 108, 30, 3);          // horizontal arm
     equipGfx.fillStyle(eDark, 1);
-    equipGfx.fillRect(30, 65, 25, 18);          // flag/scrim rectangle
+    equipGfx.fillRect(30, 88, 25, 22);          // flag/scrim rectangle
     // triangular base: 3 legs
     equipGfx.fillStyle(eShadow, 1);
-    equipGfx.fillRect(35, 218, 35, 3);          // base bar
-    equipGfx.fillRect(53, 218, 2, 5);
+    equipGfx.fillRect(35, 318, 35, 3);          // base bar
+    equipGfx.fillRect(53, 318, 2, 5);
     equipGfx.beginPath();
-    equipGfx.moveTo(53, 220);
-    equipGfx.lineTo(35, 223);
-    equipGfx.lineTo(71, 223);
+    equipGfx.moveTo(53, 320);
+    equipGfx.lineTo(35, 323);
+    equipGfx.lineTo(71, 323);
     equipGfx.closePath();
     equipGfx.fillPath();
 
     // FILM LIGHT ON STAND (left-center) - tall pole, rectangular housing with barn doors, cable
     equipGfx.fillStyle(eShadow, 1);
-    equipGfx.fillRect(155, 60, 3, 160);         // tall vertical pole
+    equipGfx.fillRect(155, 82, 3, 238);         // tall vertical pole
     equipGfx.fillStyle(eDark, 1);
-    equipGfx.fillRect(140, 48, 30, 18);         // light housing
+    equipGfx.fillRect(140, 65, 30, 22);         // light housing
     // barn doors (small rectangles on each side)
     equipGfx.fillStyle(0x141420, 1);
-    equipGfx.fillRect(137, 48, 5, 14);          // left barn door
-    equipGfx.fillRect(168, 48, 5, 14);          // right barn door
+    equipGfx.fillRect(137, 65, 5, 18);          // left barn door
+    equipGfx.fillRect(168, 65, 5, 18);          // right barn door
     // cable drooping down
     equipGfx.lineStyle(1, eShadow, 0.7);
     equipGfx.beginPath();
-    equipGfx.moveTo(155, 66);
-    equipGfx.lineTo(140, 100);
-    equipGfx.lineTo(130, 150);
-    equipGfx.lineTo(125, 220);
+    equipGfx.moveTo(155, 89);
+    equipGfx.lineTo(140, 135);
+    equipGfx.lineTo(130, 200);
+    equipGfx.lineTo(125, 320);
     equipGfx.strokePath();
     // stand base
     equipGfx.fillStyle(eShadow, 1);
-    equipGfx.fillRect(140, 218, 30, 3);
+    equipGfx.fillRect(140, 318, 30, 3);
     equipGfx.beginPath();
-    equipGfx.moveTo(156, 220);
-    equipGfx.lineTo(140, 223);
-    equipGfx.lineTo(170, 223);
+    equipGfx.moveTo(156, 320);
+    equipGfx.lineTo(140, 323);
+    equipGfx.lineTo(170, 323);
     equipGfx.closePath();
     equipGfx.fillPath();
 
     // CAMERA ON TRIPOD (right) - box on triangular legs with viewfinder
     equipGfx.fillStyle(eDark, 1);
-    equipGfx.fillRect(650, 130, 40, 28);        // camera body
+    equipGfx.fillRect(650, 176, 40, 28);        // camera body
     equipGfx.fillStyle(eShadow, 1);
-    equipGfx.fillRect(645, 135, 8, 8);          // viewfinder
-    equipGfx.fillRect(690, 132, 10, 6);         // lens shade
+    equipGfx.fillRect(645, 181, 8, 8);          // viewfinder
+    equipGfx.fillRect(690, 178, 10, 6);         // lens shade
     // tripod legs
     equipGfx.lineStyle(2, eShadow, 0.9);
-    equipGfx.lineBetween(660, 158, 640, 220);   // left leg
-    equipGfx.lineBetween(670, 158, 670, 220);   // center leg
-    equipGfx.lineBetween(680, 158, 700, 220);   // right leg
+    equipGfx.lineBetween(660, 204, 640, 320);   // left leg
+    equipGfx.lineBetween(670, 204, 670, 320);   // center leg
+    equipGfx.lineBetween(680, 204, 700, 320);   // right leg
 
     // APPLE BOXES stacked (far right)
     equipGfx.fillStyle(0x12121c, 1);
-    equipGfx.fillRect(740, 195, 40, 18);        // bottom box
+    equipGfx.fillRect(740, 290, 40, 22);        // bottom box
     equipGfx.fillStyle(0x101018, 1);
-    equipGfx.fillRect(742, 178, 36, 18);        // middle box
+    equipGfx.fillRect(742, 270, 36, 22);        // middle box
     equipGfx.fillStyle(0x0e0e16, 1);
-    equipGfx.fillRect(745, 165, 30, 14);        // top box
+    equipGfx.fillRect(745, 254, 30, 18);        // top box
 
     // GENERATOR (far left edge) - large rectangle with exhaust pipe
     equipGfx.fillStyle(0x0e0e16, 1);
-    equipGfx.fillRect(0, 188, 28, 32);          // generator body
+    equipGfx.fillRect(0, 280, 28, 40);          // generator body
     equipGfx.fillStyle(eShadow, 1);
-    equipGfx.fillRect(5, 178, 4, 12);           // exhaust pipe
+    equipGfx.fillRect(5, 268, 4, 14);           // exhaust pipe
     // subtle warm glow around generator
     const genGlow = this.add.graphics();
     this.topHalfContainer.add(genGlow);
     genGlow.fillStyle(0xf5a030, 0.015);
-    genGlow.fillCircle(14, 200, 40);
+    genGlow.fillCircle(14, 295, 40);
     genGlow.fillStyle(0xf5a030, 0.025);
-    genGlow.fillCircle(14, 200, 22);
+    genGlow.fillCircle(14, 295, 22);
 
     // --- Work Light Glow (center, where the desk is) ---
     this.workLightGfx = this.add.graphics();
@@ -405,13 +409,13 @@ export class DeskScene extends Phaser.Scene {
     const gfx = this.add.graphics();
     this.intertitleContainer.add(gfx);
     gfx.fillStyle(0x050508, 1);
-    gfx.fillRect(0, 0, 800, 600);
+    gfx.fillRect(0, 0, 800, 900);
 
     // Subtle work light glow hint
     gfx.fillStyle(0xf5d799, 0.03);
-    gfx.fillEllipse(400, 300, 300, 200);
+    gfx.fillEllipse(400, 400, 300, 200);
 
-    const titleText = this.add.text(400, 260, 'A few stunties are\nhere to hustle you.', {
+    const titleText = this.add.text(400, 380, 'A few stunties are\nhere to hustle you.', {
       fontFamily: 'Courier New, monospace',
       fontSize: '28px',
       color: '#d4c5a0',
@@ -420,7 +424,7 @@ export class DeskScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.intertitleContainer.add(titleText);
 
-    const continueText = this.add.text(400, 380, '[ TAP TO CONTINUE ]', {
+    const continueText = this.add.text(400, 500, '[ TAP TO CONTINUE ]', {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#6a6050',
@@ -443,7 +447,7 @@ export class DeskScene extends Phaser.Scene {
     this.workLightGfx.clear();
 
     const cx = 400;
-    const cy = 250;
+    const cy = 350;
     // concentric ellipses, warm center to cooler edges
     const glowLayers = [
       { rx: 260, ry: 110, color: 0xe8d0a0, alpha: 0.018 },
@@ -462,7 +466,7 @@ export class DeskScene extends Phaser.Scene {
 
     // Light spill on the ground surface
     this.workLightGfx!.fillStyle(0xf5d799, 0.015 * alphaMultiplier);
-    this.workLightGfx!.fillEllipse(cx, 260, 320, 30);
+    this.workLightGfx!.fillEllipse(cx, 360, 320, 30);
   }
 
   private drawCoordinator(): void {
@@ -470,7 +474,7 @@ export class DeskScene extends Phaser.Scene {
     this.topHalfContainer.add(gfx);
 
     const cx = 400;
-    const chairY = 155;
+    const chairY = 265;
 
     // Folding chair - seat + back + thin metal legs (scaled up)
     gfx.fillStyle(0x222228, 1);
@@ -531,7 +535,7 @@ export class DeskScene extends Phaser.Scene {
     this.topHalfContainer.add(gfx);
 
     const tx = 270;
-    const ty = 210;
+    const ty = 340;
     const tw = 260;
     const th = 8;
 
@@ -597,7 +601,7 @@ export class DeskScene extends Phaser.Scene {
     const figCount = Math.min(queueCount, 5);
     for (let i = 0; i < figCount; i++) {
       const qx = 80 + i * 28;
-      const qy = 145 - i * 8;
+      const qy = 220 - i * 8;
       const alphaFade = 0.9 - i * 0.15;
       const heightVar = randomInt(-3, 3);
 
@@ -645,8 +649,8 @@ export class DeskScene extends Phaser.Scene {
     this.visitorSpriteContainer.add(gfx);
 
     const vx = 400;
-    const vy = 105;
-    const s = 2.2; // scale factor
+    const vy = 160;
+    const s = 4.0; // scale factor
     const isMale = this.currentVisitor.gender === 'male';
     const bodyColor = isMale ? 0x4a5a7a : 0x7a4a6a;
     const skinColor = 0xc4a882;
@@ -749,7 +753,7 @@ export class DeskScene extends Phaser.Scene {
   }
 
   // ================================================================
-  // STATUS BAR (y: 560-600)
+  // STATUS BAR (y: 862-900)
   // ================================================================
 
   private drawStatusBar(): void {
@@ -759,10 +763,10 @@ export class DeskScene extends Phaser.Scene {
 
     // Dark panel background
     gfx.fillStyle(0x0d0d12, 1);
-    gfx.fillRect(0, 560, 800, 40);
+    gfx.fillRect(0, 862, 800, 38);
     // Thin gold top border
     gfx.lineStyle(1, 0x8a7a50, 1);
-    gfx.lineBetween(0, 560, 800, 560);
+    gfx.lineBetween(0, 862, 800, 862);
 
     const state = this.gsm.getCurrentState();
     const filledCount = this.roles.filter(r => r.filledBy !== null).length;
@@ -770,7 +774,7 @@ export class DeskScene extends Phaser.Scene {
     const timeStr = this.formatTime(state.timeOfNight);
 
     // Night info
-    const nightLabel = this.add.text(16, 568, `NIGHT ${this.night}/7`, {
+    const nightLabel = this.add.text(16, 870, `NIGHT ${this.night}/7`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#d4c5a0',
@@ -779,7 +783,7 @@ export class DeskScene extends Phaser.Scene {
     this.statusBar.add(nightLabel);
 
     // Time
-    const timeLabel = this.add.text(130, 568, timeStr, {
+    const timeLabel = this.add.text(130, 870, timeStr, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#d4c5a0',
@@ -787,7 +791,7 @@ export class DeskScene extends Phaser.Scene {
     this.statusBar.add(timeLabel);
 
     // Roles
-    const rolesLabel = this.add.text(240, 568, `Roles: ${filledCount}/${totalRoles}`, {
+    const rolesLabel = this.add.text(240, 870, `Roles: ${filledCount}/${totalRoles}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#d4c5a0',
@@ -795,7 +799,7 @@ export class DeskScene extends Phaser.Scene {
     this.statusBar.add(rolesLabel);
 
     // Money in gold
-    const moneyLabel = this.add.text(400, 568, `$${state.money}`, {
+    const moneyLabel = this.add.text(400, 870, `$${state.money}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '18px',
       color: '#e8c36a',
@@ -805,7 +809,7 @@ export class DeskScene extends Phaser.Scene {
 
     // Coffee cup icon + depleting level
     const coffeeX = 490;
-    const coffeeY = 567;
+    const coffeeY = 869;
     gfx.fillStyle(0x3a3a44, 1);
     gfx.fillRect(coffeeX, coffeeY, 10, 14);
     gfx.fillStyle(0x2a2a32, 1);
@@ -819,7 +823,7 @@ export class DeskScene extends Phaser.Scene {
 
     // Rep bar
     const barX = 540;
-    const barY = 569;
+    const barY = 871;
     const barW = 150;
     const barH = 12;
 
@@ -834,7 +838,7 @@ export class DeskScene extends Phaser.Scene {
     gfx.fillStyle(repColor, 1);
     gfx.fillRect(barX + 1, barY + 1, (barW - 2) * repFill, barH - 2);
 
-    const repLabel = this.add.text(barX + barW + 6, barY - 1, `REP ${state.reputation}`, {
+    const repLabel = this.add.text(barX + barW + 6, barY - 2, `REP ${state.reputation}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '14px',
       color: '#d4c5a0',
@@ -843,7 +847,7 @@ export class DeskScene extends Phaser.Scene {
   }
 
   // ================================================================
-  // BOTTOM HALF: The Desk Workspace (y: 280-560)
+  // BOTTOM HALF: The Desk Workspace (y: 380-740)
   // ================================================================
 
   private drawBottomHalf(visitor: Visitor): void {
@@ -853,37 +857,37 @@ export class DeskScene extends Phaser.Scene {
 
     // Main desk workspace background
     gfx.fillStyle(0x16140f, 1);
-    gfx.fillRect(0, 280, 800, 280);
+    gfx.fillRect(0, 380, 800, 360);
 
     // Warm-gold divider line separating top and bottom
     gfx.lineStyle(2, 0x8a7a50, 0.6);
-    gfx.lineBetween(0, 280, 800, 280);
+    gfx.lineBetween(0, 380, 800, 380);
 
     // Panel dividers with subtle depth
     gfx.lineStyle(1, 0x2a261e, 1);
-    gfx.lineBetween(200, 285, 200, 555);
-    gfx.lineBetween(540, 285, 540, 555);
+    gfx.lineBetween(200, 385, 200, 735);
+    gfx.lineBetween(540, 385, 540, 735);
 
     // Panel backgrounds in slightly different shades
     // Headshot panel
     gfx.fillStyle(0x171510, 1);
-    gfx.fillRect(1, 281, 199, 274);
+    gfx.fillRect(1, 381, 199, 354);
     // Resume panel
     gfx.fillStyle(0x18160e, 1);
-    gfx.fillRect(201, 281, 338, 274);
+    gfx.fillRect(201, 381, 338, 354);
     // Book/Reel panel
     gfx.fillStyle(0x161410, 1);
-    gfx.fillRect(541, 281, 259, 274);
+    gfx.fillRect(541, 381, 259, 354);
 
     // Subtle inner borders for each panel
     gfx.lineStyle(1, 0x1e1c16, 0.5);
-    gfx.strokeRect(4, 284, 193, 268);
-    gfx.strokeRect(204, 284, 332, 268);
-    gfx.strokeRect(544, 284, 252, 268);
+    gfx.strokeRect(4, 384, 193, 348);
+    gfx.strokeRect(204, 384, 332, 348);
+    gfx.strokeRect(544, 384, 252, 348);
 
     // Paper texture on resume panel (faint horizontal lines every 12px)
     gfx.lineStyle(1, 0x1e1c14, 0.15);
-    for (let py = 296; py < 552; py += 12) {
+    for (let py = 396; py < 732; py += 12) {
       gfx.lineBetween(205, py, 535, py);
     }
 
@@ -898,7 +902,7 @@ export class DeskScene extends Phaser.Scene {
   // ---- Headshot Panel ----
   private drawHeadshot(visitor: Visitor, gfx: Phaser.GameObjects.Graphics): void {
     const hx = 16;
-    const hy = 290;
+    const hy = 390;
 
     const headerText = this.add.text(hx, hy, 'HEADSHOT', {
       fontFamily: 'Courier New, monospace',
@@ -1237,7 +1241,7 @@ export class DeskScene extends Phaser.Scene {
   // ---- Resume Panel ----
   private drawResume(visitor: Visitor): void {
     const rx = 214;
-    let ry = 290;
+    let ry = 390;
 
     const headerText = this.add.text(rx, ry, 'RESUME', {
       fontFamily: 'Courier New, monospace',
@@ -1368,9 +1372,9 @@ export class DeskScene extends Phaser.Scene {
   // ---- Book + Reel Panel ----
   private drawBookAndReel(visitor: Visitor): void {
     const px = 544;
-    let py = 290;
+    let py = 390;
 
-    const headerText = this.add.text(px, py, 'STUNT LISTING BOOK', {
+    const headerText = this.add.text(px, py, 'STUNTLISTING BOOK', {
       fontFamily: 'Courier New, monospace',
       fontSize: '14px',
       color: '#6a6050',
@@ -1414,7 +1418,7 @@ export class DeskScene extends Phaser.Scene {
     });
 
     // Reel section
-    const reelY = 420;
+    const reelY = 540;
     const reelGfx = this.add.graphics();
     this.bottomHalfContainer.add(reelGfx);
 
@@ -1478,9 +1482,9 @@ export class DeskScene extends Phaser.Scene {
     this.dialogueContainer.removeAll(true);
 
     const panelX = 10;
-    const btnY = 432;
-    const convoY = 480;
-    const convoH = 74;
+    const btnY = 742;
+    const convoY = 778;
+    const convoH = 44;
 
     const gfx = this.add.graphics();
     this.dialogueContainer.add(gfx);
@@ -1525,7 +1529,10 @@ export class DeskScene extends Phaser.Scene {
 
       btn.on('pointerdown', () => {
         this.idleTimer = 0;
-        const response = visitor.dialogueResponses[opt.key] ?? '...';
+        const count = (this.dialogueClickCounts[opt.key] || 0) + 1;
+        this.dialogueClickCounts[opt.key] = count;
+        const responseKey = count <= 1 ? opt.key : `${opt.key}_${count}`;
+        const response = visitor.dialogueResponses[responseKey] ?? visitor.dialogueResponses[opt.key] ?? '...';
         this.conversationHistory.push({ question: opt.label, answer: response });
         this.drawDialogue(visitor);
       });
@@ -1643,7 +1650,7 @@ export class DeskScene extends Phaser.Scene {
     const scanGfx = this.add.graphics();
     this.vhsOverlayContainer.add(scanGfx);
     scanGfx.lineStyle(1, 0x000000, 0.04);
-    for (let sy = 0; sy < 600; sy += 3) {
+    for (let sy = 0; sy < 900; sy += 3) {
       scanGfx.lineBetween(0, sy, 800, sy);
     }
 
@@ -1655,13 +1662,13 @@ export class DeskScene extends Phaser.Scene {
     vigGfx.fillRect(0, 0, 800, 60);
     // Bottom edge
     vigGfx.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0, 0, 0.3, 0.3);
-    vigGfx.fillRect(0, 540, 800, 60);
+    vigGfx.fillRect(0, 840, 800, 60);
     // Left edge
     vigGfx.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.25, 0, 0.25, 0);
-    vigGfx.fillRect(0, 0, 50, 600);
+    vigGfx.fillRect(0, 0, 50, 900);
     // Right edge
     vigGfx.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0, 0.25, 0, 0.25);
-    vigGfx.fillRect(750, 0, 50, 600);
+    vigGfx.fillRect(750, 0, 50, 900);
 
     // Film grain graphics (will be redrawn in update loop)
     this.grainGraphics = this.add.graphics();
@@ -1673,14 +1680,14 @@ export class DeskScene extends Phaser.Scene {
     this.grainGraphics.clear();
     for (let i = 0; i < 25; i++) {
       const gx = randomInt(0, 800);
-      const gy = randomInt(0, 600);
+      const gy = randomInt(0, 900);
       this.grainGraphics.fillStyle(0x000000, 0.02 + Math.random() * 0.02);
       this.grainGraphics.fillRect(gx, gy, 1, 1);
     }
     // A few lighter grain dots too
     for (let i = 0; i < 10; i++) {
       const gx = randomInt(0, 800);
-      const gy = randomInt(0, 600);
+      const gy = randomInt(0, 900);
       this.grainGraphics.fillStyle(0xffffff, 0.01 + Math.random() * 0.015);
       this.grainGraphics.fillRect(gx, gy, 1, 1);
     }
@@ -1706,6 +1713,7 @@ export class DeskScene extends Phaser.Scene {
     this.idleTimer = 0;
     this.bribeAccepted = false;
     this.conversationHistory = [];
+    this.dialogueClickCounts = {};
     if (this.thoughtBubble) {
       this.thoughtBubble.destroy();
       this.thoughtBubble = null;
@@ -1827,11 +1835,11 @@ export class DeskScene extends Phaser.Scene {
     const calloutBg = this.add.graphics();
     this.bottomHalfContainer.add(calloutBg);
     calloutBg.fillStyle(0x3a1a1a, 1);
-    calloutBg.fillRoundedRect(540, 540, 200, 22, 3);
+    calloutBg.fillRoundedRect(540, 720, 200, 22, 3);
     calloutBg.lineStyle(1, 0xc4553a, 1);
-    calloutBg.strokeRoundedRect(540, 540, 200, 22, 3);
+    calloutBg.strokeRoundedRect(540, 720, 200, 22, 3);
 
-    const calloutBtn = this.add.text(548, 543, 'CALL OUT DUPLICATE', {
+    const calloutBtn = this.add.text(548, 723, 'CALL OUT DUPLICATE', {
       fontFamily: 'Courier New, monospace',
       fontSize: '12px',
       color: '#e06050',
@@ -1898,11 +1906,11 @@ export class DeskScene extends Phaser.Scene {
     this.overlayContainer.add(gfx);
 
     gfx.fillStyle(0x0a0a0f, 0.92);
-    gfx.fillRoundedRect(150, 120, 500, 360, 6);
+    gfx.fillRoundedRect(150, 200, 500, 400, 6);
     gfx.lineStyle(2, 0x8a7a50, 0.8);
-    gfx.strokeRoundedRect(150, 120, 500, 360, 6);
+    gfx.strokeRoundedRect(150, 200, 500, 400, 6);
 
-    const title = this.add.text(400, 140, 'ASSIGN TO ROLE:', {
+    const title = this.add.text(400, 220, 'ASSIGN TO ROLE:', {
       fontFamily: 'Courier New, monospace',
       fontSize: '18px',
       color: '#d4c5a0',
@@ -1913,7 +1921,7 @@ export class DeskScene extends Phaser.Scene {
     const unfilledRoles = this.roles.filter(r => r.filledBy === null);
 
     if (unfilledRoles.length === 0) {
-      const noRoles = this.add.text(400, 280, 'No open roles.', {
+      const noRoles = this.add.text(400, 380, 'No open roles.', {
         fontFamily: 'Courier New, monospace',
         fontSize: '16px',
         color: '#6a6050',
@@ -1921,7 +1929,7 @@ export class DeskScene extends Phaser.Scene {
       this.overlayContainer.add(noRoles);
     } else {
       unfilledRoles.forEach((role, i) => {
-        const ry = 170 + i * 50;
+        const ry = 250 + i * 50;
         const riskColors: Record<string, string> = {
           high: '#c4553a',
           medium: '#e8c36a',
@@ -1972,11 +1980,11 @@ export class DeskScene extends Phaser.Scene {
     const cancelBg = this.add.graphics();
     this.overlayContainer.add(cancelBg);
     cancelBg.fillStyle(0x2a2a30, 1);
-    cancelBg.fillRoundedRect(350, 445, 100, 26, 4);
+    cancelBg.fillRoundedRect(350, 565, 100, 26, 4);
     cancelBg.lineStyle(1, 0x4a4a56, 1);
-    cancelBg.strokeRoundedRect(350, 445, 100, 26, 4);
+    cancelBg.strokeRoundedRect(350, 565, 100, 26, 4);
 
-    const cancelBtn = this.add.text(400, 452, 'CANCEL', {
+    const cancelBtn = this.add.text(400, 572, 'CANCEL', {
       fontFamily: 'Courier New, monospace',
       fontSize: '14px',
       color: '#888070',
@@ -2175,11 +2183,11 @@ export class DeskScene extends Phaser.Scene {
     this.overlayContainer.add(gfx);
 
     gfx.fillStyle(0x0a0a0f, 0.95);
-    gfx.fillRoundedRect(100, 180, 600, 200, 6);
+    gfx.fillRoundedRect(100, 300, 600, 200, 6);
     gfx.lineStyle(2, 0xc4553a, 1);
-    gfx.strokeRoundedRect(100, 180, 600, 200, 6);
+    gfx.strokeRoundedRect(100, 300, 600, 200, 6);
 
-    const title = this.add.text(400, 210, 'STUNT UPGRADE', {
+    const title = this.add.text(400, 330, 'STUNT UPGRADE', {
       fontFamily: 'Courier New, monospace',
       fontSize: '22px',
       color: '#c4553a',
@@ -2189,7 +2197,7 @@ export class DeskScene extends Phaser.Scene {
 
     const upgradeText = this.ndUpgradeSystem.assessUpgradeRisk(upgradedRole);
 
-    const desc = this.add.text(400, 270, upgradeText, {
+    const desc = this.add.text(400, 390, upgradeText, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#d4c5a0',
@@ -2198,7 +2206,7 @@ export class DeskScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.overlayContainer.add(desc);
 
-    const note = this.add.text(400, 320, 'The AD just walked over and told you. Great.', {
+    const note = this.add.text(400, 440, 'The AD just walked over and told you. Great.', {
       fontFamily: 'Courier New, monospace',
       fontSize: '14px',
       color: '#6a6050',
@@ -2208,11 +2216,11 @@ export class DeskScene extends Phaser.Scene {
     const okBg = this.add.graphics();
     this.overlayContainer.add(okBg);
     okBg.fillStyle(0x2a2618, 1);
-    okBg.fillRoundedRect(370, 348, 60, 26, 4);
+    okBg.fillRoundedRect(370, 468, 60, 26, 4);
     okBg.lineStyle(1, 0x5a4a2a, 1);
-    okBg.strokeRoundedRect(370, 348, 60, 26, 4);
+    okBg.strokeRoundedRect(370, 468, 60, 26, 4);
 
-    const okBtn = this.add.text(400, 355, 'OK', {
+    const okBtn = this.add.text(400, 475, 'OK', {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#e8c36a',

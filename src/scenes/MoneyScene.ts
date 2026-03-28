@@ -44,29 +44,29 @@ export class MoneyScene extends Phaser.Scene {
 
     // Dark green accounting paper background
     gfx.fillStyle(0x0e1810, 1);
-    gfx.fillRect(80, 15, 640, 570);
+    gfx.fillRect(80, 15, 640, 870);
 
     // Faint vertical column lines (accounting paper style)
     gfx.lineStyle(1, 0x1a2a1c, 0.3);
     const colPositions = [200, 350, 500, 580];
     colPositions.forEach(cx => {
-      gfx.lineBetween(cx, 20, cx, 580);
+      gfx.lineBetween(cx, 20, cx, 880);
     });
 
     // Red vertical margin line (like accounting paper)
     gfx.lineStyle(1, 0x4a2020, 0.25);
-    gfx.lineBetween(140, 20, 140, 580);
+    gfx.lineBetween(140, 20, 140, 880);
 
     // Double-line border
     gfx.lineStyle(2, 0x2a3a2c, 1);
-    gfx.strokeRect(80, 15, 640, 570);
+    gfx.strokeRect(80, 15, 640, 870);
     gfx.lineStyle(1, 0x2a3a2c, 0.4);
-    gfx.strokeRect(84, 19, 632, 562);
+    gfx.strokeRect(84, 19, 632, 862);
 
     // Paper texture dots
     for (let i = 0; i < 200; i++) {
       const px = 82 + Math.random() * 636;
-      const py = 17 + Math.random() * 566;
+      const py = 17 + Math.random() * 866;
       const bright = Math.random() > 0.5 ? 0x142018 : 0x0a120c;
       gfx.fillStyle(bright, 0.4);
       gfx.fillRect(px, py, 1, 1);
@@ -74,7 +74,7 @@ export class MoneyScene extends Phaser.Scene {
 
     // Faint horizontal ruled lines
     gfx.lineStyle(1, 0x1a2a1c, 0.15);
-    for (let ry = 90; ry < 570; ry += 30) {
+    for (let ry = 90; ry < 870; ry += 30) {
       gfx.lineBetween(85, ry, 715, ry);
     }
 
@@ -270,14 +270,14 @@ export class MoneyScene extends Phaser.Scene {
     if (state.money < 0) {
       const redOverlay = this.add.graphics();
       redOverlay.fillStyle(0x3a0000, 0.08);
-      redOverlay.fillRect(80, 15, 640, 570);
+      redOverlay.fillRect(80, 15, 640, 870);
     }
 
     // VHS overlay (applied after all content)
     this.vhs = new VHSOverlay(this);
     this.vhs.apply();
 
-    const btnY = 540;
+    const btnY = 830;
     const btnW = 200;
     const btnH = 42;
     const btnX = 400 - btnW / 2;

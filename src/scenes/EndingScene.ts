@@ -25,7 +25,7 @@ export class EndingScene extends Phaser.Scene {
       // Dawn/daylight feeling — lighter warm tones
       this.cameras.main.setBackgroundColor('#2a2520');
       gfx.fillStyle(0x2a2520, 1);
-      gfx.fillRect(0, 0, 800, 600);
+      gfx.fillRect(0, 0, 800, 900);
 
       // Gradient to lighter at top (dawn sky)
       gfx.fillStyle(0x3a352e, 0.5);
@@ -41,7 +41,7 @@ export class EndingScene extends Phaser.Scene {
 
       // Ground plane
       gfx.fillStyle(0x3a3830, 1);
-      gfx.fillRect(0, 420, 800, 180);
+      gfx.fillRect(0, 580, 800, 320);
 
       // Construction site silhouettes — concrete blocks
       gfx.fillStyle(0x2a2820, 0.9);
@@ -91,7 +91,7 @@ export class EndingScene extends Phaser.Scene {
       // Night set but golden-lit
       this.cameras.main.setBackgroundColor('#0a0a0f');
       gfx.fillStyle(0x0a0a0f, 1);
-      gfx.fillRect(0, 0, 800, 600);
+      gfx.fillRect(0, 0, 800, 900);
 
       // Golden ambient glow
       gfx.fillStyle(0xe8c36a, 0.04);
@@ -125,7 +125,7 @@ export class EndingScene extends Phaser.Scene {
       // Tiers A through D — varying atmosphere
       this.cameras.main.setBackgroundColor('#0a0a0f');
       gfx.fillStyle(0x0a0a0f, 1);
-      gfx.fillRect(0, 0, 800, 600);
+      gfx.fillRect(0, 0, 800, 900);
 
       // Atmosphere varies by tier
       const tierAtmosphere: Record<string, { color: number; alpha: number; radius: number }> = {
@@ -208,7 +208,7 @@ export class EndingScene extends Phaser.Scene {
     }).setOrigin(0.5, 0);
 
     // Stats panel — clean bordered panel
-    const statsY = 340;
+    const statsY = 450;
     const statsW = 520;
     const statsH = 170;
     const statsX = 400 - statsW / 2;
@@ -272,7 +272,7 @@ export class EndingScene extends Phaser.Scene {
     });
 
     // Play Again button — with hover effect
-    const btnY = 535;
+    const btnY = 730;
     const btnW = 260;
     const btnH = 48;
     const btnX = 400 - btnW / 2;

@@ -52,7 +52,7 @@ export class EveningScene extends Phaser.Scene {
     });
 
     const W = 800;
-    const H = 600;
+    const H = 900;
     this.cameras.main.setBackgroundColor('#0a0a0f');
 
     // Focus takes longer each night (1s Night 1, up to 4s Night 7)
@@ -153,17 +153,17 @@ export class EveningScene extends Phaser.Scene {
 
     // Back wall
     gfx.fillStyle(0x1a1a24, 1);
-    gfx.fillRect(0, 40, W, 380);
+    gfx.fillRect(0, 40, W, 560);
     for (let x = 0; x < W; x += 40) {
       gfx.fillStyle(0x1c1c28, 0.4);
-      gfx.fillRect(x, 40, 2, 380);
+      gfx.fillRect(x, 40, 2, 560);
     }
 
     // Floor
     gfx.fillStyle(0x13131a, 1);
-    gfx.fillRect(0, 424, W, 176);
+    gfx.fillRect(0, 604, W, 296);
     gfx.fillStyle(0x2a2a34, 1);
-    gfx.fillRect(0, 420, W, 5);
+    gfx.fillRect(0, 600, W, 5);
 
     // Window
     const skyColor = night <= 2 ? 0x2a1a3a : night <= 5 ? 0x1a0a2a : 0x0a0a1a;
@@ -214,9 +214,9 @@ export class EveningScene extends Phaser.Scene {
 
     // Light glow
     gfx.fillStyle(0xf5d799, 0.03);
-    gfx.fillEllipse(400, 200, 400, 300);
+    gfx.fillEllipse(400, 300, 400, 400);
     gfx.fillStyle(0xf5d799, 0.04);
-    gfx.fillEllipse(400, 200, 250, 200);
+    gfx.fillEllipse(400, 300, 250, 280);
 
     // Clock
     gfx.fillStyle(0x3a352e, 1);
@@ -230,70 +230,70 @@ export class EveningScene extends Phaser.Scene {
 
     // Jacket
     gfx.fillStyle(0x1e1e28, 1);
-    gfx.fillRect(25, 192, 40, 8);
-    gfx.fillRect(28, 200, 34, 50);
+    gfx.fillRect(25, 312, 40, 8);
+    gfx.fillRect(28, 320, 34, 50);
 
     // Table
     gfx.fillStyle(0x222230, 1);
-    gfx.fillRect(150, 355, 500, 14);
+    gfx.fillRect(150, 520, 500, 14);
     gfx.fillStyle(0x1e1e2a, 1);
-    gfx.fillRect(165, 369, 8, 52);
-    gfx.fillRect(450, 369, 8, 52);
-    gfx.fillRect(630, 369, 8, 52);
+    gfx.fillRect(165, 534, 8, 66);
+    gfx.fillRect(450, 534, 8, 66);
+    gfx.fillRect(630, 534, 8, 66);
 
     // Items on table
     gfx.fillStyle(0xd4c5a0, 0.25);
-    gfx.fillRect(203, 340, 42, 6);
+    gfx.fillRect(203, 505, 42, 6);
     gfx.fillStyle(0xd4c5a0, 0.3);
-    gfx.fillRect(206, 337, 38, 5);
+    gfx.fillRect(206, 502, 38, 5);
     gfx.fillStyle(0x2a2018, 1);
-    gfx.fillRect(470, 340, 16, 16);
+    gfx.fillRect(470, 505, 16, 16);
 
     // Chair
     gfx.fillStyle(0x1e1e2a, 1);
-    gfx.fillRect(330, 340, 50, 6);
-    gfx.fillRect(328, 395, 54, 8);
-    gfx.fillRect(334, 365, 4, 56);
-    gfx.fillRect(372, 365, 4, 56);
+    gfx.fillRect(330, 505, 50, 6);
+    gfx.fillRect(328, 560, 54, 8);
+    gfx.fillRect(334, 530, 4, 56);
+    gfx.fillRect(372, 530, 4, 56);
 
     // Fridge
     gfx.fillStyle(0x222230, 1);
-    gfx.fillRect(680, 140, 80, 280);
+    gfx.fillRect(680, 280, 80, 320);
     gfx.fillStyle(0x1a1a26, 1);
-    gfx.fillRect(682, 230, 76, 3);
+    gfx.fillRect(682, 400, 76, 3);
     gfx.fillStyle(0x3a3a48, 0.8);
-    gfx.fillRect(690, 250, 3, 40);
+    gfx.fillRect(690, 420, 3, 40);
     gfx.fillStyle(0x8a4040, 0.4);
-    gfx.fillRect(710, 260, 18, 14);
+    gfx.fillRect(710, 430, 18, 14);
     gfx.fillStyle(0x405080, 0.35);
-    gfx.fillRect(735, 275, 14, 12);
+    gfx.fillRect(735, 445, 14, 12);
     gfx.fillStyle(0x408050, 0.3);
-    gfx.fillRect(715, 300, 20, 16);
+    gfx.fillRect(715, 470, 20, 16);
   }
 
   private drawTextElements(W: number, night: number): void {
     // Monologue panel
     const panelGfx = this.add.graphics();
     panelGfx.fillStyle(0x0a0a10, 0.75);
-    panelGfx.fillRect(60, 430, 680, 140);
+    panelGfx.fillRect(60, 700, 680, 140);
     panelGfx.fillStyle(0x2a2a34, 0.3);
-    panelGfx.fillRect(60, 430, 680, 1);
+    panelGfx.fillRect(60, 700, 680, 1);
 
     // Night number
-    this.add.text(402, 302, `NIGHT ${night} / 7`, {
+    this.add.text(402, 502, `NIGHT ${night} / 7`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '36px',
       color: '#000000',
       fontStyle: 'bold',
     }).setOrigin(0.5).setAlpha(0.3);
-    this.add.text(400, 300, `NIGHT ${night} / 7`, {
+    this.add.text(400, 500, `NIGHT ${night} / 7`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '36px',
       color: '#d4c5a0',
       fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(400, 340, '5:15 PM — Call Time', {
+    this.add.text(400, 540, '5:15 PM — Call Time', {
       fontFamily: 'Courier New, monospace',
       fontSize: '18px',
       color: '#888070',
@@ -301,7 +301,7 @@ export class EveningScene extends Phaser.Scene {
 
     // Monologue text
     this.fullMonologue = this.nightConfig.openingMonologue;
-    this.monologueText = this.add.text(90, 445, '', {
+    this.monologueText = this.add.text(90, 715, '', {
       fontFamily: 'Courier New, monospace',
       fontSize: '18px',
       color: '#d4c5a0',
@@ -313,7 +313,7 @@ export class EveningScene extends Phaser.Scene {
   private showContinue(): void {
     this.continueShown = true;
     this.canAdvance = true;
-    this.continueText = this.add.text(400, 555, '[ CONTINUE ]', {
+    this.continueText = this.add.text(400, 860, '[ CONTINUE ]', {
       fontFamily: 'Courier New, monospace',
       fontSize: '20px',
       color: '#e8c36a',
