@@ -1848,14 +1848,17 @@ export class DeskScene extends Phaser.Scene {
 
     if (visitor.resume.credits.length > 0) {
       visitor.resume.credits.slice(0, 3).forEach(credit => {
-        const creditText = this.add.text(rx + 8, ry, `- ${credit}`, {
+        const creditLine = `- ${credit}`;
+        const creditText = this.add.text(rx + 8, ry, creditLine, {
           fontFamily: 'Courier New, monospace',
-          fontSize: '14px',
+          fontSize: '13px',
           color: '#d4c5a0',
-          wordWrap: { width: 300 },
+          wordWrap: { width: 290 },
         });
         this.bottomHalfContainer.add(creditText);
-        ry += 15;
+        // Account for word-wrapped lines (~30 chars per line at 13px)
+        const estimatedLines = Math.ceil(creditLine.length / 30);
+        ry += estimatedLines * 15 + 2;
       });
     } else {
       const noneText = this.add.text(rx + 8, ry, '(none)', {
@@ -1908,7 +1911,7 @@ export class DeskScene extends Phaser.Scene {
     const bookGfx = this.add.graphics();
     this.bottomHalfContainer.add(bookGfx);
 
-    const bookH = 120;
+    const bookH = 180;
     // Leather cover
     bookGfx.fillStyle(0x2a1a0e, 1);
     bookGfx.fillRoundedRect(px - 4, py, 248, bookH, 3);
@@ -1975,7 +1978,7 @@ export class DeskScene extends Phaser.Scene {
     });
 
     // Reel section — positioned below book with clear gap
-    const reelY = 515;
+    const reelY = 580;
     const reelGfx = this.add.graphics();
     this.bottomHalfContainer.add(reelGfx);
 
@@ -2510,9 +2513,9 @@ export class DeskScene extends Phaser.Scene {
     const reelGfx = this.add.graphics();
     this.bottomHalfContainer.add(reelGfx);
 
-    // Monitor inner bounds (from drawBookAndReel - px=544, reelY=540)
-    const mx = 558;
-    const my = 562;
+    // Monitor inner bounds (from drawBookAndReel - px=544, reelY=580)
+    const mx = 548;
+    const my = 602;
     const mw = 218;
     const mh = 68;
 
@@ -2742,9 +2745,9 @@ export class DeskScene extends Phaser.Scene {
 
   private drawReelAnimFrame(rawStuntType: string, frame: number): void {
     const stuntType = rawStuntType.replace(/ /g, '_');
-    // Animate inside the reel monitor area
-    const mx = 558;
-    const my = 562;
+    // Animate inside the reel monitor area (matches reelY=580)
+    const mx = 548;
+    const my = 602;
     const mw = 218;
     const mh = 68;
 
