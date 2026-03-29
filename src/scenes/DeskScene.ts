@@ -1490,6 +1490,12 @@ export class DeskScene extends Phaser.Scene {
     const skinBase = visitor.headshot.matchesFace ? app.skinTone : (visitor.gender === 'male' ? 0x8a6a4a : 0x9a7a5a);
     const hairColor = visitor.headshot.matchesFace ? app.hairColor : (visitor.gender === 'male' ? 0x3a2a1a : 0x4a3020);
 
+    // Pose variation based on visitor ID — head tilt, eye direction, expression
+    const poseHash = visitor.id.charCodeAt(visitor.id.length - 1) % 7;
+    const headTiltX = [-3, 0, 3, -2, 2, 0, -4][poseHash]; // head offset left/right
+    const eyeLookX = [0, -2, 2, 0, -1, 1, 0][poseHash]; // eye direction
+    const mouthType = poseHash; // 0=neutral, 1=slight smile, 2=open, 3=frown, 4=smirk, 5=teeth, 6=weird
+
     if (visitor.headshot.type === 'color_8x10') {
       // White border (photo border)
       gfx.fillStyle(0xd8d4cc, 1);
@@ -1521,58 +1527,76 @@ export class DeskScene extends Phaser.Scene {
       gfx.fillStyle(0x000000, 0.08);
       gfx.fillRect(cx - 1, photoY + 88, 2, 30);
 
-      // Face — oval with jawline
+      // Face — oval with jawline, offset by pose
+      const fcx = cx + headTiltX;
       gfx.fillStyle(skinBase, 1);
-      gfx.fillEllipse(cx, photoY + 48, 48, 56);
-      // Jawline shadow
+      gfx.fillEllipse(fcx, photoY + 48, 48, 56);
       gfx.fillStyle(0x000000, 0.08);
-      gfx.fillEllipse(cx, photoY + 58, 44, 36);
+      gfx.fillEllipse(fcx, photoY + 58, 44, 36);
 
       // Ears
       gfx.fillStyle(skinBase, 0.8);
-      gfx.fillEllipse(cx - 24, photoY + 46, 6, 10);
-      gfx.fillEllipse(cx + 24, photoY + 46, 6, 10);
+      gfx.fillEllipse(fcx - 24, photoY + 46, 6, 10);
+      gfx.fillEllipse(fcx + 24, photoY + 46, 6, 10);
 
       // Hair
       gfx.fillStyle(hairColor, 1);
-      gfx.fillEllipse(cx, photoY + 28, 52, 30);
+      gfx.fillEllipse(fcx, photoY + 28, 52, 30);
       if (visitor.gender !== 'male') {
-        gfx.fillRect(cx - 26, photoY + 26, 6, 40);
-        gfx.fillRect(cx + 20, photoY + 26, 6, 40);
+        gfx.fillRect(fcx - 26, photoY + 26, 6, 40);
+        gfx.fillRect(fcx + 20, photoY + 26, 6, 40);
       }
 
-      // Eyes — whites + iris + pupil
+      // Eyes — whites + iris + pupil, with gaze direction
       gfx.fillStyle(0xffffff, 0.85);
-      gfx.fillEllipse(cx - 9, photoY + 44, 10, 6);
-      gfx.fillEllipse(cx + 9, photoY + 44, 10, 6);
+      gfx.fillEllipse(fcx - 9, photoY + 44, 10, 6);
+      gfx.fillEllipse(fcx + 9, photoY + 44, 10, 6);
       gfx.fillStyle(0x4a6a5a, 1);
-      gfx.fillCircle(cx - 9, photoY + 44, 2.5);
-      gfx.fillCircle(cx + 9, photoY + 44, 2.5);
+      gfx.fillCircle(fcx - 9 + eyeLookX, photoY + 44, 2.5);
+      gfx.fillCircle(fcx + 9 + eyeLookX, photoY + 44, 2.5);
       gfx.fillStyle(0x1a1a1a, 1);
-      gfx.fillCircle(cx - 9, photoY + 44, 1.2);
-      gfx.fillCircle(cx + 9, photoY + 44, 1.2);
+      gfx.fillCircle(fcx - 9 + eyeLookX, photoY + 44, 1.2);
+      gfx.fillCircle(fcx + 9 + eyeLookX, photoY + 44, 1.2);
 
-      // Eyebrows
+      // Eyebrows — raised/lowered based on expression
       gfx.fillStyle(hairColor, 0.7);
-      gfx.fillRect(cx - 14, photoY + 38, 10, 2);
-      gfx.fillRect(cx + 4, photoY + 38, 10, 2);
+      const browOffset = mouthType === 2 ? -2 : mouthType === 3 ? 1 : 0;
+      gfx.fillRect(fcx - 14, photoY + 38 + browOffset, 10, 2);
+      gfx.fillRect(fcx + 4, photoY + 38 + browOffset, 10, 2);
 
       // Nose
       gfx.fillStyle(0x000000, 0.1);
-      gfx.fillTriangle(cx, photoY + 48, cx - 4, photoY + 57, cx + 4, photoY + 57);
+      gfx.fillTriangle(fcx, photoY + 48, fcx - 4, photoY + 57, fcx + 4, photoY + 57);
       gfx.fillStyle(skinBase, 0.8);
-      gfx.fillCircle(cx - 3, photoY + 56, 2);
-      gfx.fillCircle(cx + 3, photoY + 56, 2);
+      gfx.fillCircle(fcx - 3, photoY + 56, 2);
+      gfx.fillCircle(fcx + 3, photoY + 56, 2);
 
-      // Mouth
+      // Mouth — varies by pose
       gfx.fillStyle(0x8a4a3a, 0.6);
-      gfx.fillEllipse(cx, photoY + 63, 12, 4);
-      gfx.fillStyle(skinBase, 0.5);
-      gfx.fillEllipse(cx, photoY + 61, 10, 2);
+      if (mouthType === 0) {
+        gfx.fillEllipse(fcx, photoY + 63, 12, 4); // neutral
+      } else if (mouthType === 1) {
+        gfx.fillEllipse(fcx, photoY + 63, 14, 3); // slight smile
+        gfx.fillStyle(skinBase, 0.5);
+        gfx.fillEllipse(fcx, photoY + 61, 10, 2);
+      } else if (mouthType === 2) {
+        gfx.fillEllipse(fcx, photoY + 63, 10, 6); // surprised/open
+      } else if (mouthType === 3) {
+        gfx.fillRect(fcx - 5, photoY + 63, 10, 2); // flat/frown
+      } else if (mouthType === 4) {
+        gfx.fillEllipse(fcx + 2, photoY + 63, 10, 3); // smirk (offset)
+      } else if (mouthType === 5) {
+        gfx.fillEllipse(fcx, photoY + 63, 12, 5); // showing teeth
+        gfx.fillStyle(0xd8d0c0, 0.5);
+        gfx.fillRect(fcx - 4, photoY + 62, 8, 2);
+      } else {
+        // Weird expression — one eye squinting, crooked smile
+        gfx.fillEllipse(fcx + 3, photoY + 64, 8, 4);
+      }
 
-      // Studio light catch — subtle highlight on cheek
+      // Studio light catch
       gfx.fillStyle(0xffffff, 0.06);
-      gfx.fillEllipse(cx - 12, photoY + 42, 12, 20);
+      gfx.fillEllipse(fcx - 12, photoY + 42, 12, 20);
 
       const nameText = this.add.text(hx + 4, photoY + photoH + 6, visitor.name, {
         fontFamily: 'Courier New, monospace',
@@ -1758,6 +1782,29 @@ export class DeskScene extends Phaser.Scene {
   private drawResume(visitor: Visitor): void {
     const rx = 214;
     let ry = 390;
+
+    // Paper background — each visitor has slightly different paper color/texture
+    const paperHash = visitor.id.charCodeAt(0) % 4;
+    const paperColors = [0xd8d0c0, 0xc8c0b0, 0xd0c8b8, 0xe0d8c8];
+    const paperColor = paperColors[paperHash];
+    const resumeGfx = this.add.graphics();
+    this.bottomHalfContainer.add(resumeGfx);
+    // Paper rectangle with slight rotation feel
+    resumeGfx.fillStyle(paperColor, 0.12);
+    resumeGfx.fillRect(203, 384, 334, 308);
+    // Subtle fold line / crease
+    resumeGfx.lineStyle(1, paperColor, 0.06);
+    resumeGfx.lineBetween(210, 440 + paperHash * 30, 530, 440 + paperHash * 30);
+    // Coffee ring stain (some resumes)
+    if (paperHash === 2) {
+      resumeGfx.lineStyle(2, 0x6a4a2a, 0.04);
+      resumeGfx.strokeCircle(500, 650, 14);
+    }
+    // Corner dog-ear (some resumes)
+    if (paperHash === 1 || paperHash === 3) {
+      resumeGfx.fillStyle(paperColor, 0.15);
+      resumeGfx.fillTriangle(530, 384, 537, 384, 537, 398);
+    }
 
     const headerText = this.add.text(rx, ry, 'RESUME', {
       fontFamily: 'Courier New, monospace',
@@ -2541,8 +2588,15 @@ export class DeskScene extends Phaser.Scene {
       this.bookResultText.setText(lines.join('\n'));
       this.bookResultText.setColor('#d4c5a0');
     } else {
-      this.bookResultText.setText('NOT FOUND\n\nNo listing for this name.');
+      const notFoundMsgs = [
+        'NOT FOUND\n\nThat\'s odd. Everyone\'s\nin the book.',
+        'NOT FOUND\n\nHm. No listing.\nThat\'s a red flag.',
+        'NOT FOUND\n\nNot in here.\nHow\'d they get this gig?',
+        'NOT FOUND\n\nNo record.\nSomebody\'s lying.',
+      ];
+      this.bookResultText.setText(notFoundMsgs[Math.floor(Math.random() * notFoundMsgs.length)]);
       this.bookResultText.setColor('#c4553a');
+      this.visitorTells.push('not_in_book');
     }
   }
 
@@ -2685,6 +2739,25 @@ export class DeskScene extends Phaser.Scene {
       // Legs trailing
       reelGfx.fillRect(figX - 3, figY + 8, 2, 6);
       reelGfx.fillRect(figX + 2, figY + 8, 2, 6);
+    } else if (stuntType === 'ratchet_pull' || stuntType === 'ratchet pull') {
+      // Figure being yanked sideways by a cable — flying through the air
+      reelGfx.lineStyle(1, 0x8a8a9a, 0.6);
+      reelGfx.lineBetween(mx + mw - 5, figY, figX + 8, figY - 2); // cable
+      reelGfx.fillStyle(0xd4c5a0, 0.9);
+      // Figure horizontal, being pulled right
+      reelGfx.fillCircle(figX + 6, figY - 4, 4); // head
+      reelGfx.fillRect(figX - 8, figY - 2, 16, 3); // body horizontal
+      // Arms trailing behind
+      reelGfx.fillRect(figX - 14, figY - 4, 6, 2);
+      reelGfx.fillRect(figX - 12, figY, 6, 2);
+      // Legs trailing
+      reelGfx.fillRect(figX - 14, figY + 2, 2, 6);
+      reelGfx.fillRect(figX - 10, figY + 2, 2, 6);
+      // Motion lines
+      reelGfx.lineStyle(1, 0xd4c5a0, 0.3);
+      reelGfx.lineBetween(figX - 20, figY - 6, figX - 30, figY - 6);
+      reelGfx.lineBetween(figX - 18, figY, figX - 28, figY);
+      reelGfx.lineBetween(figX - 22, figY + 6, figX - 32, figY + 6);
     } else if (stuntType === 'explosion_reaction') {
       // Figure being blown back
       reelGfx.fillCircle(figX + 12, figY - 6, 4);
@@ -2918,6 +2991,23 @@ export class DeskScene extends Phaser.Scene {
       clearGfx.fillRect(swingX - 1, figY - 4, 3, 12);
       clearGfx.fillRect(swingX - 10, figY - 2, 8, 2);
       clearGfx.fillRect(swingX + 3, figY - 2, 8, 2);
+    } else if (stuntType === 'ratchet_pull' || stuntType === 'ratchet pull') {
+      // Figure yanked across screen by cable — flies from left to right
+      const pullX = mx + 10 + phase * (mw / 5);
+      clearGfx.lineStyle(1, 0x8a8a9a, 0.6);
+      clearGfx.lineBetween(mx + mw - 5, figY, pullX + 8, figY - 2);
+      clearGfx.fillStyle(0xd4c5a0, 0.9);
+      clearGfx.fillCircle(pullX + 6, figY - 4, 4);
+      clearGfx.fillRect(pullX - 8, figY - 2, 16, 3);
+      clearGfx.fillRect(pullX - 14 - phase, figY - 4, 6, 2);
+      clearGfx.fillRect(pullX - 12 - phase, figY + 1, 6, 2);
+      clearGfx.fillRect(pullX - 14, figY + 4, 2, 5);
+      clearGfx.fillRect(pullX - 10, figY + 4, 2, 5);
+      clearGfx.lineStyle(1, 0xd4c5a0, 0.2 + phase * 0.05);
+      for (let ml = 0; ml < 2 + phase; ml++) {
+        const ly = figY - 6 + ml * 5;
+        clearGfx.lineBetween(pullX - 20 - phase * 3, ly, pullX - 30 - phase * 5, ly);
+      }
     } else if (stuntType === 'fire_run') {
       // Running on fire — figure runs across screen with trailing flames
       const runX = figX - 20 + phase * 12;
@@ -3412,9 +3502,17 @@ export class DeskScene extends Phaser.Scene {
     }
 
     const allRolesFilled = this.roles.every(r => r.filledBy !== null);
-    if (this.currentVisitorIndex >= this.visitors.length || allRolesFilled) {
+    if (allRolesFilled) {
       this.endNight();
       return;
+    }
+
+    // If we've run through all visitors, generate more — the queue is endless
+    // Only the deadline (clock) ends the night, not running out of people
+    if (this.currentVisitorIndex >= this.visitors.length) {
+      const state = this.gsm.getCurrentState();
+      const extraVisitors = this.visitorGenerator.generateVisitorsForNight(this.nightConfig, state);
+      this.visitors.push(...extraVisitors);
     }
 
     this.presentVisitor(this.visitors[this.currentVisitorIndex]);
@@ -3424,11 +3522,13 @@ export class DeskScene extends Phaser.Scene {
     const ndRole = this.ndUpgradeSystem.findNDRole(this.roles);
 
     if (!ndRole) {
+      // Generate more visitors if needed
       if (this.currentVisitorIndex >= this.visitors.length) {
-        this.endNight();
-      } else {
-        this.presentVisitor(this.visitors[this.currentVisitorIndex]);
+        const state = this.gsm.getCurrentState();
+        const extraVisitors = this.visitorGenerator.generateVisitorsForNight(this.nightConfig, state);
+        this.visitors.push(...extraVisitors);
       }
+      this.presentVisitor(this.visitors[this.currentVisitorIndex]);
       return;
     }
 

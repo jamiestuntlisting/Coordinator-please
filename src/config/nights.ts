@@ -149,7 +149,7 @@ export const NIGHT_CONFIGS: NightConfig[] = [
     wigGuyAppears: false,
     returningVisitorChance: 0,
     kidExpenseChance: 0,
-    openingMonologue: "These stunt people know who I need before I even know. Someone is snitching.",
+    openingMonologue: "Someone is snitching. These stunt people know who I need before I know.",
     closingMonologue: 'Three nights down. Four to go.',
     hiringDeadline: 23.5,
   },

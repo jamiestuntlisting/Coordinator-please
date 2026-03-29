@@ -197,13 +197,15 @@ export class ResultsScene extends Phaser.Scene {
       allProblems.forEach((hire: HireResult) => {
         const fineStr = hire.fine > 0 ? ` -$${hire.fine} from your check.` : '';
         const msgs = hire.outcome === 'unfilled_role' ? [
-          `"${hire.roleTitle}" went unfilled. This is your LAST warning.${fineStr}`,
-          `Where's my ${hire.roleTitle.toLowerCase()}? I'm taking it out of your pay.${fineStr}`,
-          `Nobody for "${hire.roleTitle}"? That's coming out of your check.${fineStr}`,
+          `"${hire.roleTitle}" went unfilled.${fineStr} What are you gonna do about it, quit? Haha.`,
+          `Where's my ${hire.roleTitle.toLowerCase()}?${fineStr} You think I won't replace you?`,
+          `Nobody for "${hire.roleTitle}"?${fineStr} I got ten coordinators who'd kill for this gig.`,
+          `"${hire.roleTitle}" — UNFILLED.${fineStr} You're making this real easy for me.`,
         ] : [
-          `${hire.roleTitle}: That hire cost us.${fineStr} It's coming out of YOUR pay.`,
-          `I'm docking your check for the ${hire.roleTitle.toLowerCase()} mess.${fineStr}`,
-          `${hire.roleTitle} was YOUR call. YOUR paycheck.${fineStr}`,
+          `${hire.roleTitle}: That hire cost us.${fineStr} What are you gonna do about it, quit? Haha.`,
+          `I'm docking your check for the ${hire.roleTitle.toLowerCase()} mess.${fineStr} Keep it up.`,
+          `${hire.roleTitle} was YOUR call.${fineStr} You think you're irreplaceable?`,
+          `${hire.roleTitle}?${fineStr} I got a stack of resumes on my desk. Think about that.`,
         ];
         const msg = msgs[Math.floor(Math.random() * msgs.length)];
         this.add.text(115, noteY, msg, {
@@ -260,7 +262,7 @@ export class ResultsScene extends Phaser.Scene {
         fontStyle: 'bold',
       });
 
-      this.add.text(120, y + 8, 'UPM: "One more mistake and you\'re done."', {
+      this.add.text(120, y + 8, 'UPM: "One more. That\'s all you get. What are you gonna do, quit?"', {
         fontFamily: 'Courier New, monospace',
         fontSize: '16px',
         color: '#c4553a',
@@ -274,7 +276,7 @@ export class ResultsScene extends Phaser.Scene {
       gfx.lineStyle(2, 0xe8c36a, 0.6);
       gfx.strokeRect(75, y, 650, 36);
 
-      this.add.text(90, y + 8, 'Line Producer: "We\'re watching you, coordinator."', {
+      this.add.text(90, y + 8, 'UPM: "I got ten coordinators who\'d kill for this gig. Remember that."', {
         fontFamily: 'Courier New, monospace',
         fontSize: '16px',
         color: '#e8c36a',
