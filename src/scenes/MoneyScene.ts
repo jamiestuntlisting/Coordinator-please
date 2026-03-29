@@ -169,14 +169,34 @@ export class MoneyScene extends Phaser.Scene {
     }
 
     this.lineItems.push({ label: 'EXPENSES', amount: -totalExpenses, color: '#c45040', isTotalLine: true });
+
+    // Fines — deducted from paycheck by UPM
+    const fines = this.nightResult.fines ?? 0;
+    if (fines > 0) {
+      this.lineItems.push({ label: '', amount: 0, color: '', isSeparator: true });
+      this.lineItems.push({ label: 'UPM FINES', amount: -fines, color: '#c45040', isTotalLine: true });
+
+      // Show individual fines from bad hires
+      this.nightResult.hires.forEach(hire => {
+        if (hire.fine > 0) {
+          this.lineItems.push({
+            label: `  ${hire.roleTitle}`,
+            amount: -hire.fine,
+            color: '#c45040',
+            isSubItem: true,
+          });
+        }
+      });
+    }
+
     this.lineItems.push({ label: '', amount: 0, color: '', isSeparator: true });
 
     // Net
-    const net = gross - totalExpenses;
+    const net = gross - totalExpenses - fines;
     this.lineItems.push({ label: 'NET TONIGHT', amount: net, color: net >= 0 ? '#4a7a4f' : '#c45040', isTotalLine: true });
 
     // Update actual money
-    const newMoney = state.money + dayRate - totalExpenses;
+    const newMoney = state.money + dayRate - totalExpenses - fines;
     gsm.updateState({ money: newMoney, dayRate });
 
     this.lineItems.push({
@@ -333,6 +353,7 @@ export class MoneyScene extends Phaser.Scene {
       rejections: [],
       injuries: [],
       repChange: 0,
+      fines: 0,
       moneyEarned: BALANCE.dayRateBase,
       moneySpent: 0,
       bribesTaken: 0,

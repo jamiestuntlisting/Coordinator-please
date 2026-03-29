@@ -71,9 +71,11 @@ export class ResultsScene extends Phaser.Scene {
       const isUnfilled = hire.outcome === 'unfilled_role';
       const outcomeLabel = hire.outcomeDetail || this.getOutcomeLabel(hire.outcome);
 
-      // Row background
+      // Row background — estimate height based on outcome text length
+      const estOutcomeLines = Math.ceil(outcomeLabel.length / 50);
+      const estRowH = 22 + Math.max(20, estOutcomeLines * 16) + (hire.wasInjured ? 30 : 0);
       gfx.fillStyle(isGood ? 0x1a2a1a : (isUnfilled ? 0x1a1a1a : 0x2a1a1a), 0.3);
-      gfx.fillRect(65, y, 670, isGood ? 40 : (hire.wasInjured ? 70 : 50));
+      gfx.fillRect(65, y, 670, estRowH);
 
       // Checkmark or X icon
       const iconGfx = this.add.graphics();
@@ -105,23 +107,36 @@ export class ResultsScene extends Phaser.Scene {
       });
 
       // Outcome description (specific detail about what went wrong/right)
-      this.add.text(110, y + 22, outcomeLabel, {
+      const outcomeText = this.add.text(110, y + 22, outcomeLabel, {
         fontFamily: 'Courier New, monospace',
         fontSize: '13px',
         color: '#888070',
         wordWrap: { width: 520 },
       });
 
-      // Rep change on right side
-      const repSign = hire.repChange >= 0 ? '+' : '';
-      this.add.text(690, y + 4, `${repSign}${hire.repChange}`, {
-        fontFamily: 'Courier New, monospace',
-        fontSize: '14px',
-        color: hire.repChange >= 0 ? '#4a7a4f' : '#c4553a',
-        fontStyle: 'bold',
-      }).setOrigin(1, 0);
+      // Calculate actual height of outcome text (approx 16px per line)
+      const outcomeLines = Math.ceil(outcomeLabel.length / 50);
+      const outcomeHeight = Math.max(20, outcomeLines * 16);
 
-      y += 40;
+      // Right side: show rep gain OR fine amount
+      if (hire.repChange > 0) {
+        this.add.text(690, y + 4, `+${hire.repChange} rep`, {
+          fontFamily: 'Courier New, monospace',
+          fontSize: '14px',
+          color: '#4a7a4f',
+          fontStyle: 'bold',
+        }).setOrigin(1, 0);
+      }
+      if (hire.fine > 0) {
+        this.add.text(690, y + (hire.repChange > 0 ? 20 : 4), `-$${hire.fine}`, {
+          fontFamily: 'Courier New, monospace',
+          fontSize: '14px',
+          color: '#c4553a',
+          fontStyle: 'bold',
+        }).setOrigin(1, 0);
+      }
+
+      y += 22 + outcomeHeight;
 
       // Injury panel
       if (hire.wasInjured && hire.injury) {
@@ -157,17 +172,19 @@ export class ResultsScene extends Phaser.Scene {
       y += 4;
     });
 
-    // UPM handwritten note for unfilled roles
+    // UPM handwritten note for unfilled roles and fined hires
     const unfilledRoles = hires.filter(h => h.outcome === 'unfilled_role');
-    if (unfilledRoles.length > 0) {
+    const finedHires = hires.filter(h => h.fine > 0 && h.outcome !== 'unfilled_role');
+    if (unfilledRoles.length > 0 || finedHires.length > 0) {
       y += 8;
       // Sticky note / handwritten note background
       const noteGfx = this.add.graphics();
+      const totalProblems = unfilledRoles.length + finedHires.length;
       noteGfx.fillStyle(0xd8c870, 0.9); // yellow sticky note
-      noteGfx.fillRect(85, y, 630, 46 + unfilledRoles.length * 20);
+      noteGfx.fillRect(85, y, 630, 46 + totalProblems * 20);
       // Slight shadow
       noteGfx.fillStyle(0x000000, 0.15);
-      noteGfx.fillRect(88, y + 3, 630, 46 + unfilledRoles.length * 20);
+      noteGfx.fillRect(88, y + 3, 630, 46 + totalProblems * 20);
       // Tape at top
       noteGfx.fillStyle(0xc8c0a0, 0.5);
       noteGfx.fillRect(350, y - 6, 60, 14);
@@ -181,14 +198,20 @@ export class ResultsScene extends Phaser.Scene {
       });
 
       let noteY = y + 26;
-      unfilledRoles.forEach((hire: HireResult) => {
-        const msgs = [
-          `"${hire.roleTitle}" went unfilled. This is your LAST warning.`,
-          `Where's my ${hire.roleTitle.toLowerCase()}? I'm calling your agent in the morning.`,
-          `Nobody for "${hire.roleTitle}"? You're done after this week.`,
-          `I'm hearing "${hire.roleTitle}" had no one. Start packing your desk.`,
-          `You left "${hire.roleTitle}" empty? I've got three coordinators who'd kill for your job.`,
-          `No one for "${hire.roleTitle}." I'm documenting this. HR will be in touch.`,
+      // Also include bad hires with fines
+      const problemHires = hires.filter(h => h.fine > 0);
+      const allProblems = [...unfilledRoles, ...problemHires];
+
+      allProblems.forEach((hire: HireResult) => {
+        const fineStr = hire.fine > 0 ? ` -$${hire.fine} from your check.` : '';
+        const msgs = hire.outcome === 'unfilled_role' ? [
+          `"${hire.roleTitle}" went unfilled. This is your LAST warning.${fineStr}`,
+          `Where's my ${hire.roleTitle.toLowerCase()}? I'm taking it out of your pay.${fineStr}`,
+          `Nobody for "${hire.roleTitle}"? That's coming out of your check.${fineStr}`,
+        ] : [
+          `${hire.roleTitle}: That hire cost us.${fineStr} It's coming out of YOUR pay.`,
+          `I'm docking your check for the ${hire.roleTitle.toLowerCase()} mess.${fineStr}`,
+          `${hire.roleTitle} was YOUR call. YOUR paycheck.${fineStr}`,
         ];
         const msg = msgs[Math.floor(Math.random() * msgs.length)];
         this.add.text(115, noteY, msg, {
@@ -201,7 +224,7 @@ export class ResultsScene extends Phaser.Scene {
         noteY += 20;
       });
 
-      y += 54 + unfilledRoles.length * 20;
+      y += 54 + totalProblems * 20;
     }
 
     // Summary section — separator
@@ -437,6 +460,7 @@ export class ResultsScene extends Phaser.Scene {
       rejections: [],
       injuries: [],
       repChange: 0,
+      fines: 0,
       moneyEarned: BALANCE.dayRateBase,
       moneySpent: 0,
       bribesTaken: 0,

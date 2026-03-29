@@ -65,6 +65,7 @@ export class MoneySystem {
           outcome: 'correct_right_role' as const,
           outcomeDetail: 'Good hire.',
           repChange: 0,
+          fine: 0,
           wasInjured: false,
           injury: null,
         };
@@ -102,6 +103,7 @@ export class MoneySystem {
       rejections,
       injuries,
       repChange,
+      fines: 0,
       moneyEarned,
       moneySpent: totalSpent,
       bribesTaken,

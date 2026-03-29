@@ -2833,6 +2833,7 @@ export class DeskScene extends Phaser.Scene {
         outcome: 'caught_duplicate_reel',
         outcomeDetail: `Caught using ${originalOwner}'s reel. Busted.`,
         repChange: repGain,
+        fine: 0,
         wasInjured: false,
         injury: null,
       });
@@ -3009,6 +3010,9 @@ export class DeskScene extends Phaser.Scene {
 
     const outcomeDetail = this.getSpecificOutcomeDetail(visitor, role, outcome);
 
+    // Calculate fine — deducted from paycheck
+    const fine = (BALANCE.fines as Record<string, number>)[outcome] ?? 0;
+
     const result: HireResult = {
       visitorId: visitor.id,
       visitorName: visitor.name,
@@ -3017,6 +3021,7 @@ export class DeskScene extends Phaser.Scene {
       outcome,
       outcomeDetail,
       repChange,
+      fine,
       wasInjured,
       injury,
     };
@@ -3358,6 +3363,7 @@ export class DeskScene extends Phaser.Scene {
         outcome,
         outcomeDetail: `${role.title} went unfilled. The UPM wants a word.`,
         repChange,
+        fine: (BALANCE.fines as Record<string, number>)['unfilled_role'] ?? 0,
         wasInjured: false,
         injury: null,
       });
@@ -3386,6 +3392,7 @@ export class DeskScene extends Phaser.Scene {
     }
 
     const totalRepChange = this.hireResults.reduce((sum, r) => sum + r.repChange, 0);
+    const totalFines = this.hireResults.reduce((sum, r) => sum + r.fine, 0);
     const injuries = this.hireResults.filter(r => r.injury).map(r => r.injury!);
 
     const state = this.gsm.getCurrentState();
@@ -3396,6 +3403,7 @@ export class DeskScene extends Phaser.Scene {
       rejections: this.rejections,
       injuries,
       repChange: totalRepChange,
+      fines: totalFines,
       moneyEarned: this.reputationSystem.getDayRate(state.reputation),
       moneySpent: 0,
       bribesTaken: this.bribesTaken,

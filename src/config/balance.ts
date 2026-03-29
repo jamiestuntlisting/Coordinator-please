@@ -22,7 +22,7 @@ export const BALANCE: BalanceConfig = {
   // -- SAG --
   sagRepCost: 150,
 
-  // -- Reputation gains --
+  // -- Reputation gains (rep only goes UP for good work) --
   repGain: {
     correct_right_role: 2,
     correct_slight_mismatch: 1,
@@ -31,19 +31,33 @@ export const BALANCE: BalanceConfig = {
     caught_returning_visitor: 2,
   },
 
-  // -- Reputation losses --
+  // -- Reputation losses (minimal — strikes and fines handle punishment) --
   repLoss: {
-    wrong_hire_nd_minor_injury: -1,
-    wrong_hire_medium_injury: -3,
-    wrong_hire_high_serious_injury: -5,
-    wrong_hire_upgraded_nd_injury: -5,
-    non_sag_on_sag_night: -4,
-    wrong_gender: -3,
-    size_mismatch: -2,
+    wrong_hire_nd_minor_injury: 0,
+    wrong_hire_medium_injury: 0,
+    wrong_hire_high_serious_injury: -1,
+    wrong_hire_upgraded_nd_injury: 0,
+    non_sag_on_sag_night: 0,
+    wrong_gender: 0,
+    size_mismatch: 0,
     passed_legit: 0,
-    unfilled_role: -2,
-    not_local: -3,
+    unfilled_role: 0,
+    not_local: 0,
   },
+
+  // -- Fines deducted from paycheck (the real punishment) --
+  fines: {
+    wrong_hire_nd_minor_injury: 15,
+    wrong_hire_nd_no_injury: 0,
+    wrong_hire_medium_injury: 40,
+    wrong_hire_high_serious_injury: 100,
+    wrong_hire_upgraded_nd_injury: 75,
+    non_sag_on_sag_night: 50,
+    wrong_gender: 30,
+    size_mismatch: 20,
+    not_local: 35,
+    unfilled_role: 25,
+  } as Record<string, number>,
 
   // -- Injury chances (0-1, higher = more likely to be injured) --
   ndInjuryChance: 0.15,

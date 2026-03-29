@@ -183,6 +183,7 @@ export interface HireResult {
   outcome: HireOutcome;
   outcomeDetail: string;  // specific description of what went wrong/right
   repChange: number;
+  fine: number;          // money deducted from paycheck for this hire
   wasInjured: boolean;
   injury: Injury | null;
 }
@@ -204,6 +205,7 @@ export interface NightResult {
   bribeMoney: number;
   sagRepVisit: boolean;
   sagRepCost: number;
+  fines: number;       // total money deducted for bad hires
   ndUpgraded: boolean;
   kidExpense: KidExpense | null;
 }
@@ -300,6 +302,7 @@ export interface BalanceConfig {
 
   repGain: Record<string, number>;
   repLoss: Record<string, number>;
+  fines: Record<string, number>;  // money deducted from paycheck for bad hires
 
   ndInjuryChance: number;
   mediumInjuryChance: number;
