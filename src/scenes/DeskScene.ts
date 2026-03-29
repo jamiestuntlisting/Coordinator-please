@@ -2336,7 +2336,6 @@ export class DeskScene extends Phaser.Scene {
   }
 
   private showSagCardVisual(visitor: Visitor): void {
-    // Show a SAG card overlay in the bottom-left area (over headshot)
     const cardGfx = this.add.graphics();
     this.bottomHalfContainer.add(cardGfx);
 
@@ -2346,17 +2345,24 @@ export class DeskScene extends Phaser.Scene {
     const ch = 100;
 
     if (visitor.sagCard && visitor.sagCard.present) {
+      this.sagCardShown = true;
+
+      // Determine if this is a fake "SAD" card (fakers with expired/none SAG, 20% chance)
+      const isFakeCard = !visitor.canDoTheJob && !visitor.sagCard.valid;
+      const isSadCard = isFakeCard && (visitor.id.charCodeAt(visitor.id.length - 1) % 5 === 0);
+
       // Card background
-      cardGfx.fillStyle(visitor.sagCard.valid ? 0xd8d0b8 : 0xc8b898, 1);
+      cardGfx.fillStyle(isSadCard ? 0xd0c8a0 : (visitor.sagCard.valid ? 0xd8d0b8 : 0xc8b898), 1);
       cardGfx.fillRoundedRect(cx, cy, cw, ch, 4);
       cardGfx.lineStyle(1, 0x8a7a5a, 1);
       cardGfx.strokeRoundedRect(cx, cy, cw, ch, 4);
 
-      // SAG logo area
-      cardGfx.fillStyle(0x2a4a8a, 1);
+      // SAG/SAD logo area
+      cardGfx.fillStyle(isSadCard ? 0x4a2a2a : 0x2a4a8a, 1);
       cardGfx.fillRect(cx + 8, cy + 6, 50, 14);
 
-      const sagLabel = this.add.text(cx + 12, cy + 8, 'SAG', {
+      const logoText = isSadCard ? 'SAD' : 'SAG';
+      const sagLabel = this.add.text(cx + 12, cy + 8, logoText, {
         fontFamily: 'Courier New, monospace',
         fontSize: '10px',
         color: '#ffffff',
@@ -2364,73 +2370,158 @@ export class DeskScene extends Phaser.Scene {
       });
       this.bottomHalfContainer.add(sagLabel);
 
+      if (isSadCard) {
+        this.visitorTells.push('fake_sag_card');
+      }
+
       // Member name
-      const cardName = this.add.text(cx + 8, cy + 26, visitor.sagCard.name, {
+      this.add.text(cx + 8, cy + 26, visitor.sagCard.name, {
         fontFamily: 'Courier New, monospace',
         fontSize: '11px',
         color: '#1a1a1a',
         fontStyle: 'bold',
         wordWrap: { width: cw - 16 },
-      });
-      this.bottomHalfContainer.add(cardName);
+      }).setOrigin(0, 0);
+      // (added to scene automatically)
 
       // Status
       const statusColor = visitor.sagCard.valid ? '#2a6a2a' : '#8a2a2a';
       const statusLabel = visitor.sagCard.valid ? 'CURRENT' : 'EXPIRED';
-      const statusText = this.add.text(cx + 8, cy + 50, statusLabel, {
+      this.add.text(cx + 8, cy + 50, statusLabel, {
         fontFamily: 'Courier New, monospace',
         fontSize: '12px',
         color: statusColor,
         fontStyle: 'bold',
       });
-      this.bottomHalfContainer.add(statusText);
 
-      // Location on card — important tell for fakers!
-      const locColor = visitor.sagCard.location === visitor.claimedCity ? '#4a4a4a' : '#8a2a2a';
-      const locText = this.add.text(cx + 8, cy + 66, visitor.sagCard.location, {
+      // Location on card — key tell!
+      const locMismatch = visitor.sagCard.location !== 'Localville';
+      const locColor = locMismatch ? '#8a2a2a' : '#4a4a4a';
+      this.add.text(cx + 8, cy + 66, visitor.sagCard.location, {
         fontFamily: 'Courier New, monospace',
         fontSize: '11px',
         color: locColor,
         fontStyle: 'bold',
       });
-      this.bottomHalfContainer.add(locText);
+
+      if (locMismatch) {
+        this.visitorTells.push('sag_wrong_location');
+      }
 
       // Membership number
-      const memNum = this.add.text(cx + 8, cy + 82, `#${Math.floor(Math.random() * 900000 + 100000)}`, {
+      this.add.text(cx + 8, cy + 82, `#${Math.floor(Math.random() * 900000 + 100000)}`, {
         fontFamily: 'Courier New, monospace',
         fontSize: '9px',
         color: '#4a4a4a',
       });
-      this.bottomHalfContainer.add(memNum);
 
-      // If expired, add a red stamp
+      // Expired stamp
       if (!visitor.sagCard.valid) {
         cardGfx.lineStyle(3, 0xc44020, 0.6);
         cardGfx.strokeRect(cx + 60, cy + 40, 90, 30);
-        const expiredStamp = this.add.text(cx + 105, cy + 48, 'EXPIRED', {
+        this.add.text(cx + 105, cy + 48, 'EXPIRED', {
           fontFamily: 'Courier New, monospace',
           fontSize: '12px',
           color: '#c44020',
           fontStyle: 'bold',
         }).setOrigin(0.5).setAngle(-8);
-        this.bottomHalfContainer.add(expiredStamp);
+        this.visitorTells.push('expired_sag');
       }
     } else {
-      // No card
+      // No card shown
       cardGfx.fillStyle(0x1a1a22, 0.8);
       cardGfx.fillRoundedRect(cx, cy, cw, ch, 4);
       cardGfx.lineStyle(1, 0x3a3a44, 0.6);
       cardGfx.strokeRoundedRect(cx, cy, cw, ch, 4);
 
-      const noCard = this.add.text(cx + cw / 2, cy + ch / 2, 'NO SAG CARD\nSHOWN', {
+      this.add.text(cx + cw / 2, cy + ch / 2, 'NO CARD\nSHOWN', {
         fontFamily: 'Courier New, monospace',
         fontSize: '14px',
         color: '#c4553a',
         fontStyle: 'bold',
         align: 'center',
       }).setOrigin(0.5);
-      this.bottomHalfContainer.add(noCard);
+      this.visitorTells.push('no_sag_card');
     }
+  }
+
+  private handleSagCardRequest(visitor: Visitor, count: number): void {
+    this.dialogueClickCounts['are_you_sag'] = count;
+
+    if (count === 1) {
+      // First ask: show the card (or lack thereof)
+      const responseKey = 'are_you_sag';
+      const response = visitor.dialogueResponses[responseKey] ?? '...';
+      this.conversationHistory.push({ question: 'Show SAG Card', answer: response });
+      this.showSagCardVisual(visitor);
+      this.startTalking();
+      this.drawDialogue(visitor);
+      return;
+    }
+
+    if (count === 2 && !visitor.sagCard) {
+      // Second ask with no card: they offer a bribe to make it go away
+      const bribeAmount = randomInt(20, 60);
+      const response = `*leans in* Look, I don't have my card on me. What if I made it worth your while? $${bribeAmount}, just between us.`;
+      this.conversationHistory.push({ question: 'Show SAG Card', answer: response });
+
+      // Create a bribe offer if they don't already have one
+      if (!visitor.bribeOffer) {
+        visitor.bribeOffer = { amount: bribeAmount, dialogue: response };
+      }
+      this.startTalking();
+      this.drawDialogue(visitor);
+      return;
+    }
+
+    // Subsequent asks: they get defensive / the player caught them
+    if (count >= 2) {
+      this.playerKnowsLie = true;
+      const caughtResponses = [
+        '*voice cracks* I told you, it\'s... being processed.',
+        '*won\'t make eye contact* Can we talk about something else?',
+        '*getting angry* What is this, an interrogation?!',
+        '*sweating* My agent handles all that stuff. Call him.',
+      ];
+      const response = visitor.dialogueResponses[`are_you_sag_${count}`]
+        ?? caughtResponses[(count - 2) % caughtResponses.length];
+      this.conversationHistory.push({ question: 'Show SAG Card', answer: response });
+      this.startTalking();
+      this.drawDialogue(visitor);
+    }
+  }
+
+  private checkForLieHint(visitor: Visitor, questionKey: string, count: number): boolean {
+    // Check if this question touches on something wrong with the visitor
+    const isFaker = !visitor.canDoTheJob || !visitor.isStuntPerformer;
+
+    if (questionKey === 'where_are_you_from' && !visitor.isLocal) {
+      if (count >= 2) {
+        this.playerKnowsLie = true;
+        this.visitorTells.push('not_local');
+      }
+      return true;
+    }
+
+    if (questionKey === 'tell_me_about_experience' && isFaker && !visitor.isStuntPerformer) {
+      if (count >= 2) {
+        this.playerKnowsLie = true;
+        this.visitorTells.push('not_stunt_performer');
+      }
+      return true;
+    }
+
+    if (questionKey === 'about_your_reel' && visitor.skillReel) {
+      // Check if their reel name doesn't match
+      if (visitor.skillReel.titleCardName !== visitor.name) {
+        if (count >= 1) {
+          this.visitorTells.push('stolen_reel');
+        }
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private lookUpBook(visitor: Visitor): void {
