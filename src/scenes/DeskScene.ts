@@ -99,6 +99,11 @@ export class DeskScene extends Phaser.Scene {
   private bribeRefused: boolean = false;
   private conversationHistory: { question: string; answer: string }[] = [];
 
+  // Lie/tell tracking — what's wrong with this visitor
+  private sagCardShown: boolean = false;
+  private visitorTells: string[] = []; // tracked lies/tells found by the player
+  private playerKnowsLie: boolean = false; // did the player catch a lie?
+
   // Real-time clock
   private clockElapsed: number = 0;
   private clockText: Phaser.GameObjects.Text | null = null;
@@ -865,7 +870,7 @@ export class DeskScene extends Phaser.Scene {
     this.overlayContainer.add(refBtn);
 
     refBtn.on('pointerdown', () => {
-      // Refusing the SAG rep costs you a strike
+      // Refusing the SAG rep costs you a mistake
       const state = this.gsm.getCurrentState();
       this.gsm.updateState({
         sagRepVisited: true,
@@ -898,7 +903,7 @@ export class DeskScene extends Phaser.Scene {
     });
 
     // Warning text
-    const warning = this.add.text(400, 595, 'Refusing may result in a strike.', {
+    const warning = this.add.text(400, 595, 'Refusing may result in a mistake.', {
       fontFamily: 'Courier New, monospace',
       fontSize: '13px',
       color: '#6a6050',
@@ -1400,29 +1405,15 @@ export class DeskScene extends Phaser.Scene {
     gfx.fillStyle(0x6a4a2a, 0.8);
     gfx.fillRect(coffeeX + 1, coffeeY + 3 + (11 - coffeeFillH), 8, coffeeFillH);
 
-    // Rep bar
-    const barX = 540;
-    const barY = 877;
-    const barW = 150;
-    const barH = 12;
-
-    // Dark background for bar
-    gfx.fillStyle(0x1a1a22, 1);
-    gfx.fillRect(barX, barY, barW, barH);
-    gfx.lineStyle(1, 0x2a2a36, 1);
-    gfx.strokeRect(barX, barY, barW, barH);
-
-    const repFill = Math.max(0, Math.min(100, state.reputation)) / 100;
-    const repColor = state.reputation >= 70 ? 0x4a7a4f : state.reputation >= 40 ? 0x7a6a3a : 0xc4553a;
-    gfx.fillStyle(repColor, 1);
-    gfx.fillRect(barX + 1, barY + 1, (barW - 2) * repFill, barH - 2);
-
-    const repLabel = this.add.text(barX + barW + 6, barY - 2, `REP ${state.reputation}`, {
+    // Mistakes counter
+    const mistakesColor = state.strikes >= BALANCE.strikesForWarning ? '#c4553a' : '#d4c5a0';
+    const mistakesLabel = this.add.text(540, 876, `Mistakes: ${state.strikes}/${BALANCE.maxStrikes}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '14px',
-      color: '#d4c5a0',
+      fontSize: '16px',
+      color: mistakesColor,
+      fontStyle: state.strikes >= BALANCE.strikesForWarning ? 'bold' : 'normal',
     });
-    this.statusBar.add(repLabel);
+    this.statusBar.add(mistakesLabel);
   }
 
   // ================================================================
@@ -1752,18 +1743,13 @@ export class DeskScene extends Phaser.Scene {
       }
     });
 
-    // Photo type label
-    const typeLabels: Record<string, string> = {
-      color_8x10: 'COLOR 8x10',
-      atlanta_comp: 'ATLANTA COMP',
-      bw_8x10: 'B&W 8x10',
-    };
-    const typeText = this.add.text(hx, photoY + photoH + 22, typeLabels[visitor.headshot.type] ?? '', {
+    // Visitor name under headshot
+    const nameText = this.add.text(hx, photoY + photoH + 22, visitor.name, {
       fontFamily: 'Courier New, monospace',
       fontSize: '12px',
-      color: '#6a6050',
+      color: '#d4c5a0',
     });
-    this.bottomHalfContainer.add(typeText);
+    this.bottomHalfContainer.add(nameText);
 
     // Bribe is now handled in dialogue area, not here
   }
@@ -1791,18 +1777,12 @@ export class DeskScene extends Phaser.Scene {
     this.bottomHalfContainer.add(nameText);
     ry += 28;
 
-    // SAG status
-    const sagColors: Record<string, string> = {
-      current: '#4a7a4f',
-      expired: '#c4553a',
-      none: '#888070',
-      claims_yes: '#e8c36a',
-    };
-    const sagText = this.add.text(rx, ry, `SAG: ${visitor.resume.sagStatus.toUpperCase()}`, {
+    // SAG status — hidden until card is shown; resume just says "ask"
+    const sagText = this.add.text(rx, ry, 'SAG: (ask to see card)', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '18px',
-      color: sagColors[visitor.resume.sagStatus] ?? '#888070',
-      fontStyle: 'bold',
+      fontSize: '16px',
+      color: '#6a6050',
+      fontStyle: 'italic',
     });
     this.bottomHalfContainer.add(sagText);
     ry += 24;
@@ -2080,18 +2060,28 @@ export class DeskScene extends Phaser.Scene {
         this.idleTimer = 0;
         const count = (this.dialogueClickCounts[opt.key] || 0) + 1;
         this.dialogueClickCounts[opt.key] = count;
-        const responseKey = count <= 1 ? opt.key : `${opt.key}_${count}`;
-        const response = visitor.dialogueResponses[responseKey] ?? visitor.dialogueResponses[opt.key] ?? '...';
-        this.conversationHistory.push({ question: opt.label, answer: response });
 
-        // Visitor talks — mouth moves, expression changes
-        this.startTalking();
-
-        // Show SAG card visual when asking about SAG
-        if (opt.key === 'are_you_sag' && count === 1) {
-          this.showSagCardVisual(visitor);
+        // Special SAG card handling
+        if (opt.key === 'are_you_sag') {
+          this.handleSagCardRequest(visitor, count);
+          return;
         }
 
+        // For other questions, check if this question touches a lie
+        const responseKey = count <= 1 ? opt.key : `${opt.key}_${count}`;
+        let response = visitor.dialogueResponses[responseKey] ?? visitor.dialogueResponses[opt.key] ?? '...';
+
+        // Lie detection hints: if this visitor has a tell related to this question
+        if (this.checkForLieHint(visitor, opt.key, count)) {
+          // The response already includes the hint from dialogueResponses
+          // But the visitor gets nervous if we've caught them before
+          if (this.playerKnowsLie && count >= 2) {
+            response += ' *shifts uncomfortably*';
+          }
+        }
+
+        this.conversationHistory.push({ question: opt.label, answer: response });
+        this.startTalking();
         this.drawDialogue(visitor);
       });
 
@@ -2290,6 +2280,9 @@ export class DeskScene extends Phaser.Scene {
     this.idleTimer = 0;
     this.bribeAccepted = false;
     this.bribeRefused = false;
+    this.sagCardShown = false;
+    this.visitorTells = [];
+    this.playerKnowsLie = false;
     this.conversationHistory = [];
     this.dialogueClickCounts = {};
     if (this.thoughtBubble) {
@@ -3276,7 +3269,7 @@ export class DeskScene extends Phaser.Scene {
       case 'wrong_hire_upgraded_nd_injury':
         return `The stunt got upgraded and ${visitor.name} wasn't ready for it. Injury.`;
       case 'non_sag_on_sag_night':
-        return `${visitor.name} is not SAG. This is a union call. Strike from the rep.`;
+        return `${visitor.name} is not SAG. This is a union call. That's a mistake.`;
       case 'not_local':
         return `${visitor.name}'s SAG card says ${visitor.actualCity}. Production said locals only. You're in trouble.`;
       case 'unfilled_role':

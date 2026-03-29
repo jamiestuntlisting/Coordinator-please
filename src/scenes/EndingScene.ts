@@ -212,7 +212,7 @@ export class EndingScene extends Phaser.Scene {
     // Stats panel — clean bordered panel
     const statsY = 450;
     const statsW = 520;
-    const statsH = 170;
+    const statsH = 150;
     const statsX = 400 - statsW / 2;
 
     // Panel background
@@ -241,9 +241,8 @@ export class EndingScene extends Phaser.Scene {
     const totalBribes = state.totalBribes;
 
     const statItems = [
-      { label: 'Reputation', value: `${state.reputation}`, color: state.reputation >= 50 ? '#4a7a4f' : '#c4553a' },
       { label: 'Money', value: `$${state.money}`, color: state.money >= 0 ? '#e8c36a' : '#c4553a' },
-      { label: 'Strikes', value: `${state.strikes}`, color: state.strikes > 0 ? '#c4553a' : '#4a7a4f' },
+      { label: 'Mistakes', value: `${state.strikes}`, color: state.strikes > 0 ? '#c4553a' : '#4a7a4f' },
       { label: 'Injuries', value: `${totalInjuries}`, color: totalInjuries > 0 ? '#c4553a' : '#4a7a4f' },
       { label: 'Bribes taken', value: `${totalBribes}`, color: totalBribes > 0 ? '#7a6a3a' : '#888070' },
       { label: 'Nights completed', value: `${Math.min(state.night, 7)}`, color: '#d4c5a0' },

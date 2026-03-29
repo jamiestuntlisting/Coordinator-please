@@ -118,17 +118,9 @@ export class ResultsScene extends Phaser.Scene {
       const outcomeLines = Math.ceil(outcomeLabel.length / 50);
       const outcomeHeight = Math.max(20, outcomeLines * 16);
 
-      // Right side: show rep gain OR fine amount
-      if (hire.repChange > 0) {
-        this.add.text(690, y + 4, `+${hire.repChange} rep`, {
-          fontFamily: 'Courier New, monospace',
-          fontSize: '14px',
-          color: '#4a7a4f',
-          fontStyle: 'bold',
-        }).setOrigin(1, 0);
-      }
+      // Right side: show fine amount
       if (hire.fine > 0) {
-        this.add.text(690, y + (hire.repChange > 0 ? 20 : 4), `-$${hire.fine}`, {
+        this.add.text(690, y + 4, `-$${hire.fine}`, {
           fontFamily: 'Courier New, monospace',
           fontSize: '14px',
           color: '#c4553a',
@@ -235,99 +227,22 @@ export class ResultsScene extends Phaser.Scene {
     gfx.lineBetween(80, y + 3, 720, y + 3);
     y += 15;
 
-    const totalRepChange = this.nightResult.repChange;
     const state = gsm.getCurrentState();
 
-    // Reputation bar — animate from old to new
-    const oldRep = state.reputation - totalRepChange;
-    const newRep = state.reputation;
     const barX = 80;
-    const barW = 300;
 
-    this.add.text(barX, y, 'REPUTATION', {
+    // Mistakes count — simple text display
+    const mistakesColor = state.strikes >= BALANCE.strikesForWarning ? '#c4553a' : '#d4c5a0';
+    this.add.text(barX, y, `MISTAKES: ${state.strikes}/${BALANCE.maxStrikes}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '18px',
-      color: '#888070',
+      color: mistakesColor,
       fontStyle: 'bold',
     });
-
-    // Rep change indicator
-    this.add.text(barX + 150, y, `(${totalRepChange >= 0 ? '+' : ''}${totalRepChange})`, {
-      fontFamily: 'Courier New, monospace',
-      fontSize: '18px',
-      color: totalRepChange >= 0 ? '#4a7a4f' : '#c4553a',
-      fontStyle: 'bold',
-    });
-
-    y += 20;
-    // Bar background
-    gfx.fillStyle(0x111118, 0.8);
-    gfx.fillRect(barX, y, barW, 16);
-    gfx.lineStyle(1, 0x3a352e, 0.6);
-    gfx.strokeRect(barX, y, barW, 16);
-
-    // Animated bar fill
-    const maxRep = 100;
-    const barFill = this.add.graphics();
-    const startFill = Math.max(0, (oldRep / maxRep) * barW);
-    const endFill = Math.max(0, (newRep / maxRep) * barW);
-    const barColor = newRep >= 50 ? 0x4a7a4f : (newRep >= 25 ? 0xe8c36a : 0xc4553a);
-
-    barFill.fillStyle(barColor, 0.8);
-    barFill.fillRect(barX + 1, y + 1, startFill, 14);
-
-    // Tween the bar
-    const fillObj = { width: startFill };
-    this.tweens.add({
-      targets: fillObj,
-      width: endFill,
-      duration: 800,
-      delay: 300,
-      ease: 'Power2',
-      onUpdate: () => {
-        barFill.clear();
-        barFill.fillStyle(barColor, 0.8);
-        barFill.fillRect(barX + 1, y + 1, fillObj.width, 14);
-      },
-    });
-
-    // Rep number
-    this.add.text(barX + barW + 10, y, `${newRep}`, {
-      fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
-      color: '#d4c5a0',
-      fontStyle: 'bold',
-    });
-
-    y += 30;
-
-    // Strikes — drawn as X marks
-    this.add.text(barX, y, 'STRIKES:', {
-      fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
-      color: state.strikes >= BALANCE.strikesForWarning ? '#c4553a' : '#d4c5a0',
-      fontStyle: 'bold',
-    });
-
-    const strikeStartX = barX + 110;
-    for (let s = 0; s < BALANCE.maxStrikes; s++) {
-      const sx = strikeStartX + s * 28;
-      const strikeGfx = this.add.graphics();
-      if (s < state.strikes) {
-        // Filled strike — red X
-        strikeGfx.lineStyle(3, 0xc4553a, 1);
-        strikeGfx.lineBetween(sx - 6, y + 2, sx + 6, y + 14);
-        strikeGfx.lineBetween(sx + 6, y + 2, sx - 6, y + 14);
-      } else {
-        // Empty strike — dim outline
-        strikeGfx.lineStyle(1, 0x3a352e, 0.5);
-        strikeGfx.strokeRect(sx - 6, y + 2, 12, 12);
-      }
-    }
 
     y += 28;
 
-    // Strike warnings — bordered warning panel
+    // Mistake warnings — bordered warning panel
     if (state.strikes >= BALANCE.strikesForFinalWarning) {
       gfx.fillStyle(0x3a1515, 0.6);
       gfx.fillRect(75, y, 650, 36);
@@ -345,7 +260,7 @@ export class ResultsScene extends Phaser.Scene {
         fontStyle: 'bold',
       });
 
-      this.add.text(120, y + 8, 'UPM: "One more screw-up and you\'re done."', {
+      this.add.text(120, y + 8, 'UPM: "One more mistake and you\'re done."', {
         fontFamily: 'Courier New, monospace',
         fontSize: '16px',
         color: '#c4553a',
@@ -442,7 +357,7 @@ export class ResultsScene extends Phaser.Scene {
       wrong_hire_medium_injury: 'Bad hire. Someone got hurt.',
       wrong_hire_high_serious_injury: 'Terrible hire. Serious injury.',
       wrong_hire_upgraded_nd_injury: 'The upgrade got someone hurt.',
-      non_sag_on_sag_night: 'Non-SAG on a SAG call. Strike.',
+      non_sag_on_sag_night: 'Non-SAG on a SAG call. That\'s a mistake.',
       passed_legit: 'You turned away a good one.',
       passed_faker: 'Good call sending them away.',
       unfilled_role: 'Role went unfilled.',
