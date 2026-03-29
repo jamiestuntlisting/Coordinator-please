@@ -329,10 +329,20 @@ export class VisitorGenerator {
    * Generate a faker visitor. Randomly picks a faker type.
    */
   private generateFakerVisitor(gender: Gender, nightConfig: NightConfig, _state: GameState): Visitor {
-    const fakerType = pick([
-      'wrong_city', 'stolen_reel', 'not_in_book', 'expired_sag', 'borrowed_headshot', 'close_faker',
-      'sag_wrong_city', 'sag_wrong_city', 'almost_perfect', 'weight_off',
-    ]);
+    // Later nights: fakers have only ONE thing wrong (harder to catch)
+    // Early nights: fakers can have multiple obvious tells
+    const isLateNight = nightConfig.night >= 4;
+    const fakerType = isLateNight
+      ? pick([
+          'sag_wrong_city', 'sag_wrong_city', 'sag_wrong_city',  // most common — one subtle tell
+          'almost_perfect',   // expired SAG only
+          'weight_off',       // body mismatch only
+          'stolen_reel',      // reel name mismatch only
+        ])
+      : pick([
+          'wrong_city', 'stolen_reel', 'not_in_book', 'expired_sag',
+          'borrowed_headshot', 'close_faker', 'sag_wrong_city', 'almost_perfect',
+        ]);
 
     const name = this.generateName(gender);
     const body = this.generateBodyType();
@@ -363,7 +373,9 @@ export class VisitorGenerator {
         actualCity = pick(FAKER_CITIES);
         claimedCity = LOCAL_CITY; // they claim local
         isLocal = false;
-        headshotType = chance(0.5) ? 'atlanta_comp' : 'color_8x10';
+        // On early nights, headshot might also be a comp card (double tell)
+        // On later nights, headshot looks normal — only StuntListing/SAG reveals city
+        headshotType = nightConfig.night <= 2 ? (chance(0.5) ? 'atlanta_comp' : 'color_8x10') : 'color_8x10';
         break;
 
       case 'stolen_reel':

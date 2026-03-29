@@ -774,6 +774,138 @@ export class DeskScene extends Phaser.Scene {
     });
   }
 
+  private showSagRepEncounter(_visitor: Visitor): void {
+    this.overlayContainer.removeAll(true);
+    const gfx = this.add.graphics();
+    this.overlayContainer.add(gfx);
+
+    // Dark overlay
+    gfx.fillStyle(0x0a0a0f, 0.95);
+    gfx.fillRoundedRect(60, 150, 680, 500, 8);
+    gfx.lineStyle(2, 0x2a4a8a, 0.8);
+    gfx.strokeRoundedRect(60, 150, 680, 500, 8);
+
+    // SAG logo bar
+    gfx.fillStyle(0x2a4a8a, 1);
+    gfx.fillRect(80, 165, 640, 40);
+
+    const sagLogo = this.add.text(400, 185, 'SCREEN ACTORS GUILD', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '22px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+    }).setOrigin(0.5);
+    this.overlayContainer.add(sagLogo);
+
+    // Rep portrait — suited figure
+    const repGfx = this.add.graphics();
+    this.overlayContainer.add(repGfx);
+    repGfx.fillStyle(0x2a2a3a, 1);
+    repGfx.fillRect(370, 220, 60, 70); // suit
+    repGfx.fillStyle(0xc4a882, 0.9);
+    repGfx.fillCircle(400, 235, 18); // head
+    repGfx.fillStyle(0x1a1a2a, 1);
+    repGfx.fillRect(388, 230, 10, 5); // glasses left
+    repGfx.fillRect(402, 230, 10, 5); // glasses right
+    repGfx.fillRect(398, 232, 4, 2); // bridge
+
+    // Dialogue
+    const dialogue = this.add.text(400, 310, '"Good evening. I\'m from the Guild.\nWe\'ve had reports of non-union\nperformers on SAG sets.\n\nA contribution to the safety fund\nwould go a long way toward resolving\nany... concerns."', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '16px',
+      color: '#d4c5a0',
+      align: 'center',
+      lineSpacing: 4,
+    }).setOrigin(0.5, 0);
+    this.overlayContainer.add(dialogue);
+
+    const sagCost = BALANCE.sagRepCost;
+
+    // PAY button
+    const payBg = this.add.graphics();
+    this.overlayContainer.add(payBg);
+    payBg.fillStyle(0x1a3a1e, 1);
+    payBg.fillRoundedRect(100, 530, 280, 44, 6);
+    payBg.lineStyle(2, 0x4a7a4f, 1);
+    payBg.strokeRoundedRect(100, 530, 280, 44, 6);
+
+    const payBtn = this.add.text(240, 552, `PAY $${sagCost}`, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '22px',
+      color: '#6aba6f',
+      fontStyle: 'bold',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    this.overlayContainer.add(payBtn);
+
+    payBtn.on('pointerdown', () => {
+      const state = this.gsm.getCurrentState();
+      this.gsm.updateState({
+        sagRepVisited: true,
+        money: state.money - sagCost,
+      });
+      this.overlayContainer.removeAll(true);
+      this.drawStatusBar();
+      this.nextVisitor();
+    });
+
+    // REFUSE button
+    const refBg = this.add.graphics();
+    this.overlayContainer.add(refBg);
+    refBg.fillStyle(0x3a1a1a, 1);
+    refBg.fillRoundedRect(420, 530, 280, 44, 6);
+    refBg.lineStyle(2, 0xc4553a, 1);
+    refBg.strokeRoundedRect(420, 530, 280, 44, 6);
+
+    const refBtn = this.add.text(560, 552, 'REFUSE', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '22px',
+      color: '#e06050',
+      fontStyle: 'bold',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    this.overlayContainer.add(refBtn);
+
+    refBtn.on('pointerdown', () => {
+      // Refusing the SAG rep costs you a strike
+      const state = this.gsm.getCurrentState();
+      this.gsm.updateState({
+        sagRepVisited: true,
+        strikes: state.strikes + 1,
+      });
+
+      // Show threat
+      const threatGfx = this.add.graphics();
+      this.overlayContainer.add(threatGfx);
+      threatGfx.fillStyle(0x0a0a0f, 0.95);
+      threatGfx.fillRoundedRect(120, 480, 560, 80, 6);
+      threatGfx.lineStyle(1, 0xc4553a, 0.8);
+      threatGfx.strokeRoundedRect(120, 480, 560, 80, 6);
+
+      const threat = this.add.text(400, 520, '"That\'s your choice. But we\'ll be watching\nvery closely from now on."', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '16px',
+        color: '#c4553a',
+        align: 'center',
+        fontStyle: 'italic',
+      }).setOrigin(0.5);
+      this.overlayContainer.add(threat);
+
+      // Auto-dismiss after 1.5s
+      this.time.delayedCall(1500, () => {
+        this.overlayContainer.removeAll(true);
+        this.drawStatusBar();
+        this.nextVisitor();
+      });
+    });
+
+    // Warning text
+    const warning = this.add.text(400, 595, 'Refusing may result in a strike.', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '13px',
+      color: '#6a6050',
+    }).setOrigin(0.5);
+    this.overlayContainer.add(warning);
+  }
+
   private showCallSheetOverlay(): void {
     this.overlayContainer.removeAll(true);
 
@@ -2145,6 +2277,12 @@ export class DeskScene extends Phaser.Scene {
   // ================================================================
 
   private presentVisitor(visitor: Visitor): void {
+    // SAG rep gets their own special screen — not a normal visitor
+    if (visitor.isSagRep) {
+      this.showSagRepEncounter(visitor);
+      return;
+    }
+
     this.currentVisitor = visitor;
     this.idleTimer = 0;
     this.bribeAccepted = false;

@@ -372,6 +372,7 @@ export class EndingScene extends Phaser.Scene {
         '',
         "Your cousin says he can get you on at the HVAC company.",
         'Benefits. Regular hours. No one falls off a building.',
+        '...usually.',
         '',
         "Maybe that's not so bad.",
       ].join('\n'),
