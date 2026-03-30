@@ -30,8 +30,8 @@ export class IntroScene extends Phaser.Scene {
     this.lines = [
       { text: "1995.", delay: 800 },
       { text: "", delay: 400 },
-      { text: "I'm down to my last dime.", delay: 1500 },
-      { text: "Then this producer called.", delay: 2200 },
+      { text: "I was down to my last dime.", delay: 1500 },
+      { text: "Then this producer called about a gig.", delay: 2200 },
       { text: "It's seven nights of overnights.", delay: 1500 },
       { text: "Stunt coordinating on some low-budget thing", delay: 1200 },
       { text: "shooting in Localville.", delay: 1800 },
