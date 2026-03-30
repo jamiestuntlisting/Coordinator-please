@@ -31,16 +31,17 @@ export class IntroScene extends Phaser.Scene {
       "",
       "I'm down to my last dime.",
       "Then this show called.",
-      "Seven nights of overnights.",
+      "It's seven nights of overnights.",
       "Stunt coordinating on some low-budget thing",
       "shooting in Localville.",
       "",
-      "You need to know one thing about Localville.",
-      "In this town, there are liars",
-      "and truth tellers.",
-      "Everyone wants a job from me,",
+      "Working in Localville, you need to know one thing.",
+      "In this town there are liars",
+      "and there are truth tellers.",
+      "You need to know the difference.",
+      "Everyone wants a job,",
       "and most of them will lie through their teeth",
-      "to get the job.",
+      "to get it.",
       "",
       "But I need stunt people I can trust.",
       "And the producer will come down on me hard",
@@ -48,6 +49,13 @@ export class IntroScene extends Phaser.Scene {
       "",
       "I need this job to survive.",
     ];
+
+    // Tap to speed up text reveal
+    this.input.on('pointerdown', () => {
+      if (!this.allRevealed) {
+        this.elapsed = this.revealInterval; // triggers next line immediately
+      }
+    });
 
     // Start revealing lines
     this.revealNextLine();
