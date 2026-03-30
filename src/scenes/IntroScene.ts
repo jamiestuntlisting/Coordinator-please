@@ -2,11 +2,11 @@ import Phaser from 'phaser';
 import GameStateManager from '../systems/GameStateManager';
 
 export class IntroScene extends Phaser.Scene {
-  private lines: string[] = [];
+  private lines: { text: string; delay: number }[] = [];
   private currentLine: number = 0;
   private lineTexts: Phaser.GameObjects.Text[] = [];
   private elapsed: number = 0;
-  private revealInterval: number = 1500;
+  private currentDelay: number = 1500;
   private allRevealed: boolean = false;
   private continueText: Phaser.GameObjects.Text | null = null;
 
@@ -26,34 +26,35 @@ export class IntroScene extends Phaser.Scene {
     // Draw city skyline background
     this.drawSkyline();
 
+    // Each line has its own pacing delay (ms before NEXT line appears)
     this.lines = [
-      "It's 1995.",
-      "",
-      "I'm down to my last dime.",
-      "Then this show called.",
-      "It's seven nights of overnights.",
-      "Stunt coordinating on some low-budget thing",
-      "shooting in Localville.",
-      "",
-      "Working in Localville, you need to know one thing.",
-      "In this town there are liars",
-      "and there are truth tellers.",
-      "You need to know the difference.",
-      "Everyone wants a job,",
-      "and most of them will lie through their teeth",
-      "to get it.",
-      "",
-      "But I need stunt people I can trust.",
-      "And the producer will come down on me hard",
-      "if my performers are no good.",
-      "",
-      "I need this job to survive.",
+      { text: "It's 1995.", delay: 2000 },
+      { text: "", delay: 800 },
+      { text: "I'm down to my last dime.", delay: 1500 },
+      { text: "Then this show called.", delay: 2200 },
+      { text: "It's seven nights of overnights.", delay: 1500 },
+      { text: "Stunt coordinating on some low-budget thing", delay: 1200 },
+      { text: "shooting in Localville.", delay: 1800 },
+      { text: "", delay: 1000 },
+      { text: "Working in Localville, you need to know one thing.", delay: 2200 },
+      { text: "In this town there are truth tellers,", delay: 1400 },
+      { text: "and there are liars.", delay: 1800 },
+      { text: "", delay: 800 },
+      { text: "Everybody wants a job around here.", delay: 1400 },
+      { text: "Some of them will lie through their teeth", delay: 1000 },
+      { text: "to get it.", delay: 1800 },
+      { text: "", delay: 1000 },
+      { text: "But I need stunt people I can trust.", delay: 1800 },
+      { text: "The producer will come down on me hard", delay: 1200 },
+      { text: "if my performers screw up.", delay: 2000 },
+      { text: "", delay: 1000 },
+      { text: "I need this job to survive.", delay: 2000 },
     ];
 
     // Tap to speed up text reveal
     this.input.on('pointerdown', () => {
       if (!this.allRevealed) {
-        this.elapsed = this.revealInterval; // triggers next line immediately
+        this.elapsed = this.currentDelay;
       }
     });
 
@@ -65,7 +66,7 @@ export class IntroScene extends Phaser.Scene {
     if (this.allRevealed) return;
 
     this.elapsed += delta;
-    if (this.elapsed >= this.revealInterval) {
+    if (this.elapsed >= this.currentDelay) {
       this.elapsed = 0;
       this.revealNextLine();
     }
@@ -177,12 +178,13 @@ export class IntroScene extends Phaser.Scene {
       return;
     }
 
-    const line = this.lines[this.currentLine];
+    const lineObj = this.lines[this.currentLine];
+    const line = lineObj.text;
+    this.currentDelay = lineObj.delay;
     const y = 40 + this.currentLine * 34;
 
     if (line === '') {
       this.currentLine++;
-      this.elapsed = this.revealInterval - 300;
       return;
     }
 
