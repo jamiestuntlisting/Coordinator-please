@@ -28,8 +28,8 @@ export class IntroScene extends Phaser.Scene {
 
     // Each line has its own pacing delay (ms before NEXT line appears)
     this.lines = [
-      { text: "It's 1995.", delay: 2000 },
-      { text: "", delay: 800 },
+      { text: "1995.", delay: 1200 },
+      { text: "", delay: 600 },
       { text: "I'm down to my last dime.", delay: 1500 },
       { text: "Then this show called.", delay: 2200 },
       { text: "It's seven nights of overnights.", delay: 1500 },
@@ -45,8 +45,8 @@ export class IntroScene extends Phaser.Scene {
       { text: "to get it.", delay: 1800 },
       { text: "", delay: 1000 },
       { text: "But I need stunt people I can trust.", delay: 1800 },
-      { text: "The producer will come down on me hard", delay: 1200 },
-      { text: "if my performers screw up.", delay: 2000 },
+      { text: "The Producer will have my neck", delay: 1200 },
+      { text: "if the performers screw up.", delay: 2000 },
       { text: "", delay: 1000 },
       { text: "I need this job to survive.", delay: 2000 },
     ];

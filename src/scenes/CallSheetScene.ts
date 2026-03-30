@@ -107,7 +107,7 @@ export class CallSheetScene extends Phaser.Scene {
     // ---- Role Cards (stacked, not table columns) ----
     const roles = this.nightConfig.roles;
     const cardStartY = 140;
-    const cardH = 110;
+    const cardH = 130;
     const cardGap = 8;
 
     roles.forEach((role: RoleTemplate, i: number) => {
@@ -159,24 +159,24 @@ export class CallSheetScene extends Phaser.Scene {
       const genderStr = role.requiredGender === 'any' ? 'ANY GENDER' : role.requiredGender.toUpperCase();
       this.add.text(200, cy + 42, genderStr, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '16px',
+        fontSize: '20px',
         color: '#888070',
       });
 
-      // Height/Weight on second line — readable
+      // Height/Weight on second line
       const heightStr = `${formatHeight(role.heightRange[0])} - ${formatHeight(role.heightRange[1])}`;
       const weightStr = `${role.weightRange[0]}-${role.weightRange[1]} lbs`;
-      this.add.text(90, cy + 66, `Height: ${heightStr}    Weight: ${weightStr}`, {
+      this.add.text(90, cy + 68, `Height: ${heightStr}    Weight: ${weightStr}`, {
         fontFamily: 'Courier New, monospace',
-        fontSize: '16px',
+        fontSize: '20px',
         color: '#888070',
       });
 
       // Skills (if any)
       if (role.requiredSkills.length > 0) {
-        this.add.text(90, cy + 86, `Skills: ${role.requiredSkills.map(s => s.replace(/_/g, ' ')).join(', ')}`, {
+        this.add.text(90, cy + 96, `Skills: ${role.requiredSkills.map(s => s.replace(/_/g, ' ')).join(', ')}`, {
           fontFamily: 'Courier New, monospace',
-          fontSize: '16px',
+          fontSize: '20px',
           color: '#6a9a6e',
         });
       }
@@ -191,7 +191,7 @@ export class CallSheetScene extends Phaser.Scene {
 
         this.add.text(685, cy + 13, 'SAG REQ', {
           fontFamily: 'Courier New, monospace',
-          fontSize: '14px',
+          fontSize: '16px',
           color: '#c4553a',
           fontStyle: 'bold',
         }).setOrigin(0.5, 0);
@@ -326,6 +326,8 @@ export class CallSheetScene extends Phaser.Scene {
   }
 
   private formatDeadline(t: number): string {
+    // Midnight = 24.0
+    if (Math.floor(t) === 24 && (t - Math.floor(t)) < 0.01) return 'Midnight';
     let hour = Math.floor(t);
     const minutes = Math.floor((t - hour) * 60);
     if (hour >= 24) hour -= 24;

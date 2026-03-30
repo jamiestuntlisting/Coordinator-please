@@ -745,7 +745,8 @@ export class DeskScene extends Phaser.Scene {
   private drawTimeDisplay(): void {
     const state = this.gsm.getCurrentState();
     const timeStr = this.formatTime(state.timeOfNight);
-    const deadlineStr = this.formatTime(this.nightConfig.hiringDeadline);
+    const dlVal = this.nightConfig.hiringDeadline;
+    const deadlineStr = (Math.floor(dlVal) === 24 && (dlVal - Math.floor(dlVal)) < 0.01) ? 'Midnight' : this.formatTime(dlVal);
 
     // Dark panel behind time
     const panelGfx = this.add.graphics();
@@ -991,7 +992,8 @@ export class DeskScene extends Phaser.Scene {
     this.overlayContainer.add(dateText);
 
     // Deadline — spaced down
-    const deadlineStr = this.formatTime(this.nightConfig.hiringDeadline);
+    const dl = this.nightConfig.hiringDeadline;
+    const deadlineStr = (Math.floor(dl) === 24 && (dl - Math.floor(dl)) < 0.01) ? 'Midnight' : this.formatTime(dl);
     const dlText = this.add.text(400, 130, `MUST HIRE BY: ${deadlineStr}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '20px',
