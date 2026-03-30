@@ -287,47 +287,49 @@ export class ResultsScene extends Phaser.Scene {
       }
     }
 
-    y += 32;
+    y += 40;
 
-    // Mistake warnings — bordered warning panel
+    // Mistake warnings — bordered warning panel with spacing
     if (state.strikes >= BALANCE.strikesForFinalWarning) {
       gfx.fillStyle(0x3a1515, 0.6);
-      gfx.fillRect(75, y, 650, 36);
+      gfx.fillRect(75, y, 650, 56);
       gfx.lineStyle(2, 0xc4553a, 0.8);
-      gfx.strokeRect(75, y, 650, 36);
+      gfx.strokeRect(75, y, 650, 56);
 
       // Warning triangle
       const warnGfx = this.add.graphics();
       warnGfx.fillStyle(0xc4553a, 1);
-      warnGfx.fillTriangle(90, y + 28, 100, y + 8, 110, y + 28);
-      this.add.text(92, y + 14, '!', {
+      warnGfx.fillTriangle(90, y + 38, 100, y + 14, 110, y + 38);
+      this.add.text(92, y + 22, '!', {
         fontFamily: 'Courier New, monospace',
         fontSize: '14px',
         color: '#1e1c18',
         fontStyle: 'bold',
       });
 
-      this.add.text(120, y + 8, 'Producer: "One more. That\'s all you get. What are you gonna do, quit?"', {
+      this.add.text(120, y + 14, 'Producer: "One more. That\'s all you get.\nWhat are you gonna do, quit?"', {
         fontFamily: 'Courier New, monospace',
         fontSize: '16px',
         color: '#c4553a',
         fontStyle: 'bold',
         wordWrap: { width: 580 },
+        lineSpacing: 4,
       });
-      y += 42;
+      y += 68;
     } else if (state.strikes >= BALANCE.strikesForWarning) {
       gfx.fillStyle(0x2a2510, 0.5);
-      gfx.fillRect(75, y, 650, 36);
+      gfx.fillRect(75, y, 650, 56);
       gfx.lineStyle(2, 0xe8c36a, 0.6);
-      gfx.strokeRect(75, y, 650, 36);
+      gfx.strokeRect(75, y, 650, 56);
 
-      this.add.text(90, y + 8, 'Producer: "I got ten coordinators who\'d kill for this gig. Remember that."', {
+      this.add.text(90, y + 14, 'Producer: "I got ten coordinators who\'d kill\nfor this gig. Remember that."', {
         fontFamily: 'Courier New, monospace',
         fontSize: '16px',
         color: '#e8c36a',
         wordWrap: { width: 610 },
+        lineSpacing: 4,
       });
-      y += 42;
+      y += 68;
     }
 
     // Injuries summary
