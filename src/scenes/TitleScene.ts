@@ -288,13 +288,6 @@ export class TitleScene extends Phaser.Scene {
       color: '#888070',
     }).setOrigin(0.5);
 
-    // Year
-    this.add.text(400, 530, '1995', {
-      fontFamily: 'Courier New, monospace',
-      fontSize: '24px',
-      color: '#999080',
-    }).setOrigin(0.5);
-
     // ===== CLICK TO START (blinking) =====
     const startText = this.add.text(400, 600, '[ TAP TO START ]', {
       fontFamily: 'Courier New, monospace',
