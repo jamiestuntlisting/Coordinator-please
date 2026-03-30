@@ -164,24 +164,45 @@ export class ResultsScene extends Phaser.Scene {
       y += 4;
     });
 
-    // UPM handwritten note for unfilled roles and fined hires
-    const unfilledRoles = hires.filter(h => h.outcome === 'unfilled_role');
-    const finedHires = hires.filter(h => h.fine > 0 && h.outcome !== 'unfilled_role');
-    if (unfilledRoles.length > 0 || finedHires.length > 0) {
+    // UPM handwritten note — one combined note for ALL problems
+    const problemHires = this.nightResult.hires.filter((h: HireResult) => {
+      const outcome = h.outcome as string;
+      return outcome === 'unfilled_role' || (h.fine > 0 && outcome !== 'unfilled_role');
+    });
+
+    if (problemHires.length > 0) {
       y += 8;
-      // Sticky note / handwritten note background
+
+      // Pick ONE UPM message that covers everything (not per-role)
+      const totalFines = problemHires.reduce((sum, h) => sum + h.fine, 0);
+      const unfilledCount = problemHires.filter(h => h.outcome === 'unfilled_role').length;
+      const badHireCount = problemHires.filter(h => h.outcome !== 'unfilled_role').length;
+
+      let noteMsg = '';
+      if (unfilledCount > 0 && badHireCount > 0) {
+        noteMsg = `${unfilledCount} role${unfilledCount > 1 ? 's' : ''} unfilled. ${badHireCount} bad hire${badHireCount > 1 ? 's' : ''}. -$${totalFines} from your check. What are you gonna do about it, quit? Haha.`;
+      } else if (unfilledCount > 0) {
+        noteMsg = unfilledCount === 1
+          ? `"${problemHires[0].roleTitle}" went unfilled. -$${totalFines} from your check. You think I won't replace you?`
+          : `${unfilledCount} roles unfilled. -$${totalFines} from your check. I got ten coordinators who'd kill for this gig.`;
+      } else {
+        noteMsg = badHireCount === 1
+          ? `${problemHires[0].roleTitle} was YOUR call. -$${totalFines} from your check. Think about that.`
+          : `${badHireCount} bad hires tonight. -$${totalFines} from your check. Keep it up and you're done.`;
+      }
+
+      // Estimate note height based on message length
+      const estimatedLines = Math.ceil(noteMsg.length / 45);
+      const noteH = 36 + estimatedLines * 18;
+
       const noteGfx = this.add.graphics();
-      const totalProblems = unfilledRoles.length + finedHires.length;
-      noteGfx.fillStyle(0xd8c870, 0.9); // yellow sticky note
-      noteGfx.fillRect(85, y, 630, 46 + totalProblems * 20);
-      // Slight shadow
-      noteGfx.fillStyle(0x000000, 0.15);
-      noteGfx.fillRect(88, y + 3, 630, 46 + totalProblems * 20);
-      // Tape at top
+      noteGfx.fillStyle(0xd8c870, 0.9);
+      noteGfx.fillRect(85, y, 630, noteH);
+      noteGfx.fillStyle(0x000000, 0.1);
+      noteGfx.fillRect(88, y + 3, 630, noteH);
       noteGfx.fillStyle(0xc8c0a0, 0.5);
       noteGfx.fillRect(350, y - 6, 60, 14);
 
-      // Handwritten-style text (italic courier to simulate)
       this.add.text(105, y + 8, 'NOTE FROM UPM:', {
         fontFamily: 'Courier New, monospace',
         fontSize: '14px',
@@ -189,36 +210,15 @@ export class ResultsScene extends Phaser.Scene {
         fontStyle: 'bold',
       });
 
-      let noteY = y + 26;
-      // Also include bad hires with fines
-      const problemHires = hires.filter(h => h.fine > 0);
-      const allProblems = [...unfilledRoles, ...problemHires];
-
-      allProblems.forEach((hire: HireResult) => {
-        const fineStr = hire.fine > 0 ? ` -$${hire.fine} from your check.` : '';
-        const msgs = hire.outcome === 'unfilled_role' ? [
-          `"${hire.roleTitle}" went unfilled.${fineStr} What are you gonna do about it, quit? Haha.`,
-          `Where's my ${hire.roleTitle.toLowerCase()}?${fineStr} You think I won't replace you?`,
-          `Nobody for "${hire.roleTitle}"?${fineStr} I got ten coordinators who'd kill for this gig.`,
-          `"${hire.roleTitle}" — UNFILLED.${fineStr} You're making this real easy for me.`,
-        ] : [
-          `${hire.roleTitle}: That hire cost us.${fineStr} What are you gonna do about it, quit? Haha.`,
-          `I'm docking your check for the ${hire.roleTitle.toLowerCase()} mess.${fineStr} Keep it up.`,
-          `${hire.roleTitle} was YOUR call.${fineStr} You think you're irreplaceable?`,
-          `${hire.roleTitle}?${fineStr} I got a stack of resumes on my desk. Think about that.`,
-        ];
-        const msg = msgs[Math.floor(Math.random() * msgs.length)];
-        this.add.text(115, noteY, msg, {
-          fontFamily: 'Courier New, monospace',
-          fontSize: '14px',
-          color: '#1a1a08',
-          fontStyle: 'italic',
-          wordWrap: { width: 580 },
-        });
-        noteY += 20;
+      this.add.text(105, y + 26, noteMsg, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '14px',
+        color: '#1a1a08',
+        fontStyle: 'italic',
+        wordWrap: { width: 590 },
       });
 
-      y += 54 + totalProblems * 20;
+      y += noteH + 8;
     }
 
     // Summary section — separator

@@ -741,33 +741,35 @@ export class DeskScene extends Phaser.Scene {
     const cbGfx = this.add.graphics();
     this.topHalfContainer.add(cbGfx);
 
-    // Small clipboard icon + button in top-left
+    // Call sheet button — large, easy to tap on mobile
     const bx = 10;
     const by = 6;
-    const bw = 100;
-    const bh = 26;
+    const bw = 120;
+    const bh = 50;
 
-    cbGfx.fillStyle(0x1a1816, 0.8);
-    cbGfx.fillRoundedRect(bx, by, bw, bh, 4);
-    cbGfx.lineStyle(1, 0x3a352e, 0.7);
-    cbGfx.strokeRoundedRect(bx, by, bw, bh, 4);
+    cbGfx.fillStyle(0x1a1816, 0.9);
+    cbGfx.fillRoundedRect(bx, by, bw, bh, 6);
+    cbGfx.lineStyle(1, 0x5a4a2a, 0.8);
+    cbGfx.strokeRoundedRect(bx, by, bw, bh, 6);
 
-    // Clipboard icon (tiny)
+    // Clipboard icon
     cbGfx.fillStyle(0x6a5a3a, 0.8);
-    cbGfx.fillRect(bx + 6, by + 5, 12, 16);
+    cbGfx.fillRect(bx + 8, by + 10, 18, 28);
     cbGfx.fillStyle(0xd4c5a0, 0.4);
-    cbGfx.fillRect(bx + 8, by + 8, 8, 1);
-    cbGfx.fillRect(bx + 8, by + 11, 8, 1);
-    cbGfx.fillRect(bx + 8, by + 14, 6, 1);
+    cbGfx.fillRect(bx + 11, by + 15, 12, 1);
+    cbGfx.fillRect(bx + 11, by + 19, 12, 1);
+    cbGfx.fillRect(bx + 11, by + 23, 10, 1);
+    cbGfx.fillRect(bx + 11, by + 27, 12, 1);
     // Clip
     cbGfx.fillStyle(0x8a7a5a, 0.9);
-    cbGfx.fillRect(bx + 9, by + 3, 6, 4);
+    cbGfx.fillRect(bx + 13, by + 6, 8, 5);
 
-    const cbText = this.add.text(bx + 24, by + 5, 'CALL\nSHEET', {
+    const cbText = this.add.text(bx + 34, by + 8, 'CALL\nSHEET', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '9px',
-      color: '#a09880',
-      lineSpacing: 0,
+      fontSize: '14px',
+      color: '#e8c36a',
+      fontStyle: 'bold',
+      lineSpacing: 2,
     });
     this.topHalfContainer.add(cbText);
 
@@ -927,26 +929,36 @@ export class DeskScene extends Phaser.Scene {
     gfx.fillStyle(0x1e1c18, 1);
     gfx.fillRect(40, 40, 720, 810);
 
+    // Set high depth so it covers everything (SAG card, etc)
+    this.overlayContainer.setDepth(100);
+
     // Title
-    this.add.text(400, 60, `CALL SHEET — NIGHT ${this.night}`, {
+    const csTitle = this.add.text(400, 65, `CALL SHEET — NIGHT ${this.night}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '24px',
       color: '#d4c5a0',
       fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.overlayContainer.add(this.children.list[this.children.list.length - 1]);
+    this.overlayContainer.add(csTitle);
 
-    // Location & date
-    const locText = this.add.text(70, 90, `LOCATION: Localville    DATE: March ${14 + this.night}, 1995`, {
+    // Location & date — spaced down more
+    const locText = this.add.text(70, 100, `LOCATION: Localville`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '16px',
       color: '#888070',
     });
     this.overlayContainer.add(locText);
 
-    // Deadline
+    const dateText = this.add.text(730, 100, `March ${14 + this.night}, 1995`, {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '16px',
+      color: '#888070',
+    }).setOrigin(1, 0);
+    this.overlayContainer.add(dateText);
+
+    // Deadline — spaced down
     const deadlineStr = this.formatTime(this.nightConfig.hiringDeadline);
-    const dlText = this.add.text(400, 115, `MUST HIRE BY: ${deadlineStr}`, {
+    const dlText = this.add.text(400, 130, `MUST HIRE BY: ${deadlineStr}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '20px',
       color: '#e8c36a',
@@ -954,12 +966,12 @@ export class DeskScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.overlayContainer.add(dlText);
 
-    // Separator
+    // Separator — lower
     gfx.lineStyle(1, 0x3a352e, 0.8);
-    gfx.lineBetween(60, 140, 740, 140);
+    gfx.lineBetween(60, 160, 740, 160);
 
-    // Roles
-    let ry = 150;
+    // Roles — start lower
+    let ry = 172;
     this.roles.forEach((role) => {
       const isFilled = role.filledBy !== null;
       const heightStr = `${Math.floor(role.heightRange[0] / 12)}'${role.heightRange[0] % 12}"-${Math.floor(role.heightRange[1] / 12)}'${role.heightRange[1] % 12}"`;
@@ -1994,8 +2006,8 @@ export class DeskScene extends Phaser.Scene {
       this.lookUpBook(visitor);
     });
 
-    // Reel section — positioned below book with clear gap
-    const reelY = 580;
+    // Reel section — compact to fit above dialogue buttons (y=706)
+    const reelY = 560;
     const reelGfx = this.add.graphics();
     this.bottomHalfContainer.add(reelGfx);
 
@@ -2412,56 +2424,60 @@ export class DeskScene extends Phaser.Scene {
       }
 
       // Member name
-      this.add.text(cx + 8, cy + 26, visitor.sagCard.name, {
+      const cardNameText = this.add.text(cx + 8, cy + 26, visitor.sagCard.name, {
         fontFamily: 'Courier New, monospace',
         fontSize: '11px',
         color: '#1a1a1a',
         fontStyle: 'bold',
         wordWrap: { width: cw - 16 },
-      }).setOrigin(0, 0);
-      // (added to scene automatically)
+      });
+      this.bottomHalfContainer.add(cardNameText);
 
       // Status
       const statusColor = visitor.sagCard.valid ? '#2a6a2a' : '#8a2a2a';
       const statusLabel = visitor.sagCard.valid ? 'CURRENT' : 'EXPIRED';
-      this.add.text(cx + 8, cy + 50, statusLabel, {
+      const cardStatusText = this.add.text(cx + 8, cy + 50, statusLabel, {
         fontFamily: 'Courier New, monospace',
         fontSize: '12px',
         color: statusColor,
         fontStyle: 'bold',
       });
+      this.bottomHalfContainer.add(cardStatusText);
 
       // Location on card — key tell!
       const locMismatch = visitor.sagCard.location !== 'Localville';
       const locColor = locMismatch ? '#8a2a2a' : '#4a4a4a';
-      this.add.text(cx + 8, cy + 66, visitor.sagCard.location, {
+      const cardLocText = this.add.text(cx + 8, cy + 66, visitor.sagCard.location, {
         fontFamily: 'Courier New, monospace',
         fontSize: '11px',
         color: locColor,
         fontStyle: 'bold',
       });
+      this.bottomHalfContainer.add(cardLocText);
 
       if (locMismatch) {
         this.visitorTells.push('sag_wrong_location');
       }
 
       // Membership number
-      this.add.text(cx + 8, cy + 82, `#${Math.floor(Math.random() * 900000 + 100000)}`, {
+      const memNumText = this.add.text(cx + 8, cy + 82, `#${Math.floor(Math.random() * 900000 + 100000)}`, {
         fontFamily: 'Courier New, monospace',
         fontSize: '9px',
         color: '#4a4a4a',
       });
+      this.bottomHalfContainer.add(memNumText);
 
       // Expired stamp
       if (!visitor.sagCard.valid) {
         cardGfx.lineStyle(3, 0xc44020, 0.6);
         cardGfx.strokeRect(cx + 60, cy + 40, 90, 30);
-        this.add.text(cx + 105, cy + 48, 'EXPIRED', {
+        const expStamp = this.add.text(cx + 105, cy + 48, 'EXPIRED', {
           fontFamily: 'Courier New, monospace',
           fontSize: '12px',
           color: '#c44020',
           fontStyle: 'bold',
         }).setOrigin(0.5).setAngle(-8);
+        this.bottomHalfContainer.add(expStamp);
         this.visitorTells.push('expired_sag');
       }
     } else {
@@ -2471,13 +2487,14 @@ export class DeskScene extends Phaser.Scene {
       cardGfx.lineStyle(1, 0x3a3a44, 0.6);
       cardGfx.strokeRoundedRect(cx, cy, cw, ch, 4);
 
-      this.add.text(cx + cw / 2, cy + ch / 2, 'NO CARD\nSHOWN', {
+      const noCardText = this.add.text(cx + cw / 2, cy + ch / 2, 'NO CARD\nSHOWN', {
         fontFamily: 'Courier New, monospace',
         fontSize: '14px',
         color: '#c4553a',
         fontStyle: 'bold',
         align: 'center',
       }).setOrigin(0.5);
+      this.bottomHalfContainer.add(noCardText);
       this.visitorTells.push('no_sag_card');
     }
   }
