@@ -690,21 +690,55 @@ export class DeskScene extends Phaser.Scene {
     const gfx = this.add.graphics();
     this.topHalfContainer.add(gfx);
 
-    const figCount = Math.min(queueCount, 5);
+    const figCount = Math.min(queueCount, 12);
     for (let i = 0; i < figCount; i++) {
-      const qx = 80 + i * 28;
-      const qy = 220 - i * 8;
-      const alphaFade = 0.9 - i * 0.15;
-      const heightVar = randomInt(-3, 3);
+      // Use a seeded offset per index for consistent randomness across redraws
+      const seed = (i * 7 + 13) % 17;
+      const heightVar = ((seed % 7) - 3);       // -3 to +3
+      const posJitterX = ((seed * 3) % 5) - 2;  // -2 to +2
+      const posJitterY = ((seed * 5) % 5) - 2;  // -2 to +2
+
+      let qx: number, qy: number, scale: number, alpha: number;
+
+      if (i < 5) {
+        // Front group: roughly where they were, staggered left side
+        qx = 80 + i * 28 + posJitterX;
+        qy = 220 - i * 8 + posJitterY;
+        scale = 1.0 - i * 0.02;
+        alpha = 0.9 - i * 0.12;
+      } else if (i < 8) {
+        // Middle group: curving further left, smaller, more transparent
+        const mi = i - 5;
+        qx = 60 - mi * 22 + posJitterX;
+        qy = 190 - mi * 12 + posJitterY;
+        scale = 0.82 - mi * 0.06;
+        alpha = 0.35 - mi * 0.07;
+      } else {
+        // Far group: very small, very dim, suggesting line extends off-screen
+        const fi = i - 8;
+        qx = 10 - fi * 18 + posJitterX;
+        qy = 165 - fi * 8 + posJitterY;
+        scale = 0.6 - fi * 0.06;
+        alpha = 0.15 - fi * 0.03;
+      }
+
+      alpha = Math.max(0.04, alpha);
+      scale = Math.max(0.4, scale);
+
+      const bodyW = Math.round(16 * scale);
+      const bodyH = Math.round(42 * scale);
+      const headR = Math.round(7 * scale);
+      const legW = Math.round(5 * scale);
+      const legH = Math.round(16 * scale);
 
       // Body rectangle
-      gfx.fillStyle(0x16161e, alphaFade);
-      gfx.fillRect(qx - 8, qy + heightVar, 16, 42);
+      gfx.fillStyle(0x16161e, alpha);
+      gfx.fillRect(qx - bodyW / 2, qy + heightVar, bodyW, bodyH);
       // Head circle
-      gfx.fillCircle(qx, qy - 8 + heightVar, 7);
+      gfx.fillCircle(qx, qy - headR - 1 + heightVar, headR);
       // Legs (two thin rects)
-      gfx.fillRect(qx - 6, qy + 42 + heightVar, 5, 16);
-      gfx.fillRect(qx + 1, qy + 42 + heightVar, 5, 16);
+      gfx.fillRect(qx - bodyW / 2 + 1, qy + bodyH + heightVar, legW, legH);
+      gfx.fillRect(qx + 1, qy + bodyH + heightVar, legW, legH);
     }
   }
 
@@ -1372,32 +1406,32 @@ export class DeskScene extends Phaser.Scene {
     // Night info
     const nightLabel = this.add.text(16, 876, `NIGHT ${this.night}/7`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '18px',
       color: '#d4c5a0',
       fontStyle: 'bold',
     });
     this.statusBar.add(nightLabel);
 
     // Time
-    this.statusTimeText = this.add.text(130, 876, timeStr, {
+    this.statusTimeText = this.add.text(140, 876, timeStr, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '18px',
       color: '#d4c5a0',
     });
     this.statusBar.add(this.statusTimeText);
 
     // Roles
-    const rolesLabel = this.add.text(240, 876, `Roles: ${filledCount}/${totalRoles}`, {
+    const rolesLabel = this.add.text(250, 876, `Roles: ${filledCount}/${totalRoles}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '18px',
       color: '#d4c5a0',
     });
     this.statusBar.add(rolesLabel);
 
     // Money in gold
-    const moneyLabel = this.add.text(400, 876, `$${state.money}`, {
+    const moneyLabel = this.add.text(410, 876, `$${state.money}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '18px',
+      fontSize: '20px',
       color: '#e8c36a',
       fontStyle: 'bold',
     });
@@ -1419,9 +1453,9 @@ export class DeskScene extends Phaser.Scene {
 
     // Mistakes counter
     const mistakesColor = state.strikes >= BALANCE.strikesForWarning ? '#c4553a' : '#d4c5a0';
-    const mistakesLabel = this.add.text(540, 876, `Mistakes: ${state.strikes}/${BALANCE.maxStrikes}`, {
+    const mistakesLabel = this.add.text(550, 876, `Mistakes: ${state.strikes}/${BALANCE.maxStrikes}`, {
       fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
+      fontSize: '18px',
       color: mistakesColor,
       fontStyle: state.strikes >= BALANCE.strikesForWarning ? 'bold' : 'normal',
     });
@@ -3552,7 +3586,10 @@ export class DeskScene extends Phaser.Scene {
       this.visitors.push(...extraVisitors);
     }
 
-    this.presentVisitor(this.visitors[this.currentVisitorIndex]);
+    // Brief pause showing empty set before next visitor appears
+    this.time.delayedCall(1000, () => {
+      this.presentVisitor(this.visitors[this.currentVisitorIndex]);
+    });
   }
 
   private performNdUpgrade(): void {
@@ -3565,7 +3602,10 @@ export class DeskScene extends Phaser.Scene {
         const extraVisitors = this.visitorGenerator.generateVisitorsForNight(this.nightConfig, state);
         this.visitors.push(...extraVisitors);
       }
-      this.presentVisitor(this.visitors[this.currentVisitorIndex]);
+      // Brief pause showing empty set before next visitor appears
+      this.time.delayedCall(1000, () => {
+        this.presentVisitor(this.visitors[this.currentVisitorIndex]);
+      });
       return;
     }
 
