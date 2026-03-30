@@ -47,16 +47,16 @@ export const BALANCE: BalanceConfig = {
 
   // -- Fines deducted from paycheck (the real punishment) --
   fines: {
-    wrong_hire_nd_minor_injury: 15,
+    wrong_hire_nd_minor_injury: 50,
     wrong_hire_nd_no_injury: 0,
-    wrong_hire_medium_injury: 40,
-    wrong_hire_high_serious_injury: 100,
-    wrong_hire_upgraded_nd_injury: 75,
+    wrong_hire_medium_injury: 50,
+    wrong_hire_high_serious_injury: 50,
+    wrong_hire_upgraded_nd_injury: 50,
     non_sag_on_sag_night: 50,
-    wrong_gender: 30,
-    size_mismatch: 20,
-    not_local: 35,
-    unfilled_role: 25,
+    wrong_gender: 50,
+    size_mismatch: 50,
+    not_local: 50,
+    unfilled_role: 50,
   } as Record<string, number>,
 
   // -- Injury chances (0-1, higher = more likely to be injured) --
