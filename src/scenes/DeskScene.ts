@@ -3841,7 +3841,109 @@ export class DeskScene extends Phaser.Scene {
       injuryLog: [...state.injuryLog],
     });
 
-    this.time.delayedCall(500, () => {
+    // On nights 4 and 7, SAG rep shows up AFTER hiring to check your work
+    if (this.night === 4 || this.night === 7) {
+      // Check if any hired performers were non-SAG
+      const nonSagHires = this.hireResults.filter(r => {
+        if (r.outcome === 'unfilled_role') return false;
+        const visitor = this.visitors.find(v => v.id === r.visitorId);
+        if (!visitor) return false;
+        return !visitor.sagCard?.valid || visitor.resume.sagStatus !== 'current';
+      });
+
+      this.time.delayedCall(500, () => {
+        this.showEndOfNightSagRep(nightResult, nonSagHires);
+      });
+    } else {
+      this.time.delayedCall(500, () => {
+        this.scene.start('ResultsScene', {
+          night: this.night,
+          nightResult,
+        });
+      });
+    }
+  }
+
+  private showEndOfNightSagRep(nightResult: NightResult, nonSagHires: HireResult[]): void {
+    this.overlayContainer.removeAll(true);
+    const gfx = this.add.graphics();
+    this.overlayContainer.add(gfx);
+
+    gfx.fillStyle(0x0a0a0f, 0.95);
+    gfx.fillRoundedRect(60, 120, 680, 560, 8);
+    gfx.lineStyle(2, 0x2a4a8a, 0.8);
+    gfx.strokeRoundedRect(60, 120, 680, 560, 8);
+
+    // SAG logo bar
+    gfx.fillStyle(0x2a4a8a, 1);
+    gfx.fillRect(80, 135, 640, 40);
+
+    this.add.text(400, 155, 'SCREEN ACTORS GUILD', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '22px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+    }).setOrigin(0.5);
+
+    // Rep portrait
+    const repGfx = this.add.graphics();
+    repGfx.fillStyle(0x2a2a3a, 1);
+    repGfx.fillRect(370, 190, 60, 70);
+    repGfx.fillStyle(0xc4a882, 0.9);
+    repGfx.fillCircle(400, 205, 18);
+    repGfx.fillStyle(0x1a1a2a, 1);
+    repGfx.fillRect(388, 200, 10, 5);
+    repGfx.fillRect(402, 200, 10, 5);
+
+    const hasProblem = nonSagHires.length > 0;
+
+    if (hasProblem) {
+      const names = nonSagHires.map(h => h.visitorName).join(', ');
+      this.add.text(400, 280, `"We've reviewed tonight's call sheet.\n${nonSagHires.length} of your hires ${nonSagHires.length === 1 ? 'is' : 'are'} not SAG members.\n\n${names}\n\nThis is a SAG production.\nThat's a $${BALANCE.sagRepCost} fine."`, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '16px',
+        color: '#c4553a',
+        align: 'center',
+        lineSpacing: 4,
+      }).setOrigin(0.5, 0);
+
+      // Fine is automatic
+      const state = this.gsm.getCurrentState();
+      this.gsm.updateState({
+        sagRepVisited: true,
+        money: state.money - BALANCE.sagRepCost,
+      });
+      nightResult.sagRepVisit = true;
+      nightResult.sagRepCost = BALANCE.sagRepCost;
+    } else {
+      this.add.text(400, 290, '"We\'ve reviewed tonight\'s call sheet.\nEverything checks out.\n\nAll your performers are SAG members.\n\nKeep it that way."', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '16px',
+        color: '#4a7a4f',
+        align: 'center',
+        lineSpacing: 4,
+      }).setOrigin(0.5, 0);
+    }
+
+    // Continue button
+    const btnY = 580;
+    const btnBg = this.add.graphics();
+    this.overlayContainer.add(btnBg);
+    btnBg.fillStyle(0x2a2618, 1);
+    btnBg.fillRoundedRect(300, btnY, 200, 44, 6);
+    btnBg.lineStyle(1, 0x5a4a2a, 1);
+    btnBg.strokeRoundedRect(300, btnY, 200, 44, 6);
+
+    const continueBtn = this.add.text(400, btnY + 22, '[ CONTINUE ]', {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '20px',
+      color: '#e8c36a',
+      fontStyle: 'bold',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    this.overlayContainer.add(continueBtn);
+
+    continueBtn.on('pointerdown', () => {
+      this.overlayContainer.removeAll(true);
       this.scene.start('ResultsScene', {
         night: this.night,
         nightResult,
