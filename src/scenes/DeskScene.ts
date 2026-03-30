@@ -1824,16 +1824,6 @@ export class DeskScene extends Phaser.Scene {
     this.bottomHalfContainer.add(nameText);
     ry += 28;
 
-    // SAG status — hidden until card is shown; resume just says "ask"
-    const sagText = this.add.text(rx, ry, 'SAG: (ask to see card)', {
-      fontFamily: 'Courier New, monospace',
-      fontSize: '16px',
-      color: '#6a6050',
-      fontStyle: 'italic',
-    });
-    this.bottomHalfContainer.add(sagText);
-    ry += 24;
-
     // Height / Weight
     const hwText = this.add.text(rx, ry, `${visitor.resume.listedHeight}  ${visitor.resume.listedWeight}`, {
       fontFamily: 'Courier New, monospace',
@@ -2588,13 +2578,7 @@ export class DeskScene extends Phaser.Scene {
       this.bookResultText.setText(lines.join('\n'));
       this.bookResultText.setColor('#d4c5a0');
     } else {
-      const notFoundMsgs = [
-        'NOT FOUND\n\nThat\'s odd. Everyone\'s\nin the book.',
-        'NOT FOUND\n\nHm. No listing.\nThat\'s a red flag.',
-        'NOT FOUND\n\nNot in here.\nHow\'d they get this gig?',
-        'NOT FOUND\n\nNo record.\nSomebody\'s lying.',
-      ];
-      this.bookResultText.setText(notFoundMsgs[Math.floor(Math.random() * notFoundMsgs.length)]);
+      this.bookResultText.setText('NOT FOUND\n\nNo record.\nThat\'s strange.');
       this.bookResultText.setColor('#c4553a');
       this.visitorTells.push('not_in_book');
     }
