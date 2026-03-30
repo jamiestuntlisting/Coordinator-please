@@ -339,10 +339,15 @@ export class VisitorGenerator {
           'weight_off',       // body mismatch only
           'stolen_reel',      // reel name mismatch only
         ])
-      : pick([
-          'wrong_city', 'stolen_reel', 'not_in_book', 'expired_sag',
-          'borrowed_headshot', 'close_faker', 'sag_wrong_city', 'almost_perfect',
-        ]);
+      : nightConfig.night === 1
+        ? pick([
+            'wrong_city', 'wrong_city', 'wrong_city',  // Night 1: lots of non-locals
+            'not_in_book', 'borrowed_headshot', 'expired_sag',
+          ])
+        : pick([
+            'wrong_city', 'stolen_reel', 'not_in_book', 'expired_sag',
+            'borrowed_headshot', 'close_faker', 'sag_wrong_city', 'almost_perfect',
+          ]);
 
     const name = this.generateName(gender);
     const body = this.generateBodyType();

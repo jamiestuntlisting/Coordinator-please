@@ -6,8 +6,8 @@ export const NIGHT_CONFIGS: NightConfig[] = [
   // ============================================================
   {
     night: 1,
-    noteType: 'none',
-    noteDescription: '',
+    noteType: 'locals_only',
+    noteDescription: 'Hire whoever is best for the job.',
     roles: [
       {
         title: 'Fight Sequence',

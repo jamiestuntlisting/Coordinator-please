@@ -1962,41 +1962,53 @@ export class DeskScene extends Phaser.Scene {
     const px = 544;
     let py = 386;
 
-    // Book — compact leather-bound look
+    // StuntListing — dot-matrix computer printout on white tractor-feed paper
     const bookGfx = this.add.graphics();
     this.bottomHalfContainer.add(bookGfx);
 
     const bookH = 180;
-    // Leather cover
-    bookGfx.fillStyle(0x2a1a0e, 1);
-    bookGfx.fillRoundedRect(px - 4, py, 248, bookH, 3);
-    // Spine with stitching
-    bookGfx.fillStyle(0x1a0e06, 1);
-    bookGfx.fillRect(px - 4, py, 6, bookH);
-    bookGfx.lineStyle(1, 0x3a2a1a, 0.4);
-    for (let sy = py + 8; sy < py + bookH - 4; sy += 8) {
-      bookGfx.fillStyle(0x4a3a2a, 0.3);
-      bookGfx.fillRect(px - 3, sy, 4, 2);
+    // White paper background
+    bookGfx.fillStyle(0xe8e4d8, 1);
+    bookGfx.fillRect(px - 2, py, 246, bookH);
+    // Tractor feed holes along left edge
+    for (let hy = py + 8; hy < py + bookH - 4; hy += 12) {
+      bookGfx.fillStyle(0xc8c4b8, 1);
+      bookGfx.fillCircle(px + 4, hy, 2.5);
+      bookGfx.lineStyle(1, 0xb0aca0, 0.6);
+      bookGfx.strokeCircle(px + 4, hy, 2.5);
     }
-    // Page edges (right)
-    bookGfx.fillStyle(0xd8d0c0, 0.25);
-    bookGfx.fillRect(px + 240, py + 4, 3, bookH - 8);
-    // Bottom page edge
-    bookGfx.fillStyle(0xd8d0c0, 0.15);
-    bookGfx.fillRect(px + 6, py + bookH - 3, 234, 3);
-    // Gold emboss title
-    bookGfx.fillStyle(0x8a6a3a, 0.15);
-    bookGfx.fillRect(px + 30, py + 4, 180, 18);
+    // Tractor feed holes along right edge
+    for (let hy = py + 8; hy < py + bookH - 4; hy += 12) {
+      bookGfx.fillStyle(0xc8c4b8, 1);
+      bookGfx.fillCircle(px + 238, hy, 2.5);
+      bookGfx.lineStyle(1, 0xb0aca0, 0.6);
+      bookGfx.strokeCircle(px + 238, hy, 2.5);
+    }
+    // Faint horizontal lines (printer feed lines)
+    bookGfx.lineStyle(1, 0xd0ccb8, 0.4);
+    for (let ly = py + 14; ly < py + bookH; ly += 12) {
+      bookGfx.lineBetween(px + 12, ly, px + 230, ly);
+    }
+    // Green-bar alternating stripes (old continuous paper)
+    for (let sy = py; sy < py + bookH; sy += 24) {
+      bookGfx.fillStyle(0xc8e8c8, 0.15);
+      bookGfx.fillRect(px + 10, sy, 224, 12);
+    }
+    // Paper shadow
+    bookGfx.fillStyle(0x000000, 0.1);
+    bookGfx.fillRect(px + 244, py + 2, 3, bookH);
+    bookGfx.fillRect(px, py + bookH, 246, 2);
 
-    const headerText = this.add.text(px + 120, py + 6, 'STUNTLISTING', {
+    // Header — printed in dot-matrix style
+    const headerText = this.add.text(px + 122, py + 4, 'STUNTLISTING', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '13px',
-      color: '#8a6a3a',
+      fontSize: '12px',
+      color: '#1a1a2a',
       fontStyle: 'bold',
-      letterSpacing: 1,
+      letterSpacing: 2,
     }).setOrigin(0.5, 0);
     this.bottomHalfContainer.add(headerText);
-    py += 24;
+    py += 20;
 
     // Look Up button
     const lastName = visitor.name.split(' ').slice(-1)[0] || visitor.name;
@@ -2004,11 +2016,11 @@ export class DeskScene extends Phaser.Scene {
     const lookupBg = this.add.graphics();
     this.bottomHalfContainer.add(lookupBg);
     lookupBg.fillStyle(0x2a2618, 1);
-    lookupBg.fillRoundedRect(px + 6, py, 226, 30, 3);
+    lookupBg.fillRoundedRect(px + 12, py, 218, 30, 3);
     lookupBg.lineStyle(1, 0x5a4a2a, 1);
-    lookupBg.strokeRoundedRect(px + 6, py, 226, 30, 3);
+    lookupBg.strokeRoundedRect(px + 12, py, 218, 30, 3);
 
-    const lookupBtn = this.add.text(px + 14, py + 6, `LOOK UP: ${lastName}`, {
+    const lookupBtn = this.add.text(px + 20, py + 6, `LOOK UP: ${lastName}`, {
       fontFamily: 'Courier New, monospace',
       fontSize: '15px',
       color: '#e8c36a',
@@ -2017,13 +2029,13 @@ export class DeskScene extends Phaser.Scene {
     this.bottomHalfContainer.add(lookupBtn);
     py += 34;
 
-    // Book result area
-    this.bookResultText = this.add.text(px + 6, py, '', {
+    // Printout result area — dark ink on white paper
+    this.bookResultText = this.add.text(px + 14, py, '', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '11px',
-      color: '#d4c5a0',
-      wordWrap: { width: 220 },
-      lineSpacing: 2,
+      fontSize: '12px',
+      color: '#1a1a2a',
+      wordWrap: { width: 210 },
+      lineSpacing: 3,
     });
     this.bottomHalfContainer.add(this.bookResultText);
 
