@@ -246,21 +246,20 @@ export class ResultsScene extends Phaser.Scene {
     gfx.lineBetween(80, y + 3, 720, y + 3);
     y += 15;
 
-    const state = gsm.getCurrentState();
-
-    // If there were ANY fines this night, that's a mistake (one per night max)
+    // If there were ANY fines or unfilled roles this night, that's a mistake
     const hadFines = this.nightResult.fines > 0;
     const hadUnfilled = this.nightResult.hires.some((h: HireResult) => h.outcome === 'unfilled_role');
     const nightWasBad = hadFines || hadUnfilled;
 
-    // Only add one strike per night, and only if we haven't already added one
-    // (ReputationSystem may have already added strikes per-hire, so we cap at +1 per night)
+    // Add exactly 1 strike per bad night
     if (nightWasBad && !this.strikeApplied) {
       this.strikeApplied = true;
-      // Ensure exactly 1 strike per bad night (reset any per-hire strikes)
       const targetStrikes = Math.min(this.nightStrikesAtStart + 1, BALANCE.maxStrikes);
       gsm.updateState({ strikes: targetStrikes });
     }
+
+    // Re-read state AFTER potential strike update
+    const state = gsm.getCurrentState();
 
     const barX = 80;
 
