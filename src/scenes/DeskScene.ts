@@ -1068,6 +1068,36 @@ export class DeskScene extends Phaser.Scene {
       ry += 78;
     });
 
+    // Production note (if any)
+    if (this.nightConfig.noteType !== 'none' && this.nightConfig.noteDescription) {
+      ry += 4;
+      const noteGfx = this.add.graphics();
+      this.overlayContainer.add(noteGfx);
+      noteGfx.fillStyle(0xd8c870, 0.9);
+      noteGfx.fillRect(55, ry, 690, 50);
+      noteGfx.fillStyle(0x000000, 0.08);
+      noteGfx.fillRect(58, ry + 3, 690, 50);
+
+      const noteLabel = this.add.text(75, ry + 6, 'PRODUCTION NOTE:', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '13px',
+        color: '#2a2a10',
+        fontStyle: 'bold',
+      });
+      this.overlayContainer.add(noteLabel);
+
+      const noteDesc = this.add.text(75, ry + 24, this.nightConfig.noteDescription, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '14px',
+        color: '#1a1a08',
+        fontStyle: 'bold',
+        wordWrap: { width: 640 },
+      });
+      this.overlayContainer.add(noteDesc);
+
+      ry += 58;
+    }
+
     // Close button
     const closeBg = this.add.graphics();
     this.overlayContainer.add(closeBg);
