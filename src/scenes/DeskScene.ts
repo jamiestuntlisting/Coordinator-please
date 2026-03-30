@@ -2576,21 +2576,52 @@ export class DeskScene extends Phaser.Scene {
     const listing = this.bookSystem.lookupPerformer(visitor.name, this.bookListings);
 
     if (listing) {
+      // Dot-matrix printer animation — print one line at a time
       const lines = [
-        `FOUND: ${listing.name}`,
-        `City: ${listing.city}`,
-        `Size: ${listing.height}, ${listing.weight} lbs`,
-        `Skills: ${listing.skills.map(s => s.replace(/_/g, ' ')).join(', ') || 'none'}`,
-        `Coord Credits: ${listing.coordinatorCredits.join(', ') || 'none'}`,
-        listing.hasPhoto ? 'Photo: YES' : 'Photo: NO',
+        `${listing.name}`,
+        `${listing.height}  ${listing.weight} lbs`,
+        `${listing.city}`,
       ];
-      this.bookResultText.setText(lines.join('\n'));
-      this.bookResultText.setColor('#d4c5a0');
+      this.animatePrinterOutput(lines, '#4a7a4f');
     } else {
-      this.bookResultText.setText('NOT FOUND\n\nNo record.\nThat\'s strange.');
-      this.bookResultText.setColor('#c4553a');
+      this.animatePrinterOutput(['SEARCHING...', '', 'NO RECORD.', 'That\'s strange.'], '#c4553a');
       this.visitorTells.push('not_in_book');
     }
+  }
+
+  private animatePrinterOutput(lines: string[], color: string): void {
+    if (!this.bookResultText) return;
+    this.bookResultText.setText('');
+    this.bookResultText.setColor(color);
+
+    let currentText = '>>> SEARCHING...\n';
+    this.bookResultText.setText(currentText);
+
+    // Print each line with a delay, dot-matrix style
+    let lineIndex = 0;
+    const printNextLine = () => {
+      if (lineIndex >= lines.length || !this.bookResultText) return;
+
+      const line = lines[lineIndex];
+      if (line === '') {
+        currentText += '\n';
+      } else {
+        currentText += `${line}\n`;
+      }
+      this.bookResultText.setText(currentText);
+      lineIndex++;
+
+      if (lineIndex < lines.length) {
+        this.time.delayedCall(250, printNextLine);
+      }
+    };
+
+    // Start printing after "searching" delay
+    this.time.delayedCall(400, () => {
+      if (!this.bookResultText) return;
+      currentText = '';
+      printNextLine();
+    });
   }
 
   private playReel(visitor: Visitor): void {
