@@ -170,11 +170,11 @@ export class MoneyScene extends Phaser.Scene {
 
     this.lineItems.push({ label: 'EXPENSES', amount: -totalExpenses, color: '#c45040', isTotalLine: true });
 
-    // Fines — deducted from paycheck by UPM
+    // Fines — deducted from paycheck by Producer
     const fines = this.nightResult.fines ?? 0;
     if (fines > 0) {
       this.lineItems.push({ label: '', amount: 0, color: '', isSeparator: true });
-      this.lineItems.push({ label: 'UPM FINES', amount: -fines, color: '#c45040', isTotalLine: true });
+      this.lineItems.push({ label: 'PRODUCER FINES', amount: -fines, color: '#c45040', isTotalLine: true });
 
       // Show individual fines from bad hires
       this.nightResult.hires.forEach(hire => {

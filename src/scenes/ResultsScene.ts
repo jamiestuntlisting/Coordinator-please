@@ -8,6 +8,8 @@ export class ResultsScene extends Phaser.Scene {
   private nightResult!: NightResult;
   private night: number = 1;
   private vhs!: VHSOverlay;
+  private strikeApplied: boolean = false;
+  private nightStrikesAtStart: number = 0;
 
   constructor() {
     super({ key: 'ResultsScene' });
@@ -17,7 +19,10 @@ export class ResultsScene extends Phaser.Scene {
     this.night = data.night ?? 1;
     this.nightResult = data.nightResult ?? this.createPlaceholderResult();
 
+    this.strikeApplied = false;
+
     const gsm = GameStateManager.getInstance();
+    this.nightStrikesAtStart = gsm.getCurrentState().strikes;
     gsm.updateState({ currentPhase: 'results' });
 
     this.cameras.main.setBackgroundColor('#0a0a0f');
@@ -164,7 +169,7 @@ export class ResultsScene extends Phaser.Scene {
       y += 4;
     });
 
-    // UPM handwritten note — one combined note for ALL problems
+    // Producer handwritten note — one combined note for ALL problems
     const problemHires = this.nightResult.hires.filter((h: HireResult) => {
       const outcome = h.outcome as string;
       return outcome === 'unfilled_role' || (h.fine > 0 && outcome !== 'unfilled_role');
@@ -173,7 +178,7 @@ export class ResultsScene extends Phaser.Scene {
     if (problemHires.length > 0) {
       y += 8;
 
-      // Pick ONE UPM message that covers everything (not per-role)
+      // Pick ONE Producer message that covers everything (not per-role)
       const totalFines = problemHires.reduce((sum, h) => sum + h.fine, 0);
       const unfilledCount = problemHires.filter(h => h.outcome === 'unfilled_role').length;
       const badHireCount = problemHires.filter(h => h.outcome !== 'unfilled_role').length;
@@ -203,7 +208,7 @@ export class ResultsScene extends Phaser.Scene {
       noteGfx.fillStyle(0xc8c0a0, 0.5);
       noteGfx.fillRect(350, y - 6, 60, 14);
 
-      this.add.text(105, y + 8, 'NOTE FROM UPM:', {
+      this.add.text(105, y + 8, 'NOTE FROM PRODUCER:', {
         fontFamily: 'Courier New, monospace',
         fontSize: '14px',
         color: '#2a2a10',
@@ -243,18 +248,47 @@ export class ResultsScene extends Phaser.Scene {
 
     const state = gsm.getCurrentState();
 
+    // If there were ANY fines this night, that's a mistake (one per night max)
+    const hadFines = this.nightResult.fines > 0;
+    const hadUnfilled = this.nightResult.hires.some((h: HireResult) => h.outcome === 'unfilled_role');
+    const nightWasBad = hadFines || hadUnfilled;
+
+    // Only add one strike per night, and only if we haven't already added one
+    // (ReputationSystem may have already added strikes per-hire, so we cap at +1 per night)
+    if (nightWasBad && !this.strikeApplied) {
+      this.strikeApplied = true;
+      // Ensure exactly 1 strike per bad night (reset any per-hire strikes)
+      const targetStrikes = Math.min(this.nightStrikesAtStart + 1, BALANCE.maxStrikes);
+      gsm.updateState({ strikes: targetStrikes });
+    }
+
     const barX = 80;
 
-    // Mistakes count — simple text display
-    const mistakesColor = state.strikes >= BALANCE.strikesForWarning ? '#c4553a' : '#d4c5a0';
-    this.add.text(barX, y, `MISTAKES: ${state.strikes}/${BALANCE.maxStrikes}`, {
+    // Big red X marks for mistakes
+    this.add.text(barX, y, 'MISTAKES:', {
       fontFamily: 'Courier New, monospace',
       fontSize: '18px',
-      color: mistakesColor,
+      color: '#d4c5a0',
       fontStyle: 'bold',
     });
 
-    y += 28;
+    const xStartX = barX + 160;
+    const xGfx = this.add.graphics();
+    for (let m = 0; m < BALANCE.maxStrikes; m++) {
+      const mx = xStartX + m * 50;
+      if (m < state.strikes) {
+        // Big red X — filled
+        xGfx.lineStyle(5, 0xc4553a, 1);
+        xGfx.lineBetween(mx, y + 2, mx + 22, y + 22);
+        xGfx.lineBetween(mx + 22, y + 2, mx, y + 22);
+      } else {
+        // Empty box — no mistake yet
+        xGfx.lineStyle(2, 0x3a352e, 0.5);
+        xGfx.strokeRect(mx, y + 2, 22, 20);
+      }
+    }
+
+    y += 32;
 
     // Mistake warnings — bordered warning panel
     if (state.strikes >= BALANCE.strikesForFinalWarning) {
@@ -274,7 +308,7 @@ export class ResultsScene extends Phaser.Scene {
         fontStyle: 'bold',
       });
 
-      this.add.text(120, y + 8, 'UPM: "One more. That\'s all you get. What are you gonna do, quit?"', {
+      this.add.text(120, y + 8, 'Producer: "One more. That\'s all you get. What are you gonna do, quit?"', {
         fontFamily: 'Courier New, monospace',
         fontSize: '16px',
         color: '#c4553a',
@@ -288,7 +322,7 @@ export class ResultsScene extends Phaser.Scene {
       gfx.lineStyle(2, 0xe8c36a, 0.6);
       gfx.strokeRect(75, y, 650, 36);
 
-      this.add.text(90, y + 8, 'UPM: "I got ten coordinators who\'d kill for this gig. Remember that."', {
+      this.add.text(90, y + 8, 'Producer: "I got ten coordinators who\'d kill for this gig. Remember that."', {
         fontFamily: 'Courier New, monospace',
         fontSize: '16px',
         color: '#e8c36a',

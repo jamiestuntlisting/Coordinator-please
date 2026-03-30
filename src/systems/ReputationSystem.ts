@@ -42,11 +42,8 @@ export class ReputationSystem {
       strike = true;
     }
 
-    // Apply to state
+    // Apply rep change to state (strikes are now handled per-night in ResultsScene)
     state.reputation = Math.max(0, Math.min(100, state.reputation + repChange));
-    if (strike) {
-      state.strikes += 1;
-    }
 
     return { repChange, strike };
   }

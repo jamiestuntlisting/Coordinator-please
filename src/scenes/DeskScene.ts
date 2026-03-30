@@ -3526,7 +3526,7 @@ export class DeskScene extends Phaser.Scene {
       case 'not_local':
         return `${visitor.name}'s SAG card says ${visitor.actualCity}. Production said locals only. You're in trouble.`;
       case 'unfilled_role':
-        return `${role.title} went unfilled. The UPM wants a word.`;
+        return `${role.title} went unfilled. The Producer wants a word.`;
       default:
         return outcome;
     }
@@ -3777,7 +3777,7 @@ export class DeskScene extends Phaser.Scene {
         roleId: role.id,
         roleTitle: role.title,
         outcome,
-        outcomeDetail: `${role.title} went unfilled. The UPM wants a word.`,
+        outcomeDetail: `${role.title} went unfilled. The Producer wants a word.`,
         repChange,
         fine: (BALANCE.fines as Record<string, number>)['unfilled_role'] ?? 0,
         wasInjured: false,

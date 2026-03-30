@@ -367,7 +367,7 @@ export class EndingScene extends Phaser.Scene {
         'You got fired.',
         '',
         'Too many injuries. Too many bad calls.',
-        'The UPM walked you to your car at 3 AM.',
+        'The Producer walked you to your car at 3 AM.',
         '',
         "Your cousin says he can get you on at the HVAC company.",
         'Benefits. Regular hours. No one falls off a building.',
