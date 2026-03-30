@@ -28,27 +28,23 @@ export class IntroScene extends Phaser.Scene {
 
     this.lines = [
       "It's 1995.",
-      "The rate sucks, but work is work.",
       "",
-      "I was down to my last dime.",
-      "Rent past due. Pager about to get cut off.",
+      "I'm down to my last dime.",
       "Then this show called.",
-      "",
       "Seven nights of overnights.",
       "Stunt coordinating on some low-budget thing",
       "shooting in Localville.",
       "",
-      "There are liars and truth tellers in this town.",
-      "I need stunt people I can trust.",
-      "Everyone wants something from me,",
+      "You need to know one thing about Localville.",
+      "In this town, there are liars",
+      "and truth tellers.",
+      "Everyone wants a job from me,",
       "and most of them will lie through their teeth",
       "to get the job.",
       "",
-      "I know this UPM.",
-      "He'll come down on me hard",
+      "But I need stunt people I can trust.",
+      "And the producer will come down on me hard",
       "if my performers are no good.",
-      "",
-      "I'll take it.",
       "",
       "I need this job to survive.",
     ];
@@ -185,7 +181,7 @@ export class IntroScene extends Phaser.Scene {
     // Styling
     const isFirstLine = this.currentLine === 0;
     const isLastLine = this.currentLine === this.lines.length - 1;
-    const isIllTakeIt = line === "I'll take it.";
+    const isTrustLine = line === 'But I need stunt people I can trust.';
 
     let fontSize = '20px';
     let color = '#d4c5a0';
@@ -199,7 +195,7 @@ export class IntroScene extends Phaser.Scene {
       fontSize = '26px';
       color = '#d4c5a0';
       fontStyle = 'bold';
-    } else if (isIllTakeIt) {
+    } else if (isTrustLine) {
       fontSize = '24px';
       color = '#e8c36a';
       fontStyle = 'bold';
