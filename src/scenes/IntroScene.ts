@@ -78,8 +78,8 @@ export class IntroScene extends Phaser.Scene {
     const W = 800;
     const H = 900;
 
-    // Night sky gradient
-    const skyColors = [0x08091a, 0x0a0c1e, 0x0c0e22, 0x0e1026, 0x0c0e20, 0x0a0c1a];
+    // Night sky gradient — brighter deep blue
+    const skyColors = [0x0c1228, 0x101830, 0x141e38, 0x182440, 0x141e34, 0x101828];
     const stripH = 150;
     for (let i = 0; i < skyColors.length; i++) {
       gfx.fillStyle(skyColors[i], 1);
@@ -93,17 +93,17 @@ export class IntroScene extends Phaser.Scene {
       [50, 70], [180, 80], [310, 65], [440, 75], [570, 60], [700, 85],
     ];
     starPositions.forEach(([sx, sy]) => {
-      const alpha = 0.15 + Math.random() * 0.3;
+      const alpha = 0.25 + Math.random() * 0.45;
       gfx.fillStyle(0xccccdd, alpha);
       gfx.fillRect(sx, sy, Math.random() > 0.6 ? 2 : 1, 1);
     });
 
     // City skyline — dark silhouette buildings at bottom
     const skylineY = 650;
-    const buildingColor = 0x0a0a12;
+    const buildingColor = 0x12121e;
 
     // Far background buildings (dimmer, shorter)
-    gfx.fillStyle(0x0e0e18, 0.8);
+    gfx.fillStyle(0x161624, 0.8);
     gfx.fillRect(0, skylineY + 40, W, H - skylineY);
 
     // Buildings — varying heights and widths
@@ -145,10 +145,10 @@ export class IntroScene extends Phaser.Scene {
       const windowCols = Math.floor(b.w / 12);
       for (let row = 0; row < windowRows; row++) {
         for (let col = 0; col < windowCols; col++) {
-          if (Math.random() < 0.25) { // 25% of windows lit
+          if (Math.random() < 0.35) { // 35% of windows lit
             const wx = b.x + 4 + col * 12;
             const wy = by + 8 + row * 16;
-            const brightness = Math.random() * 0.3 + 0.1;
+            const brightness = Math.random() * 0.4 + 0.2;
             const windowColor = Math.random() > 0.8 ? 0xf5d799 : 0xe8c36a;
             gfx.fillStyle(windowColor, brightness);
             gfx.fillRect(wx, wy, 4, 5);
@@ -157,18 +157,20 @@ export class IntroScene extends Phaser.Scene {
       }
     });
 
-    // Ground level — dark
-    gfx.fillStyle(0x080810, 1);
+    // Ground level
+    gfx.fillStyle(0x0c0c16, 1);
     gfx.fillRect(0, skylineY + 80, W, H - skylineY);
 
-    // Subtle city glow at horizon
-    gfx.fillStyle(0xe8a040, 0.015);
-    gfx.fillEllipse(400, skylineY + 80, 800, 60);
-    gfx.fillStyle(0xe8a040, 0.025);
-    gfx.fillEllipse(400, skylineY + 80, 500, 30);
+    // City glow at horizon — brighter amber
+    gfx.fillStyle(0xe8a040, 0.04);
+    gfx.fillEllipse(400, skylineY + 60, 800, 80);
+    gfx.fillStyle(0xe8a040, 0.06);
+    gfx.fillEllipse(400, skylineY + 70, 500, 40);
+    gfx.fillStyle(0xf5c060, 0.03);
+    gfx.fillEllipse(400, skylineY + 50, 600, 60);
 
-    // Semi-transparent overlay so text is readable
-    gfx.fillStyle(0x0a0a0f, 0.65);
+    // Semi-transparent overlay so text is readable (reduced from 0.65)
+    gfx.fillStyle(0x0a0a0f, 0.45);
     gfx.fillRect(0, 0, W, H);
   }
 
