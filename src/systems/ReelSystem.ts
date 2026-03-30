@@ -1,5 +1,5 @@
 // ============================================================
-// ReelSystem — Manages skill reel verification and tracking
+// ReelSystem — Manages stunt reel verification and tracking
 // ============================================================
 
 import type {
@@ -9,7 +9,7 @@ import type {
 } from '../types/index';
 
 /**
- * The 8 shared animation types that all skill reels draw from.
+ * The 8 shared animation types that all stunt reels draw from.
  */
 export const REEL_ANIMATIONS: ReelAnimation[] = [
   {

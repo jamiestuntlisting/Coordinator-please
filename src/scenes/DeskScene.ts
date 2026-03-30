@@ -1779,14 +1779,6 @@ export class DeskScene extends Phaser.Scene {
       }
     });
 
-    // Visitor name under headshot
-    const nameText = this.add.text(hx, photoY + photoH + 22, visitor.name, {
-      fontFamily: 'Courier New, monospace',
-      fontSize: '12px',
-      color: '#d4c5a0',
-    });
-    this.bottomHalfContainer.add(nameText);
-
     // Bribe is now handled in dialogue area, not here
   }
 
@@ -2007,11 +1999,11 @@ export class DeskScene extends Phaser.Scene {
     });
 
     // Reel section — compact to fit above dialogue buttons (y=706)
-    const reelY = 560;
+    const reelY = 580;
     const reelGfx = this.add.graphics();
     this.bottomHalfContainer.add(reelGfx);
 
-    const reelHeader = this.add.text(px, reelY, 'SKILL REEL', {
+    const reelHeader = this.add.text(px, reelY, 'STUNT REEL', {
       fontFamily: 'Courier New, monospace',
       fontSize: '14px',
       color: '#6a6050',
@@ -2021,18 +2013,18 @@ export class DeskScene extends Phaser.Scene {
 
     // TV / monitor rectangle - with bezel
     reelGfx.fillStyle(0x1a1a22, 1);
-    reelGfx.fillRect(px - 2, reelY + 16, 234, 84);
+    reelGfx.fillRect(px - 2, reelY + 16, 234, 70);
     reelGfx.fillStyle(0x0a0a12, 1);
-    reelGfx.fillRect(px + 4, reelY + 22, 222, 72);
+    reelGfx.fillRect(px + 4, reelY + 22, 222, 58);
     reelGfx.lineStyle(1, 0x2a2a36, 1);
-    reelGfx.strokeRect(px - 2, reelY + 16, 234, 84);
+    reelGfx.strokeRect(px - 2, reelY + 16, 234, 70);
     // tiny power LED
     reelGfx.fillStyle(visitor.skillReel ? 0x4a7a4f : 0x3a3a44, 1);
     reelGfx.fillCircle(px + 225, reelY + 26, 2);
 
     // Scanlines on TV
     reelGfx.lineStyle(1, 0x000000, 0.06);
-    for (let sy = reelY + 24; sy < reelY + 92; sy += 3) {
+    for (let sy = reelY + 24; sy < reelY + 78; sy += 3) {
       reelGfx.lineBetween(px + 5, sy, px + 225, sy);
     }
 
@@ -2048,11 +2040,11 @@ export class DeskScene extends Phaser.Scene {
       const playBg = this.add.graphics();
       this.bottomHalfContainer.add(playBg);
       playBg.fillStyle(0x2a2618, 1);
-      playBg.fillRoundedRect(px, reelY + 104, 140, 34, 3);
+      playBg.fillRoundedRect(px, reelY + 90, 140, 30, 3);
       playBg.lineStyle(1, 0x5a4a2a, 1);
-      playBg.strokeRoundedRect(px, reelY + 104, 140, 34, 3);
+      playBg.strokeRoundedRect(px, reelY + 90, 140, 30, 3);
 
-      const playBtn = this.add.text(px + 8, reelY + 111, 'PLAY REEL', {
+      const playBtn = this.add.text(px + 8, reelY + 96, 'PLAY REEL', {
         fontFamily: 'Courier New, monospace',
         fontSize: '16px',
         color: '#e8c36a',
@@ -2656,7 +2648,7 @@ export class DeskScene extends Phaser.Scene {
     const mx = 548;
     const my = 602;
     const mw = 218;
-    const mh = 68;
+    const mh = 54;
 
     // VHS blue background
     reelGfx.fillStyle(0x0a0a2a, 1);
@@ -2907,7 +2899,7 @@ export class DeskScene extends Phaser.Scene {
     const mx = 548;
     const my = 602;
     const mw = 218;
-    const mh = 68;
+    const mh = 54;
 
     // Clear previous frame by drawing over it
     const clearGfx = this.add.graphics();
@@ -3487,7 +3479,20 @@ export class DeskScene extends Phaser.Scene {
     const getLostResponse = visitor.dialogueResponses['get_lost'] ?? `*${visitor.name} leaves quietly*`;
     this.showVisitorResponse(getLostResponse);
     this.startTalking('angry');
-    this.time.delayedCall(1200, () => this.nextVisitor());
+
+    // Fade out visitor sprite after 1800ms
+    this.time.delayedCall(1800, () => {
+      if (this.visitorSpriteContainer) {
+        this.tweens.add({
+          targets: this.visitorSpriteContainer,
+          alpha: 0,
+          duration: 600,
+          ease: 'Power2',
+        });
+      }
+    });
+
+    this.time.delayedCall(2500, () => this.nextVisitor());
   }
 
   private nextVisitor(): void {

@@ -168,7 +168,7 @@ export class DocumentChecker {
   }
 
   /**
-   * Check the authenticity of a visitor's skill reel.
+   * Check the authenticity of a visitor's stunt reel.
    */
   checkReelAuthenticity(
     visitor: Visitor,

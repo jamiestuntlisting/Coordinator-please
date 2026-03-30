@@ -221,6 +221,18 @@ export class ResultsScene extends Phaser.Scene {
       y += noteH + 8;
     }
 
+    // No-mistake self-commentary — quiet night
+    if (problemHires.length === 0 && this.nightResult.fines === 0) {
+      y += 6;
+      this.add.text(105, y, '"No news is good news. I hope it stays quiet."', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '13px',
+        color: '#6a6050',
+        fontStyle: 'italic',
+      });
+      y += 22;
+    }
+
     // Summary section — separator
     y = Math.max(y + 5, 350);
     gfx.lineStyle(2, 0x3a352e, 0.8);
