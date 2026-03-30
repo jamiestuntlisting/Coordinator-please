@@ -7,6 +7,7 @@ import { DeskScene } from './scenes/DeskScene';
 import { ResultsScene } from './scenes/ResultsScene';
 import { MoneyScene } from './scenes/MoneyScene';
 import { EndingScene } from './scenes/EndingScene';
+import { IntroScene } from './scenes/IntroScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -18,7 +19,7 @@ const config: Phaser.Types.Core.GameConfig = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [TitleScene, EveningScene, CallSheetScene, DeskScene, ResultsScene, MoneyScene, EndingScene],
+  scene: [TitleScene, IntroScene, EveningScene, CallSheetScene, DeskScene, ResultsScene, MoneyScene, EndingScene],
 };
 
 const game = new Phaser.Game(config);

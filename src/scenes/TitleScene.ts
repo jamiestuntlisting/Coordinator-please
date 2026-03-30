@@ -284,22 +284,23 @@ export class TitleScene extends Phaser.Scene {
     // Subtitle
     this.add.text(400, 490, 'A Stunt Coordination Game', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '20px',
+      fontSize: '28px',
       color: '#888070',
     }).setOrigin(0.5);
 
     // Year
-    this.add.text(400, 520, '1995', {
+    this.add.text(400, 530, '1995', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '18px',
+      fontSize: '24px',
       color: '#999080',
     }).setOrigin(0.5);
 
     // ===== CLICK TO START (blinking) =====
-    const startText = this.add.text(400, 580, '[ CLICK TO START ]', {
+    const startText = this.add.text(400, 600, '[ TAP TO START ]', {
       fontFamily: 'Courier New, monospace',
-      fontSize: '22px',
+      fontSize: '28px',
       color: '#e8c36a',
+      fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.blinkTimer = this.time.addEvent({
@@ -349,7 +350,7 @@ export class TitleScene extends Phaser.Scene {
       if (this.blinkTimer) this.blinkTimer.destroy();
       const gsm = GameStateManager.getInstance();
       gsm.reset();
-      this.scene.start('EveningScene', { night: 1 });
+      this.scene.start('IntroScene');
     });
   }
 
