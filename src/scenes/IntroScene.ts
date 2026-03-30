@@ -52,10 +52,15 @@ export class IntroScene extends Phaser.Scene {
       { text: "I need this job to survive.", delay: 2000 },
     ];
 
-    // Tap to speed up text reveal
+    // Tap to reveal all text instantly, then tap again to continue
     this.input.on('pointerdown', () => {
       if (!this.allRevealed) {
-        this.elapsed = this.currentDelay;
+        // Reveal all remaining lines instantly
+        while (this.currentLine < this.lines.length) {
+          this.revealNextLine();
+        }
+        this.allRevealed = true;
+        this.showContinue();
       }
     });
 
