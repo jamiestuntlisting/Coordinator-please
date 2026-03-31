@@ -264,6 +264,14 @@ export class TitleScene extends Phaser.Scene {
     lightGfx.fillRect(380, glowCenterY - 4, 40, 10);
 
     // ===== TITLE TEXT =====
+    // "StuntListing's" above the title
+    this.add.text(400, 90, "StuntListing's", {
+      fontFamily: 'Courier New, monospace',
+      fontSize: '24px',
+      color: '#888070',
+      fontStyle: 'italic',
+    }).setOrigin(0.5);
+
     // Drop shadow
     this.add.text(402, 162, 'COORDINATOR,\nPLEASE', {
       fontFamily: 'Courier New, monospace',
